@@ -1,0 +1,50 @@
+<!-- templates/register.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>RiskView 회원가입</title>
+</head>
+
+<body>
+    <h1>RiskView 회원가입</h1>
+
+    <form th:action="@{/register}" th:object="${userDTO}" th:method="post">
+        <!-- 사용자 ID -->
+        <label for="userId">아이디:</label>
+        <input type="text" th:field="*{userId}" required><br><br>
+
+        <!-- 비밀번호 -->
+        <label for="password">비밀번호:</label>
+        <input type="password" th:field="*{password}" required><br><br>
+
+        <!-- 이름 -->
+        <label for="name">이름:</label>
+        <input type="text" th:field="*{name}" required><br><br>
+
+        <!-- 닉네임 -->
+        <label for="userNickname">닉네임:</label>
+        <input type="text" th:field="*{userNickname}" required><br><br>
+
+        <!-- 이메일 -->
+        <label for="email">이메일:</label>
+        <input type="email" th:field="*{email}" required><br><br>
+
+        <!-- 선호 언어 -->
+        <label for="preferred_language">선호 언어:</label>
+        <select th:field="*{preferredLanguage}">
+            <option value="KO">한국어</option>
+            <option value="EN">영어</option>
+            <!-- 필요하면 다른 언어 옵션 추가 -->
+        </select><br><br>
+
+        <!-- 제출 버튼 -->
+        <button type="submit">회원가입</button>
+    </form>
+
+    <!-- 에러/성공 메시지 -->
+    <p th:if="${error}" th:text="${error}" style="color:red;"></p>
+    <p th:if="${success}" th:text="${success}" style="color:green;"></p>
+</body>
+
+</html>

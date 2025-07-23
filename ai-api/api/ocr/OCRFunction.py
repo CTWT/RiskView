@@ -60,9 +60,9 @@ def ocrMapping(ocrList: list[str]) -> LeaseContract:
     rentCheckStr = extract_between_tokens(ocrList, ['부동산임대차계약서'], ['전세'])
 
     if rentCheckStr in ['O', 'o', '0']:
-        leaseContract.leaseType = '전세'
+        leaseContract.leaseType = 'JEONSE'
     else:
-        leaseContract.leaseType = '월세'
+        leaseContract.leaseType = 'MONTHLY'
 
     leaseContract.location = extract_between_tokens(ocrList, ['소재지'], ['토', '지'])
     leaseContract.landType = extract_between_tokens(ocrList, ['토', '지', '지', '목'], ['면 적'])

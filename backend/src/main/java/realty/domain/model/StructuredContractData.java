@@ -36,7 +36,7 @@ public class StructuredContractData implements Serializable {
     @Column(name = "id", columnDefinition = "BIGINT COMMENT '구조화 계약 데이터 ID'")
     private Long id;
 
-    @Column(name = "lease_type", nullable = false, columnDefinition = "ENUM('전세', '월세') DEFAULT '전세' COMMENT '임대 유형'")
+    @Column(name = "lease_type", nullable = false, columnDefinition = "ENUM('JEONSE', 'MONTHLY') DEFAULT 'JEONSE' COMMENT '임대 유형'")
     private String leaseType;
 
     @Column(name = "document_code", nullable = false, length = 20, columnDefinition = "VARCHAR(20) COMMENT '문서 고유 코드 (FK)'")

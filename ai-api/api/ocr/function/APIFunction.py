@@ -1,8 +1,11 @@
 from dataclasses import dataclass, asdict
-from LeaseContract import LeaseContract
+from data.LeaseContract import LeaseContract
 import json
-import properties
+from Properties import *
 import requests
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -22,7 +25,7 @@ def convertToJSON(contract:LeaseContract)->str:
 def sendDataToSpring(jsonString:str):
     try:
         data = json.loads(jsonString)  # JSON 문자열 → dict
-        response = requests.post(properties.request_path, json=data)  # JSON 전송
+        response = requests.post(request_path, json=data)  # JSON 전송
         print("서버 응답:", response.text)
     except json.JSONDecodeError as e:
         print("⚠️ JSON 파싱 오류:", e)

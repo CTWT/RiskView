@@ -1,4 +1,4 @@
-from LeaseContract import LeaseContract
+from data.LeaseContract import LeaseContract
 from datetime import date
 
 
@@ -13,7 +13,7 @@ from datetime import date
 # PDF에 글씨 새겨넣을 때의 테스트케이스
 
 contract1 = LeaseContract(
-    leaseType='전세',
+    leaseType='JEONSE',
     location='서울특별시 강남구 테헤란로 123',
     landType='대지',
     landArea=112.5,
@@ -62,7 +62,7 @@ contract1 = LeaseContract(
 )
 
 contract2 = LeaseContract(
-    leaseType='월세',
+    leaseType='MONTHLY',
     location='서울특별시 영등포구 여의도동 100',
     landType='대지',
     landArea=85.0,
@@ -112,7 +112,7 @@ contract2 = LeaseContract(
 
 
 contract3 = LeaseContract(
-    leaseType='월세',
+    leaseType='MONTHLY',
     location='화성시 외계구 999 블랙홀타워',
     landType='반중력지대',
     landArea=31415.9,

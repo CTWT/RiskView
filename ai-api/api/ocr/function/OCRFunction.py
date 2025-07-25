@@ -1,11 +1,14 @@
-import properties
-from StringHelper import *
-from LeaseContract import LeaseContract
+from Properties import *
+from tools.StringHelper import *
+from data.LeaseContract import LeaseContract
 import requests
 import uuid
 import time
 import base64
 import json
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -35,10 +38,10 @@ def runOCR(imagePath: str) -> list[str]:
 
     headers = {
         'Content-Type': 'application/json',
-        'X-OCR-SECRET': properties.secret_key
+        'X-OCR-SECRET': secret_key
     }
 
-    response = requests.post(properties.api_url, headers=headers, data=json.dumps(payload))
+    response = requests.post(api_url, headers=headers, data=json.dumps(payload))
 
     if response.status_code == 200:
         result = response.json()

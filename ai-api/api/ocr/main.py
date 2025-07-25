@@ -1,7 +1,8 @@
-from PDFFunction import *
-from OCRFunction import *
-from APIFunction import *
-from testcase import *
+from function.PDFFunction import *
+from function.OCRFunction import *
+from function.APIFunction import *
+from Testcase import *
+from Properties import *
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -12,9 +13,9 @@ from testcase import *
 
 # 테스트를 실행할 main.py
 
-pdf_path = './contract_form.pdf'
+pdf_path = './sources/Contract_form.pdf'
 
-contract = contract3
+contract = contract1
 
 if(isPDFValid(pdf_path) == True):
     output_PDF_path = insertTexttoPDF(contract, pdf_path)

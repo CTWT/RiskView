@@ -1,6 +1,8 @@
 package realty.domain.dto;
 import java.util.Date;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -37,14 +39,26 @@ public class LeaseContract {
     private long downPayment = 0;
     private boolean downPaymentSigned = false;
     private long middlePayment = 0;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date middlePaymentDate = null;
     private long balance = 0;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date balanceDate = null;
+    
     private long rentAmount = 0;
     private String rentType = "";
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date rentDate = null;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date leasePeriodStart = null;
+
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date leasePeriodEnd = null;
+
     private long commissionAmount = 0;
     private String specialTerms = "";
 

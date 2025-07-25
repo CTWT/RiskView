@@ -2,6 +2,7 @@ package realty.service;
 
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.LeaseContract;
 import realty.domain.model.StructuredContractData;
@@ -33,6 +34,7 @@ public class StructuredContractService implements ContractService {
     }
 
     @Override
+    @Transactional
     public void save(LeaseContract contract) {
         
         StructuredContractData data = ContractConverter.toEntity(contract);

@@ -1,10 +1,12 @@
 import fitz  # PyMuPDF
-from LeaseContract import LeaseContract
-from StringHelper import *
-import properties
+from data.LeaseContract import LeaseContract
+from tools.StringHelper import *
+from Properties import *
 from pdf2image import convert_from_path  # PDF를 이미지(JPG)로 변환하는 함수
 from pdf2image import exceptions
 import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -20,7 +22,7 @@ import os
 #PDF를 JPG로 변환해주는 함수
 def convertPDFtoJPG(pdf_path:str, image_path:str):
     # PDF 파일을 이미지로 변환 (페이지별로 이미지 생성됨)
-    pages = convert_from_path(pdf_path, dpi=300, poppler_path = properties.poppler_path)
+    pages = convert_from_path(pdf_path, dpi=300, poppler_path = poppler_path)
     # 첫 번째 페이지만 JPG로 저장
     pages[0].save(image_path, 'JPEG')     # 첫 페이지를 JPG 형식으로 저장
     print(f'이미지 저장 완료: {image_path}')  # 변환 완료 메시지 출력
@@ -35,7 +37,7 @@ def isPDFValid(pdf_path:str)->bool:
 
     # 예외 처리 포함
     try:
-        pages = convert_from_path(pdf_path, dpi=300, poppler_path=properties.poppler_path)
+        pages = convert_from_path(pdf_path, dpi=300, poppler_path=poppler_path)
         print("성공")
         return True
     except exceptions.PDFPageCountError:
@@ -55,15 +57,16 @@ def insertTexttoPDF(contract:LeaseContract,pdf_path:str) -> str:
     # 첫 페이지 가져오기
     page = doc[0]
 
-    # 한글 폰트 경로
-    font_path = "C:\\Windows\\Fonts\\malgun.ttf"  # Windows용 맑은 고딕 폰트 경로
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # 현재 파일 기준
+    font_path = os.path.join(BASE_DIR, "..", "sources", "malgun.ttf")
+    font_path = os.path.abspath(font_path)
 
     fontsize = 8
 
     # ✅ 빈칸 위치에 텍스트 삽입 (폰트 지정 포함)
-    if(contract.rentType == '전세'):
+    if(contract.leaseType == 'JEONSE'):
         page.insert_text((45, 74), "O", fontsize=8, fontname="KoreanFont", fontfile=font_path, color=(1,0,0))
-    elif(contract.rentType == '월세'):
+    elif(contract.leaseType == 'MONTHLY'):
         page.insert_text((109, 74), "O", fontsize=8, fontname="KoreanFont", fontfile=font_path, color=(1,0,0))
 
     page.insert_text((105, 122), contract.location, fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
@@ -140,7 +143,8 @@ def insertTexttoPDF(contract:LeaseContract,pdf_path:str) -> str:
     page.insert_text((414, 786), contract.realtorAgentSignature2, fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
 
     # 저장
-    output_path = contract.location + '.pdf'
+    output_path = os.path.join(BASE_DIR, "..", "output", contract.location+".pdf")
+    output_path = os.path.abspath(output_path)
     doc.save(output_path)
 
     print(f"✅ PDF 저장 완료: {output_path}")

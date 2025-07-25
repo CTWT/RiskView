@@ -1,4 +1,10 @@
-<!-- templates/register.html -->
+<!-- 수업명 : 가비아 2회차 -->
+<!-- 이름 : 박윤성 -->
+<!-- 작성자 : 박윤성 -->
+<!-- 수정자 : 박윤성 -->
+<!-- 작성일 : 25.07.18 -->
+<!-- 파일명 : register.html -->
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 
@@ -28,8 +34,15 @@
 
         <!-- 이메일 -->
         <label for="email">이메일:</label>
-        <input type="email" th:field="*{email}" required><br><br>
+        <input type="email" id="email"th:field="*{email}" required>
+        <!-- 인증코드 발송: emailVerificationCode와 연결됨 -->
+        <button type="button" id="sendEmailVerificationCode">인증코드 발송</button><br><br>
 
+        <!-- 이메일 인증 -->
+        <label for="emailVerificationCode">이메일 인증코드:</label>
+        <input type="text" id="emailVerificationCodeInput" name="emailVerificationCode" required>
+        <!-- 확인 버튼: emailVerificationCode와 연결됨 -->
+        <button type="button" id="verifyEmailCodeButton">확인</button><br><br>
         <!-- 선호 언어 -->
         <label for="preferred_language">선호 언어:</label>
         <select th:field="*{preferredLanguage}">
@@ -45,6 +58,10 @@
     <!-- 에러/성공 메시지 -->
     <p th:if="${error}" th:text="${error}" style="color:red;"></p>
     <p th:if="${success}" th:text="${success}" style="color:green;"></p>
+
+    <!-- 이메일 인증 코드 관련 스크립트 -->
+    <script src="/js/emailVerificationCode.js"></script>
 </body>
+
 
 </html>

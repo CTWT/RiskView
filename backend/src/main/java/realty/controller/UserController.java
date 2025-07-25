@@ -9,6 +9,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import realty.domain.dto.UserDTO;
 import realty.domain.model.User;
@@ -18,7 +19,7 @@ import realty.service.UserService;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.07.18
  * 파일명 : UserController.java
  */
@@ -48,7 +49,7 @@ public class UserController {
      */
     @GetMapping("/login")
     public String getLogin() {
-        return "login";
+        return "user/login";
     }
 
     /**
@@ -58,22 +59,32 @@ public class UserController {
      * @return index.html
      */
     @PostMapping("/login")
-    public String postLogin(@ModelAttribute UserDTO userDTO, HttpSession session) {
+    public String postLogin(@ModelAttribute UserDTO userDTO, HttpSession session, Model model) {
         // userId로 유저 객체 찾아옴
         User user = userService.findByUserId(userDTO.getUserId());
 
         // 찾아오지 못할 경우
         if (user == null) {
-            System.out.println("사용자 ID를 찾을 수 없습니다: " + userDTO.getUserId());
-            // 로그인 실패 시 에러 메시지와 함께 로그인 화면으로 리다이렉트
-            return "redirect:/login?error=true";
+            // 에러 메시지를 모델에 추가해서 폼에 전달
+            model.addAttribute("error", "사용자 ID를 찾을 수 없습니다.");
+            // 로그인 화면으로 이동
+            return "user/login";
+        }
+
+        // 탈퇴한 사용자인 경우
+        if (user.getIsDeleted() == 1) {
+            // 에러 메시지를 모델에 추가해서 폼에 전달
+            model.addAttribute("error", "탈퇴한 사용자입니다.");
+            // 로그인 화면으로 이동
+            return "user/login";
         }
 
         // 비밀번호가 일치하지 않을 경우
         if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-            System.out.println("비밀번호가 일치하지 않습니다");
-            // 로그인 실패 시 에러 메시지와 함께 로그인 화면으로 리다이렉트
-            return "redirect:/login?error=true";
+            // 에러 메시지를 모델에 추가해서 폼에 전달
+            model.addAttribute("error", "비밀번호가 일치하지 않습니다.");
+            // 로그인 화면으로 이동
+            return "user/login";
         }
 
         // 로그인 성공하면
@@ -108,7 +119,7 @@ public class UserController {
     public String getRegister(Model model) {
         // 회원가입 화면에 입력한 정보를 담을 UserDTO 객체를 모델에 추가
         model.addAttribute("userDTO", new UserDTO());
-        return "register";
+        return "user/register";
     }
 
     /**
@@ -118,10 +129,10 @@ public class UserController {
      * @return index.html
      */
     @PostMapping("/register")
-    public String postRegister(@ModelAttribute UserDTO userDTO, Model model) {
+    public String postRegister(@ModelAttribute UserDTO userDTO, Model model, HttpServletRequest request) {
         try {
             // 유저가 입력한 정보가 담겨있는 UserDTO 객체를 사용해 회원처리 처리
-            userService.registerUser(userDTO);
+            userService.registerUser(userDTO, request);
             // 사용자 정보, 성공 여부와 메시지를 모델에 추가
             model.addAttribute("userDTO", userDTO);
             model.addAttribute("success", "회원가입 성공!");
@@ -131,7 +142,21 @@ public class UserController {
             // 실패 여부와 메시지를 모델에 추가
             model.addAttribute("error", "회원가입 실패: " + e.getMessage());
             // 회원가입 실패 시 다시 회원가입 화면으로 이동
-            return "register";
+            return "user/register";
         }
+    }
+
+    /**
+     * 회원탈퇴 처리
+     * @param model
+     */
+    @PostMapping("/delete-account")
+    public String postDeleteAccount(HttpSession session, Model model) {
+        User loggedInUser = (User) session.getAttribute("user");
+        if (loggedInUser != null) {
+        userService.deleteAccount(loggedInUser.getUserId());
+        session.invalidate(); // 탈퇴 후 세션 제거
+        }
+        return "redirect:/";
     }
 }

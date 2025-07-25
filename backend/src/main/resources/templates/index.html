@@ -1,4 +1,9 @@
-<!-- templates/index.html -->
+<!-- 수업명 : 가비아 2회차 -->
+<!-- 이름 : 박윤성 -->
+<!-- 작성자 : 박윤성 -->
+<!-- 수정자 :  -->
+<!-- 작성일 : 25.07.18 -->
+<!-- 파일명 : index.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -14,6 +19,9 @@
         <p th:text="'안녕하세요, ' + ${session.user.name} + '님!'"></p>
         <form th:action="@{/logout}" method="post">
             <button type="submit">로그아웃</button>
+        </form>
+        <form th:action="@{/delete-account}" method="post">
+            <button type="submit">회원탈퇴</button>
         </form>
     </div>
 

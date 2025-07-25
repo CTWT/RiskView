@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import realty.domain.dto.UserDTO;
 import realty.domain.model.RolePermission;
 import realty.domain.model.User;
@@ -14,7 +16,7 @@ import realty.domain.repository.UserRepository;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.07.18
  * 파일명 : UserService.java
  */
@@ -26,6 +28,7 @@ public class UserService {
 
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
+
 
     /**
      * 사용자 ID로 조회
@@ -40,7 +43,20 @@ public class UserService {
      * 사용자 등록
      * @param user User 객체
      */
-    public void registerUser(UserDTO userDTO) {
+    @Transactional
+    public void registerUser(UserDTO userDTO, HttpServletRequest request) {
+
+        /**
+         * 이메일 인증 여부 확인
+         * 세션에서 이메일 인증 여부 가져옴
+         * UserDTO 객체에서 사용자 이메일 가져옴
+         */
+        Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("email_verified_" + userDTO.getEmail());
+        // 이메일 인증 여부를 확인할 수 없거나 안 받았으면
+        if (isEmailVerified == null || !isEmailVerified) {
+            throw new RuntimeException("이메일 인증 실패!");
+        }
+
         // UserDTO 객체에 담겨 있는 회원가입 시 입력 정보를 User 객체에 다시 옮겨 담음
         User user = new User();
         user.setUserId(userDTO.getUserId());
@@ -58,16 +74,38 @@ public class UserService {
         User savedUser = userRepository.save(user);
         // 사용자 고유 코드 생성
         generateUserCode(savedUser);
+        // 데이터베이스에 반영
+        userRepository.save(savedUser);
         System.out.println("회원가입 성공!");
     }
 
     /**
      * 사용자 고유 코드 생성
+     * @param user User 객체
      */
     public void generateUserCode(User user) {
-        if (user.getUserCode() != null && user.getUserSeq() != null) {
+        if (user.getUserCode() != null &&user.getUserSeq() != null) {
             user.setUserCode("U" + String.format("%08d", user.getUserSeq()));
             System.out.println("유저 코드 생성 완료");
+        }
+    }
+
+    /**
+     * 회원탈퇴
+     * @param userDTO UserDTO 객체
+     */
+    public void deleteAccount(String userId) {
+        // 사용자 ID로 데이터베이스에서 사용자 찾기
+        User user = userRepository.findByUserId(userId);
+        // 사용자를 찾았으면
+        if (user != null) {
+            // 회원탈퇴처리
+            user.setIsDeleted(1);
+            // 데이터베이스에 반영
+            userRepository.save(user);
+        // 사용자를 찾을 수 없으면
+        } else {
+            System.out.println("사용자를 찾을 수 없습니다");
         }
     }
 }

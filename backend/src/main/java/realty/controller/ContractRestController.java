@@ -36,9 +36,6 @@ public class ContractRestController {
     @PostMapping("/api/upload")
     public ResponseEntity<String> upload(@RequestBody LeaseContract contract) {
         System.out.println("✅ 수신 데이터: " + contract);
-        
-        contractService.save(contract);
-
         //테스트용
         leaseContract = contract; 
         

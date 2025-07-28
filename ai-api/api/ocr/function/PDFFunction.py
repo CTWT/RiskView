@@ -39,9 +39,9 @@ def isPDFValid(pdf_path:str)->bool:
     if not os.path.exists(pdf_path):
         print(f"❌ PDF 파일이 존재하지 않습니다: {pdf_path}")
         return False
-    print("경로 1 : ", pdf_path)
     # 예외 처리 포함
     try:
+        print("poppler_path = ",poppler_path)
         pages = convert_from_path(pdf_path, dpi=300, poppler_path= poppler_path)
         print("경로 ", pdf_path)
         print("성공")

@@ -1,8 +1,3 @@
-#  이름 : 임해균
-#  작성자 : 임해균
-#  수정자 :
-#  작성일 : 2025-07-28
-#  파일명 : chosun.py
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -14,6 +9,13 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import time, json, re, os
 import mysql.connector
+
+#  이름 : 임해균
+#  작성자 : 임해균
+#  수정자 :
+#  작성일 : 2025-07-28
+#  파일명 : chosun.py
+
 
 def crawl_news():
     options = webdriver.ChromeOptions()
@@ -95,10 +97,9 @@ def crawl_news():
     return articles
 
 
-def save_to_json(news_list, folder="app/json_exports"):
+def save_to_json(news_list, folder="app/json"):
     os.makedirs(folder, exist_ok=True)
 
-    # 폴더 안 기존 JSON 파일 개수 확인 → 다음 번호 부여
     existing_files = [f for f in os.listdir(folder) if f.startswith("chosun_") and f.endswith(".json")]
     file_num = len(existing_files) + 1
     filename = f"chosun_{file_num}.json"
@@ -125,7 +126,6 @@ def save_to_db(news_list):
     for item in news_list:
         title = item.get("title", "").strip()
 
-        # 제목 중복 체크
         cursor.execute(check_query, (title,))
         count = cursor.fetchone()[0]
         if count == 0:

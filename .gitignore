@@ -10,7 +10,7 @@
 *.pyc
 __pycache__/
 **/__pycache__/
-.gitignore
+
 # 로그 디렉토리 (직접 만든 logs 폴더 등)
 logs/
 log/
@@ -44,9 +44,4 @@ ai-server/.pytest_cache/
 ai-server/venv/
 ai-server/.env*
 ai-server/*.log
-# ocr propertis
-ai-api/api/ocr/properties.py 
-
-ai-api/api/ocr/output/*.jpg
-ai-api/api/ocr/output/*.pdf
-ai-api/api/ocr/output/*.png
+.vscode/settings.json

@@ -112,11 +112,11 @@ def crawl_yeonhap_news():
     return news_data
 
 
-def save_to_json(
-    news_list,
-    directory="ai-api/api/news_scraper/app/json",
-    filename_base="News_Yeonhap",
-):
+def save_to_json(news_list, filename_base="News_Yeonhap"):
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    directory = os.path.join(base_dir, "..", "json")
+
     os.makedirs(directory, exist_ok=True)
     counter = 1
     while True:
@@ -167,5 +167,5 @@ def save_to_db(news_list):
 
 def News_Yeonhap_Save():
     data = crawl_yeonhap_news()
-    save_to_json(data, directory="ai-api/api/news_scraper/app/json")
+    save_to_json(data)
     save_to_db(data)

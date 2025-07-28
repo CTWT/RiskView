@@ -4,7 +4,8 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time, json, re, os
 from datetime import datetime
-import mysql.connector
+
+# import mysql.connector
 
 #  이름 : 유연우
 #  작성자 : 유연우
@@ -100,9 +101,13 @@ def crawl_news():
     return news_list
 
 
-def save_to_json(
-    news_list, directory="ai-api/api/news_scraper/app/json", filename_base="News_114"
-):
+def save_to_json(news_list, filename_base="News_114"):
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    directory = os.path.join(base_dir, "..", "json")  # crawler/ 기준으로 상위 ../json
+
+    os.makedirs(directory, exist_ok=True)
+
     # os.makedirs(directory, exist_ok=True)
     counter = 1
     while True:
@@ -119,47 +124,47 @@ def save_to_json(
         print(f"❌ JSON 저장 중 오류 발생: {e}")
 
 
-def save_to_db(news_list):
-    conn = mysql.connector.connect(
-        host="localhost", user="root", password="12345", database="newsdb"
-    )
-    cursor = conn.cursor()
+# def save_to_db(news_list):
+#     conn = mysql.connector.connect(
+#         host="localhost", user="root", password="12345", database="newsdb"
+#     )
+#     cursor = conn.cursor()
 
-    query = "INSERT INTO news_114 (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
-    inserted_count = 0
-    skipped_count = 0
+#     query = "INSERT INTO news_114 (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
+#     inserted_count = 0
+#     skipped_count = 0
 
-    for item in news_list:
-        news_title = item.get("news_title", "").strip()
-        title = item.get("title", "").strip()
-        content = item.get("content", "").strip()
-        date = item.get("date", "").strip()
+#     for item in news_list:
+#         news_title = item.get("news_title", "").strip()
+#         title = item.get("title", "").strip()
+#         content = item.get("content", "").strip()
+#         date = item.get("date", "").strip()
 
-        if news_title and title and content and date:
-            try:
-                cursor.execute(query, (news_title, title, content, date))
-                inserted_count += 1
-                print(f"✅ 저장 완료: {news_title}")
-            except mysql.connector.IntegrityError:
-                skipped_count += 1
-                print(f"⚠️ 중복 건너뜀: {news_title}")
-            except Exception as e:
-                print(f"❌ 기타 오류: {e} - {news_title}")
+#         if news_title and title and content and date:
+#             try:
+#                 cursor.execute(query, (news_title, title, content, date))
+#                 inserted_count += 1
+#                 print(f"✅ 저장 완료: {news_title}")
+#             except mysql.connector.IntegrityError:
+#                 skipped_count += 1
+#                 print(f"⚠️ 중복 건너뜀: {news_title}")
+#             except Exception as e:
+#                 print(f"❌ 기타 오류: {e} - {news_title}")
 
-    conn.commit()
-    cursor.close()
-    conn.close()
-    print(
-        f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨, {skipped_count}건 중복으로 건너뜀."
-    )
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+#     print(
+#         f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨, {skipped_count}건 중복으로 건너뜀."
+#     )
 
 
 def News_114_Save():
     news = crawl_news()
     save_to_json(news)
-    save_to_db(news)
+    # save_to_db(news)
 
 
 if __name__ == "__main__":
-    news = crawl_news()
-    save_to_json(news)
+    News_114_Save()
+    # News_Yeonhap_Save()

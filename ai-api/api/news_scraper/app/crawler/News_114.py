@@ -2,18 +2,18 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-import time, json, re
+import time, json, re, os
 from datetime import datetime
 import mysql.connector
 
 #  이름 : 유연우
 #  작성자 : 유연우
 #  수정자 :
-#  수정일 : 25.07.25
+#  수정일 : 25.07.28
 #  작성일 : 25.07.23
 #  파일명 : News_114.py
 
-# 부동산 114 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환
+# 부동산 114 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
 
@@ -99,10 +99,21 @@ def crawl_news():
     return news_list
 
 
-def save_to_json(news_list, filename="부동산114_뉴스_최신.json"):
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(news_list, f, ensure_ascii=False, indent=2)
-    print(f"✅ JSON 파일 저장 완료 ({filename})")
+def save_to_json(news_list, directory="app/json", filename_base="News_114"):
+    os.makedirs(directory, exist_ok=True)
+    counter = 1
+    while True:
+        filename = f"{filename_base}_{counter:02}.json"
+        filepath = os.path.join(directory, filename)
+        if not os.path.exists(filename):
+            break
+        counter += 1
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(news_list, f, ensure_ascii=False, indent=2)
+        print(f"✅ JSON 파일 저장 완료 ({filepath})")
+    except Exception as e:
+        print(f"❌ JSON 저장 중 오류 발생: {e}")
 
 
 def save_to_db(news_list):
@@ -113,6 +124,7 @@ def save_to_db(news_list):
 
     query = "INSERT INTO news_114 (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
     inserted_count = 0
+    skipped_count = 0
 
     for item in news_list:
         news_title = item.get("news_title", "").strip()
@@ -121,16 +133,25 @@ def save_to_db(news_list):
         date = item.get("date", "").strip()
 
         if news_title and title and content and date:
-            cursor.execute(query, (news_title, title, content, date))
-            inserted_count += 1
+            try:
+                cursor.execute(query, (news_title, title, content, date))
+                inserted_count += 1
+                print(f"✅ 저장 완료: {news_title}")
+            except mysql.connector.IntegrityError:
+                skipped_count += 1
+                print(f"⚠️ 중복 건너뜀: {news_title}")
+            except Exception as e:
+                print(f"❌ 기타 오류: {e} - {news_title}")
 
     conn.commit()
     cursor.close()
     conn.close()
-    print(f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨.")
+    print(
+        f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨, {skipped_count}건 중복으로 건너뜀."
+    )
 
 
 def News_114_Save():
     news = crawl_news()
-    save_to_json(news, path="app/json")
+    save_to_json(news, directory="app/json")
     save_to_db(news)

@@ -4,7 +4,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
-import time, json, re
+import time, json, re, os
 from datetime import datetime
 import mysql.connector
 
@@ -12,11 +12,11 @@ import mysql.connector
 #  이름 : 유연우
 #  작성자 : 유연우
 #  수정자 :
-#  수정일 : 25.07.25
+#  수정일 : 25.07.28
 #  작성일 : 25.07.23
 #  파일명 : News_yeonhap.py
 
-# 연합뉴스 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환
+# 연합뉴스 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
 
@@ -111,10 +111,21 @@ def crawl_yeonhap_news():
     return news_data
 
 
-def save_to_json(news_list, filename="yeonhap_news_latest.json"):
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(news_list, f, ensure_ascii=False, indent=2)
-    print(f"✅ JSON 저장 완료: {filename}")
+def save_to_json(news_list, directory="app/json", filename_base="News_Yeonhap"):
+    os.makedirs(directory, exist_ok=True)
+    counter = 1
+    while True:
+        filename = f"{filename_base}_{counter:02}.json"
+        filepath = os.path.join(directory, filename)
+        if not os.path.exists(filepath):
+            break
+        counter += 1
+    try:
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(news_list, f, ensure_ascii=False, indent=2)
+        print(f"✅ JSON 파일 저장 완료 ({filepath})")
+    except Exception as e:
+        print(f"❌ JSON 저장 중 오류 발생: {e}")
 
 
 def save_to_db(news_list):
@@ -150,6 +161,6 @@ def save_to_db(news_list):
 
 
 def News_Yeonhap_Save():
-    news = crawl_yeonhap_news()
-    save_to_json(news, path="app/json")
-    save_to_db(news)
+    data = crawl_yeonhap_news()
+    save_to_json(data, directory="app/json")
+    save_to_db(data)

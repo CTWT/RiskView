@@ -1,0 +1,46 @@
+# -----------------------------
+# 🧩 Global (공통 무시)
+# -----------------------------
+.DS_Store
+*.log
+*.tmp
+*.swp
+.env
+.env.*
+*.pyc
+__pycache__/
+**/__pycache__/
+
+# 로그 디렉토리 (직접 만든 logs 폴더 등)
+logs/
+log/
+
+# -----------------------------
+# ⚛️ React (frontend/realty)
+# -----------------------------
+frontend/realty/node_modules/
+frontend/realty/dist/
+frontend/realty/.env*
+frontend/realty/npm-debug.log
+frontend/realty/yarn-error.log
+frontend/realty/.vite/
+frontend/realty/.cache/
+
+# -----------------------------
+# ☕ Spring Boot (backend/)
+# -----------------------------
+backend/build/
+backend
+backend/.gradle/
+backend/*.jar
+backend/.env*
+backend/application.yml
+backend/*.log
+
+# -----------------------------
+# 🐍 FastAPI (ai-server/)
+# -----------------------------
+ai-server/.pytest_cache/
+ai-server/venv/
+ai-server/.env*
+ai-server/*.log

@@ -1,35 +1,19 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import PG200001 from './pages/auth/components/authentication/PG200001';
+import PG200002 from './pages/auth/components/authentication/PG200002';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+        <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/PG200001" />} /> {/* /PG200001으로 리디렉트 */}
+        <Route path="/PG200001" element={<PG200001 />} /> {/* 로그인 페이지 */}
+        <Route path="/PG200002" element={<PG200002 />} /> {/* 회원유형 선택 페이지 */}
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App

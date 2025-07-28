@@ -1,8 +1,8 @@
 from function.PDFFunction import *
 from function.OCRFunction import *
 from function.APIFunction import *
-from Testcase import *
-from Properties import *
+from testcase import *
+from properties import *
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호

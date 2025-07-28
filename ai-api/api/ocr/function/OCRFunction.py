@@ -1,4 +1,4 @@
-from Properties import *
+from properties import *
 from tools.StringHelper import *
 from data.LeaseContract import LeaseContract
 import requests

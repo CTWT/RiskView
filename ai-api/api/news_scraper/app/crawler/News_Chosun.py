@@ -1,4 +1,3 @@
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
@@ -14,8 +13,7 @@ import mysql.connector
 #  작성자 : 임해균
 #  수정자 :
 #  작성일 : 2025-07-28
-#  파일명 : chosun.py
-
+#  파일명 : News_Chosun.py
 
 def crawl_news():
     options = webdriver.ChromeOptions()
@@ -100,9 +98,10 @@ def crawl_news():
 def save_to_json(news_list, folder="app/json"):
     os.makedirs(folder, exist_ok=True)
 
-    existing_files = [f for f in os.listdir(folder) if f.startswith("chosun_") and f.endswith(".json")]
+    # News_Chosun_번호.json 파일명 규칙 적용
+    existing_files = [f for f in os.listdir(folder) if f.startswith("News_Chosun_") and f.endswith(".json")]
     file_num = len(existing_files) + 1
-    filename = f"chosun_{file_num}.json"
+    filename = f"News_Chosun_{file_num}.json"
 
     filepath = os.path.join(folder, filename)
     with open(filepath, "w", encoding="utf-8") as f:
@@ -149,7 +148,3 @@ def Chosun_Save():
     news = crawl_news()
     save_to_json(news)
     save_to_db(news)
-
-
-if __name__ == "__main__":
-    Chosun_Save()

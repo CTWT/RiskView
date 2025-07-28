@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-*.log
-*.json
-.env
-venv/
-.chromedriver/
-chromedriver.exe

@@ -12,7 +12,7 @@ import agentIcon from "../../../../assets/icons/agent.png";
 * 작성자 : 이주하
 * 수정자 : 
 * 작성일 : 25.07.25
-* 파일명 : PG200002.tsx
+* 파일명 : PG300002.tsx
 */
 
 /**
@@ -20,20 +20,20 @@ import agentIcon from "../../../../assets/icons/agent.png";
  * @returns JSX.Element 회원 유형 선택 UI를 반환
  */
 
-const PG200002 : React.FC = () => {
+const PG300002 : React.FC = () => {
 
   const navigate = useNavigate();
 
   // 개인회원 가입 버튼 클릭 시 호출되는 함수
-  // 개인회원 가입 페이지(PG200003)로 이동
+  // 개인회원 가입 페이지(PG300003)로 이동
   const handlePersonalClick = () => {
-    navigate("PG200002/PG200003");
+    navigate("PG300002/PG300003");
   }
 
   // 공인중개사 가입 버튼 클릭 시 호출 되는 함수
   // 추후 공인중고새 가입 페이지로 연결 예정
   // const handleAgentClick = () => {
-  //   navigate("PG200002/agent");
+  //   navigate("PG300002/agent");
   // }
 
   return (
@@ -64,4 +64,4 @@ const PG200002 : React.FC = () => {
   );
 };
 
-export default PG200002;
+export default PG300002;

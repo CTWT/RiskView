@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "../../../../styles/common/common.css";
 import axios from "axios";
 import Header from "../../../../components/common/Header";
@@ -12,7 +13,7 @@ import Header from "../../../../components/common/Header";
 * 작성자 : 이주하
 * 수정자 : 
 * 작성일 : 25.07.23
-* 파일명 : PG200001.tsx
+* 파일명 : PG300001.tsx
 */
 
 /**
@@ -21,7 +22,7 @@ import Header from "../../../../components/common/Header";
  * @returns JSX.Element 로그인 폼과 유효성 검사 및 오류 처리 포함
  */
 
-const PG200001 : React.FC = () => {
+const PG300001 : React.FC = () => {
 
   // 사용자 입력 및 오류 상태 관리
   const [email, setEmail] = useState("");
@@ -47,7 +48,7 @@ const PG200001 : React.FC = () => {
 
     try {
       
-      const res = await axios.post("/api/PG200002", {email, password});
+      const res = await axios.post("/api/login", {email, password});
       // 로그인 성공 시 홈으로 이동
       if(res.status === 200) {
         navigate("/home");
@@ -62,7 +63,7 @@ const PG200001 : React.FC = () => {
     {/* 공통 헤더 컴포넌트 */}
     <Header/>
     {/* 로그인 폼 UI */}
-    <div className="authCotainer">
+    <div className="authContainer">
       <h1 className="authTitle">로그인</h1>
 
       <form onSubmit={handleSubmit}>{error && <p style={{color: "red", marginBottom: "12px"}}>{error}</p>}
@@ -90,7 +91,7 @@ const PG200001 : React.FC = () => {
       {/* 회원가입 유도 문구 */}
       <p className="authPrompt">
         아직 Risk-View 회원이 아니신가요?
-        <a href="/PG200002" className="authLink">회원가입</a>
+        <Link to="/PG300002" className="authLink">회원가입</Link>
       </p>
       </form>
     </div>
@@ -98,4 +99,4 @@ const PG200001 : React.FC = () => {
   );
 };
 
-export default PG200001;
+export default PG300001;

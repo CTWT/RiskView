@@ -1,7 +1,7 @@
 from dataclasses import dataclass, asdict
 from data.LeaseContract import LeaseContract
 import json
-from Properties import *
+from properties import *
 import requests
 import os
 import sys

@@ -11,6 +11,11 @@
 __pycache__/
 **/__pycache__/
 
+# Python virtual environments
+.venv/
+venv/
+**/.venv/
+**/venv/
 # 로그 디렉토리 (직접 만든 logs 폴더 등)
 logs/
 log/
@@ -38,10 +43,11 @@ backend/application.yml
 backend/*.log
 
 # -----------------------------
-# 🐍 FastAPI (ai-server/)
+# 🐍 FastAPI (ai-api/)
 # -----------------------------
 ai-server/.pytest_cache/
 ai-server/venv/
 ai-server/.env*
 ai-server/*.log
 .vscode/settings.json
+# ocr propertis

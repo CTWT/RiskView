@@ -1,12 +1,13 @@
 import fitz  # PyMuPDF
 from data.LeaseContract import LeaseContract
 from tools.StringHelper import *
-from properties import *
 from pdf2image import convert_from_path  # PDF를 이미지(JPG)로 변환하는 함수
 from pdf2image import exceptions
+from dotenv import load_dotenv
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
+
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -16,6 +17,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 #  파일명 : PDFFunction.py
 
 # OCR할 때 필요한 PDF 처리 관련 함수들을 모아 놓은 파일
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '..' , '.env')
+load_dotenv(dotenv_path)
+poppler_path = os.getenv('poppler_path')
 
 #@Param pdf_path pdf    파일경로
 #@Param image_path      이미지가 생성될 위치
@@ -34,10 +39,11 @@ def isPDFValid(pdf_path:str)->bool:
     if not os.path.exists(pdf_path):
         print(f"❌ PDF 파일이 존재하지 않습니다: {pdf_path}")
         return False
-
+    print("경로 1 : ", pdf_path)
     # 예외 처리 포함
     try:
-        pages = convert_from_path(pdf_path, dpi=300, poppler_path=poppler_path)
+        pages = convert_from_path(pdf_path, dpi=300, poppler_path= poppler_path)
+        print("경로 ", pdf_path)
         print("성공")
         return True
     except exceptions.PDFPageCountError:

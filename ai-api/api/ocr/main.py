@@ -2,7 +2,7 @@ from function.PDFFunction import *
 from function.OCRFunction import *
 from function.APIFunction import *
 from testcase import *
-from properties import *
+from dotenv import load_dotenv
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호

@@ -1,6 +1,6 @@
-from properties import *
 from tools.StringHelper import *
 from data.LeaseContract import LeaseContract
+from dotenv import load_dotenv
 import requests
 import uuid
 import time
@@ -18,6 +18,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 #  파일명 : OCRFunction.py
 
 # OCR을 구동시키고 데이터 정제하는 파일
+
+dotenv_path = os.path.join(os.path.dirname(__file__), '..' , '.env')
+load_dotenv(dotenv_path)
+secret_key = os.getenv('secret_key')
+api_url = os.getenv('api_url')
 
 
 # @Param imagePath JPG파일에 대해 OCR 실행

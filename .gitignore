@@ -51,3 +51,7 @@ ai-server/.env*
 ai-server/*.log
 .vscode/settings.json
 # ocr propertis
+
+ai-api/api/ocr/output/*.jpg
+ai-api/api/ocr/output/*.pdf
+ai-api/api/ocr/output/*.png

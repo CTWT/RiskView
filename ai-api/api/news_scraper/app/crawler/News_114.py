@@ -14,6 +14,7 @@ import mysql.connector
 #  파일명 : News_114.py
 
 # 부동산 114 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
+# DB 저장까지는 save_to_db 함수 주석 처리 후 실행
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
 
@@ -99,7 +100,9 @@ def crawl_news():
     return news_list
 
 
-def save_to_json(news_list, directory="app/json", filename_base="News_114"):
+def save_to_json(
+    news_list, directory="ai-api/api/news_scraper/app/json", filename_base="News_114"
+):
     os.makedirs(directory, exist_ok=True)
     counter = 1
     while True:
@@ -153,5 +156,5 @@ def save_to_db(news_list):
 
 def News_114_Save():
     news = crawl_news()
-    save_to_json(news, directory="app/json")
+    save_to_json(news, directory="ai-api/api/news_scraper/app/json")
     save_to_db(news)

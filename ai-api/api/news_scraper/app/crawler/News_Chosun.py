@@ -118,8 +118,8 @@ def save_to_db(news_list):
     )
     cursor = conn.cursor()
 
-    query = "INSERT INTO chosun_news_test (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
-    check_query = "SELECT COUNT(*) FROM chosun_news_test WHERE title = %s"
+    query = "INSERT INTO chosun (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
+    check_query = "SELECT COUNT(*) FROM chosun WHERE title = %s"
     inserted_count = 0
 
     for item in news_list:

@@ -4,7 +4,7 @@ import "../../../../styles/common/common.css";
 import userIcon from "../../../../assets/icons/user.png";
 import agentIcon from "../../../../assets/icons/agent.png";
 
-// Signup Component
+// Signup Component : 회원유형 선택 페이지
 
 /*
 * 수업명 : 가비아 2회차
@@ -27,7 +27,7 @@ const PG300002 : React.FC = () => {
   // 개인회원 가입 버튼 클릭 시 호출되는 함수
   // 개인회원 가입 페이지(PG300003)로 이동
   const handlePersonalClick = () => {
-    navigate("PG300002/PG300003");
+    navigate("/PG300003");
   }
 
   // 공인중개사 가입 버튼 클릭 시 호출 되는 함수

@@ -5,7 +5,7 @@ import "../../../../styles/common/common.css";
 import axios from "axios";
 import Header from "../../../../components/common/Header";
 
-// Login Component
+// Login Component : 로그인 페이지
 
 /*
 * 수업명 : 가비아 2회차

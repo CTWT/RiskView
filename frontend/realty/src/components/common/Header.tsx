@@ -34,8 +34,8 @@ const Header : React.FC = () => {
         <Link to="/community">커뮤니티</Link>
       </nav>
       <div className="headerAuth">
-        <Link to="/PG200001" className="headerLogin">로그인</Link>
-        <Link to="/PG200002" className="headerSignup">회원가입</Link>
+        <Link to="/PG300001" className="headerLogin">로그인</Link>
+        <Link to="/PG300002" className="headerSignup">회원가입</Link>
       </div>
     </header>
   );

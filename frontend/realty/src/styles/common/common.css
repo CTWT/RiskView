@@ -128,17 +128,20 @@
 
 /*  ------------------------------------------------------------ */
 
+
 /* Header.tsx -> css */
 
 .headerContainer {
-  width: 100vw; /* 전체 너비 */
+  width: 100vw;
+  /* 전체 너비 */
   height: 72px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 0 48px;
   background-color: white;
-  position: fixed; /* 항상 상단 고정 */
+  position: fixed;
+  /* 항상 상단 고정 */
   top: 0;
   left: 0;
   z-index: 1000;
@@ -189,6 +192,7 @@
   font-size: 14px;
 }
 
+
 /* PG3.tsx -> css */
 
 .authContainer {
@@ -222,7 +226,7 @@
 .authButton {
   width: 330px;
   padding: 14px;
-  background-color: #a290ff;
+  background-color: #A290FF;
   color: white;
   border: none;
   border-radius: 6px;
@@ -277,7 +281,7 @@
   margin-left: 6px;
   color: #25252b;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: bold
 }
 
 .authFindLink:hover,
@@ -365,7 +369,8 @@
 .authCodeInput {
   width: 100%;
   padding: 14px;
-  padding-right: 60px; /* timer 공간 확보 */
+  padding-right: 60px;
+  /* timer 공간 확보 */
   margin-bottom: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -383,6 +388,7 @@
   margin: 0;
   pointer-events: none;
 }
+
 
 .cardContainer {
   display: flex;
@@ -418,7 +424,7 @@
 .signupButton {
   width: 180px;
   padding: 14px;
-  background-color: #a290ff;
+  background-color: #A290FF;
   color: white;
   border: none;
   border-radius: 6px;
@@ -426,6 +432,7 @@
   cursor: pointer;
   margin-top: 40px;
 }
+
 
 .authResendButton {
   width: 330px;

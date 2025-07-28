@@ -13,6 +13,7 @@ import "../../../../styles/common/common.css";
 * 파일명 : PG300003.tsx
 */
 
+
 /**
  * 개인회원 이메일 인증 시작 컴포넌트
  * @returns JSX.Element - 이메일 입력과 인증 메일 전송 버튼 UI
@@ -25,31 +26,54 @@ const PG300003 : React.FC  = () => {
 
   const navigate = useNavigate();
 
+  // 이메일 유효성 검사 함수
+  const validateEmail = (email: string): boolean => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  };
+
   // 인증 메일 전송 버튼 클릭 시 호출되는 함수
   const handleSendEmail = () => {
-
-    if (!email) {
-    // 이메일이 비어있을 경우 에러 메시지 설정
-    setEmailError("이메일을 입력해주세요.");
-  } else {
-    setEmailError(""); // 에러 없으면 초기화
-    navigate("/PG300004", { state: { email } }); // 이메일 전달
-  }
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) {
+      setEmailError("이메일을 입력해주세요.");
+    } else if (!validateEmail(trimmedEmail)) {
+      setEmailError("유효한 이메일 주소를 입력해주세요.");
+    } else {
+      setEmailError("");
+      // TODO: 백엔드 이메일 전송 요청 예정
+      navigate("/PG300004", {
+        state: {
+          email: trimmedEmail,
+          isVerified: true
+        }
+      });
+    }
   }
 
   return (
-    <div className="authCotainer">
-        <div className="authHeader">
+    <div className="authWrapper">
+      <div className="authContainer">
           <h1 className="authlogo">Risk-View</h1>
           <p className="authSubtitle">Team. Debugging Monster</p>
           <p className="authwelcome">이메일 인증부터 시작해보세요</p>
+
+        <div className="authFormRow">
+          <input
+            className="authInput"
+            type="email"
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
 
-      <div className="authFormRow">
-          <input className="authInput" type="email" placeholder="이메일" value={email} onChange={(e) => setEmail(e.target.value)}/>
-      </div>
         {emailError && <p className="authError">{emailError}</p>}
-        <button className="authButton" onClick={handleSendEmail}>인증 메일 전송</button>
+
+        <button className="authButton" onClick={handleSendEmail}>
+          인증 메일 전송
+        </button>
+      </div>
     </div>
   );
 };

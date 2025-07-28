@@ -22,7 +22,7 @@ import lombok.Setter;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.07.18
  * 파일명 : User.java
  */
@@ -45,7 +45,7 @@ public class User {
      */
     @Column(name = "user_code", unique = true, nullable = false, length = 20)
     @Builder.Default
-    private String userCode="U10000000"; // 기본값으로 임시 코드 설정
+    private String userCode="U00000000"; // 기본값으로 임시 코드 설정
     
     @Column(name = "user_id", unique = true, nullable = false)
     private String userId;

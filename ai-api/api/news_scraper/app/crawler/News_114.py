@@ -103,7 +103,7 @@ def crawl_news():
 def save_to_json(
     news_list, directory="ai-api/api/news_scraper/app/json", filename_base="News_114"
 ):
-    os.makedirs(directory, exist_ok=True)
+    # os.makedirs(directory, exist_ok=True)
     counter = 1
     while True:
         filename = f"{filename_base}_{counter:02}.json"
@@ -156,5 +156,10 @@ def save_to_db(news_list):
 
 def News_114_Save():
     news = crawl_news()
-    save_to_json(news, directory="ai-api/api/news_scraper/app/json")
+    save_to_json(news)
     save_to_db(news)
+
+
+if __name__ == "__main__":
+    news = crawl_news()
+    save_to_json(news)

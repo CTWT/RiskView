@@ -62,113 +62,6 @@ def runOCR(imagePath: str) -> list[str]:
 
     return ocrList
 
-# @Param ocrList OCR실행되서 얻은 문자열토큰들의 리스트
-# 문자열 토큰리스트를 정제해서 계약서데이터로 만드는 함수
-def ocrMapping(ocrList: list[str]) -> LeaseContract:
-    leaseContract = LeaseContract()
-
-    rentCheckStr = extract_between_tokens(ocrList, ['부동산임대차계약서'], ['전세'])
-
-    if rentCheckStr in ['O', 'o', '0']:
-        leaseContract.leaseType = 'JEONSE'
-    else:
-        leaseContract.leaseType = 'MONTHLY'
-
-    leaseContract.location = extract_between_tokens(ocrList, ['소재지'], ['토', '지'])
-    leaseContract.landType = extract_between_tokens(ocrList, ['토', '지', '지', '목'], ['면 적'])
-    leaseContract.landArea = extract_between_tokens(ocrList, ['면 적'], ['m2'])
-    leaseContract.buildingStructureUse = extract_between_tokens(ocrList, ['구조·용도'], ['면적'])
-    leaseContract.buildingArea = extract_between_tokens(ocrList, ['면적'], ['m2'])
-
-    leaseContract.leasePart = get_valid_string(
-        extract_between_tokens(ocrList, ['임대할부분'], ['면 적']),
-        extract_between_tokens(ocrList, ['임대할부분'], ['면적'])
-    )
-    leaseContract.leaseArea = get_valid_string(
-        extract_between_tokens(ocrList, ['면 적'], ['m2']),
-        extract_between_tokens(ocrList, ['면적'], ['m2'])
-    )
-
-    leaseContract.deposit = korean_to_number(strip_tokens_from_start(['금', ' '], get_valid_string(
-        extract_between_tokens(ocrList, ['보증금', '금'], ['원정']),
-        extract_between_tokens(ocrList, ['보증금'], ['원정'])
-    )))
-
-    leaseContract.downPayment = korean_to_number(strip_tokens_from_start(['금', ' '], get_valid_string(
-        extract_between_tokens(ocrList, ['계약금', '금'], ['원정은']),
-        extract_between_tokens(ocrList, ['계약금'], ['원정은 계약시에']),
-        extract_between_tokens(ocrList, ['계약금'], ['원정은'])
-    )))
-
-    leaseContract.middlePayment = korean_to_number(strip_tokens_from_start(['금', ' '], get_valid_string(
-        extract_between_tokens(ocrList, ['중도금'], ['원정은']),
-        extract_between_tokens(ocrList, ['중도금', '금'], ['원정은'])
-    )))
-
-    leaseContract.middlePaymentDate = convert_string_to_date(
-        extract_between_tokens(ocrList, ['원정은'], ['일에 지불하며'])
-    )
-
-    leaseContract.balance = korean_to_number(strip_tokens_from_start(['금', ' '], get_valid_string(
-        extract_between_tokens(ocrList, ['잔', '금'], ['원정은']),
-        extract_between_tokens(ocrList, ['잔', '금', '금'], ['원정은'])
-    )))
-
-    leaseContract.balanceDate = convert_string_to_date(
-        extract_between_tokens(ocrList, ['원정은'], ['일에 지불한다.'])
-    )
-
-    leaseContract.rentAmount = korean_to_number(strip_tokens_from_start(['금', ' '], get_valid_string(
-        extract_between_tokens(ocrList, ['차', '임'], ['원정은']),
-        extract_between_tokens(ocrList, ['차', '임', '금'], ['원정은'])
-    )))
-
-    if extract_between_tokens(ocrList, ['원정은'], ['매월']).find("선불") != -1:
-        leaseContract.rentType = "후불"
-    else:
-        leaseContract.rentType = "선불"
-
-    leaseContract.rentDate = date.today().replace(day=int(extract_between_tokens(ocrList, ['매월'], ['일에'])))
-    leaseContract.leasePeriodStart = convert_string_to_date(extract_between_tokens(ocrList, ['상태로'], ['임차인에게']))
-    leaseContract.leasePeriodEnd = convert_string_to_date(extract_between_tokens(ocrList, ['인도일로부터'], ['한다.']))
-    leaseContract.commissionAmount = int(extract_between_tokens(ocrList, ['거래가액의'], ['_%로']))
-    leaseContract.specialTerms = extract_between_tokens(ocrList, ['특약사항'], ['본 계약을'])
-
-    leaseContract.lessorAddress = extract_between_tokens(ocrList, ['주', '소'], ['임대인'])
-    leaseContract.lessorIdNumber = extract_between_tokens(ocrList, ['주민등록번호'], ['전', '화'])
-    leaseContract.lessorPhone = extract_between_tokens(ocrList, ['전', '화'], ['성명'])
-    leaseContract.lessorName = extract_between_tokens(ocrList, ['성명'], ['인', '대리인'])
-    leaseContract.lessorAgentAddress = extract_between_tokens(ocrList, ['주소'], ['주민등록번호'])
-    leaseContract.lessorAgentIdNumber = extract_between_tokens(ocrList, ['주민등록번호'], ['성명'])
-    leaseContract.lessorAgentName = extract_between_tokens(ocrList, ['성명'], ['주', '소'])
-
-    leaseContract.lesseeAddress = extract_between_tokens(ocrList, ['주', '소'], ['임차인'])
-    leaseContract.lesseeIdNumber = extract_between_tokens(ocrList, ['주민등록번호'], ['전', '화'])
-    leaseContract.lesseePhone = extract_between_tokens(ocrList, ['전', '화'], ['성명'])
-    leaseContract.lesseeName = extract_between_tokens(ocrList, ['성명'], ['인', '대리인'])
-    leaseContract.lesseeAgentAddress = extract_between_tokens(ocrList, ['주소'], ['주민등록번호'])
-    leaseContract.lesseeAgentIdNumber = extract_between_tokens(ocrList, ['주민등록번호'], ['성명'])
-    leaseContract.lesseeAgentName = extract_between_tokens(ocrList, ['성명'], ['사무소소재지'])
-
-    leaseContract.realtorOfficeAddress1 = extract_between_tokens(ocrList, ['사무소소재지'], ['사무소소재지'])
-    leaseContract.realtorOfficeAddress2 = extract_between_tokens(ocrList, ['사무소소재지'], ['개업공인중개사'])
-    leaseContract.realtorOfficeName1 = extract_between_tokens(ocrList, ['사무소명칭'], ['사무소명칭'])
-    leaseContract.realtorOfficeName2 = extract_between_tokens(ocrList, ['사무소명칭'], ['대', '표'])
-    leaseContract.realtorSignature1 = extract_between_tokens(ocrList, ['서명 및 날인'], ['인', '대', '표'])
-    leaseContract.realtorSignature2 = extract_between_tokens(ocrList, ['서명및날인'], ['인', '등록번호'])
-    leaseContract.realtorLicensePhone1 = extract_between_tokens(ocrList, ['등록번호'], ['전화'])
-    leaseContract.realtorLicensePhone1 += ' / ' + extract_between_tokens(ocrList, ['전화'], ['등록번호'])
-    leaseContract.realtorLicensePhone2 = extract_between_tokens(ocrList, ['등록번호'], ['전화'])
-    leaseContract.realtorLicensePhone2 += ' / ' + extract_between_tokens(ocrList, ['전화'], ['소속공인중개사'])
-    leaseContract.realtorAgentSignature1 = cut_before_space(extract_between_tokens(ocrList, ['서명및날인'], ['인', '소속공인중개사']))
-    leaseContract.realtorAgentSignature2 = cut_before_space(get_valid_string(
-        extract_between_tokens(ocrList, ['서명 및 날인'], ['인', 'K']),
-        extract_between_tokens(ocrList, ['서명및날인'], ['K']),
-        extract_between_tokens(ocrList, ['서명및날인'], ['인'])
-    ))
-
-    return leaseContract
-
 def search_and_cut(prefix: str, suffix: str, text: str) -> tuple[str, str]:
     prefixIndex = text.find(prefix)
     if prefixIndex == -1:
@@ -181,16 +74,16 @@ def search_and_cut(prefix: str, suffix: str, text: str) -> tuple[str, str]:
     
     # prefix와 suffix가 바로 붙어있거나 사이에 내용이 없는 경우
     if suffixIndex == prefixIndex + len(prefix):
-        return text, None
+        return text[suffixIndex:], None
     
     extracted = text[prefixIndex + len(prefix):suffixIndex]
     if extracted == '':
-        return text, None
+        return text[suffixIndex:], None
     
     # suffix 이후 텍스트 반환
     return text[suffixIndex:], extracted
 
-def ocrMapping2(ocrList: list[str]) -> LeaseContract:
+def ocrMapping(ocrList: list[str]) -> LeaseContract:
     leaseContract = LeaseContract()
 
     joined_list = (''.join(ocrList))
@@ -314,6 +207,8 @@ def ocrMapping2(ocrList: list[str]) -> LeaseContract:
     if(specialTerms):
         leaseContract.specialTerms = specialTerms
 
+    text, temp = search_and_cut('본계약을증명','년월일', text)
+
     # 임대인 주소
     text,lessorAddress = search_and_cut('주소','임대인주민등록번호', text)
     if(lessorAddress):
@@ -355,7 +250,7 @@ def ocrMapping2(ocrList: list[str]) -> LeaseContract:
         leaseContract.lesseeAddress = lesseeAddress
 
     # 임차인 주민등록번호
-    text,lesseeIdNumber = search_and_cut('주민등록번호','전화', text)
+    text,lesseeIdNumber = search_and_cut('임차인주민등록번호','전화', text)
     if(lesseeIdNumber):
         leaseContract.lesseeIdNumber = lesseeIdNumber
 
@@ -418,14 +313,14 @@ def ocrMapping2(ocrList: list[str]) -> LeaseContract:
     text,realtorLicense1 = search_and_cut('등록번호','전화', text)
     text,realtorPhone1 = search_and_cut('전화','등록번호', text)
     if(realtorLicense1 != None or realtorPhone1 != None):
-        leaseContract.realtorLicensePhone1 = (realtorLicense1 if realtorLicense1 != None else '') \
+        leaseContract.realtorLicensePhone1 = (realtorLicense1 if realtorLicense1 != None else '') + " / " \
                                             +(realtorPhone1 if realtorPhone1 != None else '')
         
     # 등록번호 및 전화번호(우측)
     text,realtorLicense2 = search_and_cut('등록번호','전화', text)
     text,realtorPhone2 = search_and_cut('전화','소속공인중개사', text)
     if(realtorLicense2 != None or realtorPhone2 != None):
-        leaseContract.realtorLicensePhone2 = (realtorLicense2 if realtorLicense2 != None else '') \
+        leaseContract.realtorLicensePhone2 = (realtorLicense2 if realtorLicense2 != None else '') + " / " \
                                             +(realtorPhone2 if realtorPhone2 != None else '')
         
     # 소속공인중개사 서명(좌측)
@@ -434,7 +329,7 @@ def ocrMapping2(ocrList: list[str]) -> LeaseContract:
         leaseContract.realtorAgentSignature1 = realtorAgentSignature1
     
     # 소속공인중개사 서명(우측)
-    text,realtorAgentSignature2 = search_and_cut('서명및날인','K', text)
+    text,realtorAgentSignature2 = search_and_cut('서명및날인','인K', text)
     if(realtorAgentSignature2):
         leaseContract.realtorAgentSignature2 = realtorAgentSignature2
 

@@ -81,57 +81,6 @@ def parse_number_with_commas(number_str: str) -> int:
 def split_license_phone(license_phone: str) -> list[str]:
     return license_phone.split(" / ")
 
-
-def find_token_sequence(tokens: list[str], pattern: list[str], nth: int = 1) -> int:
-    """
-    tokens 리스트에서 pattern이 nth 번째 나타나는 시작 인덱스를 반환.
-    못 찾으면 -1 반환.
-    """
-
-    index = 0
-    for i in range(len(tokens) - len(pattern) + 1):
-        if tokens[i : i + len(pattern)] == pattern:
-            index += 1
-            if(index == nth):
-                return i
-    return -1
-
-
-def extract_between_tokens(tokens: list[str], start_token: list[str], end_token: list[str]) -> str:
-    """
-    tokens 리스트에서 start_token 이후부터 end_token 이전까지의 토큰들을 문자열로 반환.
-    start_token과 end_token은 리스트로, 연속된 단어 패턴을 의미함.
-    """
-    start_idx = find_token_sequence(tokens, start_token)
-    end_idx = find_token_sequence(tokens, end_token)
-
-    if start_idx == -1 or end_idx == -1:
-        return ""
-
-    start = start_idx + len(start_token)
-    end = end_idx
-
-    nth = 1
-    while start >= end:
-        nth +=1
-        end = find_token_sequence(tokens,end_token,nth)
-        if(end == -1):
-            return ""
-
-    result = ' '.join(tokens[start:end])
-    del tokens[0:end]
-    return result
-
-def strip_tokens_from_start(tokens: list[str], original_string: str) -> str:
-    while True:
-        for token in tokens:
-            if original_string.startswith(token):
-                original_string = original_string[len(token):]  # 앞부분 잘라냄
-                break  # 변경했으니 다시 처음부터 탐색
-        else:
-            break  # for문이 break 없이 끝났다면 더 이상 삭제할 게 없음
-    return original_string
-
 def convert_string_to_date(fullstr: str) -> date:
     trimedStr = fullstr.strip()
 

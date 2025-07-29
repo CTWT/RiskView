@@ -8,7 +8,7 @@ import re
 
 # 외부 함수 임포트
 from function.PDFFunction import convertPDFtoJPG
-from function.OCRFunction import runOCR , ocrMapping, ocrMapping2
+from function.OCRFunction import runOCR , ocrMapping
 from function.APIFunction import convertToJSON
 
 app = FastAPI()
@@ -56,7 +56,7 @@ async def process_file(file: UploadFile = File(...)):
     cleaned = re.sub(r"\s+", "", joined_list)
     print(cleaned)
 
-    outputContract = ocrMapping2(ocr_list)
+    outputContract = ocrMapping(ocr_list)
     #print(outputContract)
     json_str = convertToJSON(outputContract)
 

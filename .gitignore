@@ -35,7 +35,6 @@ frontend/realty/.cache/
 # ☕ Spring Boot (backend/)
 # -----------------------------
 backend/build/
-backend
 backend/.gradle/
 backend/*.jar
 backend/.env*

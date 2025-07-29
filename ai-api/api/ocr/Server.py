@@ -4,10 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import shutil
 import json
+import re
 
 # 외부 함수 임포트
 from function.PDFFunction import convertPDFtoJPG
-from function.OCRFunction import runOCR , ocrMapping
+from function.OCRFunction import runOCR , ocrMapping, ocrMapping2
 from function.APIFunction import convertToJSON
 
 app = FastAPI()
@@ -50,7 +51,14 @@ async def process_file(file: UploadFile = File(...)):
 
     # OCR 실행
     ocr_list = runOCR(image_path)
-    outputContract = ocrMapping(ocr_list)
+    joined_list = (''.join(ocr_list))
+
+    cleaned = re.sub(r"\s+", "", joined_list)
+    print(cleaned)
+
+    outputContract = ocrMapping2(ocr_list)
+    #print(outputContract)
     json_str = convertToJSON(outputContract)
+
 
     return JSONResponse(content=json.loads(json_str))

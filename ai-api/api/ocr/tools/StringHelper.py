@@ -1,6 +1,7 @@
 from datetime import date
 import fitz  # PyMuPDF
 import re
+from typing import Union
 
 
 #  수업명 : 가비아 2회차
@@ -36,7 +37,6 @@ def number_to_korean(number: int) -> str:
 
     return ''.join(result)
 
-# 한글(원정)을 숫자 단위로 바꿔주는 함수
 def korean_to_number(korean: str) -> int:
     num_map = {'일': 1, '이': 2, '삼': 3, '사': 4, '오': 5,
                '육': 6, '칠': 7, '팔': 8, '구': 9, '영': 0}
@@ -51,19 +51,20 @@ def korean_to_number(korean: str) -> int:
         if char in num_map:
             num = num_map[char]
         elif char in unit_map:
+            # 단위 앞에 숫자 없으면 1로 처리
             if num == 0:
                 num = 1
             section_total += num * unit_map[char]
             num = 0
         elif char in section_map:
+            # 현재까지 계산된 section_total + num에 단위 곱함
             section_total += num
             total += section_total * section_map[char]
             section_total = 0
             num = 0
         else:
-            # 숫자 없이 단독 '천' 같은 경우 (예: "천오백만")
-            section_total += num
-            num = 0
+            # 한글 숫자가 아닌 문자 무시 또는 필요 시 예외 처리
+            pass
 
     total += section_total + num
     return total
@@ -174,3 +175,22 @@ def get_valid_string(*args: str, default: str = "") -> str:
 
 def cut_before_space(s: str) -> str:
     return s.split(' ')[0]
+
+def string_to_number(s: str) -> Union[int, float]:
+    # 숫자와 소수점만 추출
+    parts = re.findall(r'\d+|\.', s)
+
+    # 숫자 하나는 무조건 있어야 함
+    if not any(part.isdigit() for part in parts):
+        return 0
+
+    # 붙이기
+    number_str = ''.join(parts)
+
+    # 소수점이 1개 초과면 잘못된 실수 → 첫 번째만 살리고 나머지는 제거
+    if number_str.count('.') > 1:
+        first_dot = number_str.find('.')
+        number_str = number_str[:first_dot + 1] + number_str[first_dot + 1:].replace('.', '')
+
+    return float(number_str) if '.' in number_str else int(number_str)
+    

@@ -1,0 +1,27 @@
+package realty.domain.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 박윤성
+ * 작성자 : 박윤성
+ * 수정자 :
+ * 작성일 : 25.07.30
+ * 파일명 : LoginHistoryDTO.java
+ */
+
+@Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class LoginHistoryDTO {
+    private String loginTime;
+    private String ipAddress;
+    private String userAgent;
+}

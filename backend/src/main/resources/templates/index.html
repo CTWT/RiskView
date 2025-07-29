@@ -23,6 +23,24 @@
         <form th:action="@{/delete-account}" method="post">
             <button type="submit">회원탈퇴</button>
         </form>
+        
+        <!-- 로그인 이력 표시 -->
+        <div th:if="${session.loginHistoryList != null and !#lists.isEmpty(session.loginHistoryList)}">
+            <h3>로그인 이력</h3>
+            <div th:each="loginHistory : ${session.loginHistoryList}">
+                <ul>
+                    <li th:text="|로그인 시각: ${loginHistory.loginTime}|"></li>
+                    <li th:text="|IP 주소: ${loginHistory.ipAddress}|"></li>
+                    <li th:text="|User-Agent: ${loginHistory.userAgent}|"></li>
+                </ul>
+                <hr/> <!-- 각 로그인 기록을 구분하기 위한 구분선 -->
+            </div>
+        </div>
+        
+        <!-- 로그인 이력이 없는 경우 -->
+        <div th:if="${session.loginHistoryList == null or #lists.isEmpty(session.loginHistoryList)}">
+            <p>로그인 이력이 없습니다.</p>
+        </div>
     </div>
 
     <!-- 아직 로그인 안 했을 경우 표시할 화면 -->

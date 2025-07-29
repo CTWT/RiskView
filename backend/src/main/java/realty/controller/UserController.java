@@ -1,19 +1,20 @@
 package realty.controller;
 
+import realty.domain.dto.LoginHistoryDTO;
+import realty.domain.dto.UserDTO;
+import realty.domain.model.User;
+import realty.service.LoginHistoryService;
+import realty.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-import realty.domain.dto.UserDTO;
-import realty.domain.model.User;
-import realty.service.UserService;
 
 /*
  * 수업명 : 가비아 2회차
@@ -32,6 +33,9 @@ public class UserController {
     
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private LoginHistoryService loginHistoryService;
     
     /**
      * 홈 화면으로 이동
@@ -59,7 +63,7 @@ public class UserController {
      * @return index.html
      */
     @PostMapping("/login")
-    public String postLogin(@ModelAttribute UserDTO userDTO, HttpSession session, Model model) {
+    public String postLogin(@ModelAttribute UserDTO userDTO, HttpSession session, HttpServletRequest request, Model model) {
         // userId로 유저 객체 찾아옴
         User user = userService.findByUserId(userDTO.getUserId());
 
@@ -91,6 +95,16 @@ public class UserController {
         session.setAttribute("user", user); // 세션에 사용자 정보 저장
         session.setMaxInactiveInterval(60); // 1분
         System.out.println("로그인 성공");
+
+        // 로그인 기록 남기기
+        String ipAddress = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        // 로그인 기록 저장
+        loginHistoryService.saveLoginHistory(user, ipAddress, userAgent);
+        // 방금 데이터베이스 저장한 로그인 기록과 이전에 데이터베이스에 저장된 로그인 기록까지 모두 가져옴
+        List<LoginHistoryDTO> loginHistoryList = loginHistoryService.findByUserCode(user.getUserCode());
+        // 로그인 이력을 세션에 저장
+        session.setAttribute("loginHistoryList", loginHistoryList);
         // 로그인 성공 화면으로 이동
         return "index";
     }

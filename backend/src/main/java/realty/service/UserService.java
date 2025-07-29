@@ -72,22 +72,18 @@ public class UserService {
         user.setRole(role);
         // User 객체 저장
         User savedUser = userRepository.save(user);
-        // 사용자 고유 코드 생성
-        generateUserCode(savedUser);
-        // 데이터베이스에 반영
+        // userSeq가 null이 아니면
+        if (savedUser.getUserSeq() != null) {
+            // UserCode설정: "U" + 8자리 숫자로 포맷된 userSeq
+            savedUser.setUserCode("U" + String.format("%08d", savedUser.getUserSeq()));
+            System.out.println("유저 코드 생성 완료");
+        } else {
+            throw new RuntimeException("userSeq가 null입니다");
+        }
+
+        // 업데이트된 User 객체를 데이터베이스에 반영
         userRepository.save(savedUser);
         System.out.println("회원가입 성공!");
-    }
-
-    /**
-     * 사용자 고유 코드 생성
-     * @param user User 객체
-     */
-    public void generateUserCode(User user) {
-        if (user.getUserCode() != null &&user.getUserSeq() != null) {
-            user.setUserCode("U" + String.format("%08d", user.getUserSeq()));
-            System.out.println("유저 코드 생성 완료");
-        }
     }
 
     /**

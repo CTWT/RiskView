@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import PG200001 from "./pages/home/PG200001";
+import PG100001 from "./pages/analysis/PG100001";
 import PG300001 from "./pages/auth/components/authentication/PG300001";
 import PG300002 from "./pages/auth/components/authentication/PG300002";
 import PG300003 from "./pages/auth/components/authentication/PG300003";
@@ -24,6 +25,7 @@ function App() {
             <Layout>
               <Routes>
                 <Route path="/" element={<PG200001 />} /> {/* 메인페이지 */}
+                <Route path="/PG100001" element={<PG100001 />} /> {/* 계약서분석 페이지 */}
                 <Route path="/PG300001" element={<PG300001 />} /> {/* 로그인 페이지 */}
               </Routes>
             </Layout>

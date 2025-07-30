@@ -1,0 +1,223 @@
+/* Toast - 토스트 메시지 담당 스타일*/
+
+.toast-container {
+  position: fixed; /* 화면에 고정 */
+  bottom: 30px; /* 화면 하단에서 30px 위 */
+  left: 50%; /* 중앙 정렬을 위해 왼쪽 50% */
+  transform: translateX(-50%); /* 정확한 중앙 정렬 */
+  padding: 12px 20px;
+  border-radius: 8px; /* 둥근 모서리 */
+  color: #fff; /* 기본 텍스트 색상 */
+  font-size: 0.95rem;
+  font-weight: 500;
+  z-index: 2000; /* 다른 요소 위에 오도록 높은 z-index */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* 그림자 */
+  opacity: 0; /* 초기에는 투명 */
+  visibility: hidden; /* 초기에는 숨김 */
+  animation: fadeInOut 3s forwards; /* 애니메이션 적용 (duration에 따라 변경될 수 있음) */
+  display: flex; /* 메시지 내용을 중앙 정렬하기 위해 */
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+}
+
+/* 타입별 배경색 */
+.toast-success {
+  background-color: #28a745; /* 녹색 */
+}
+
+.toast-error {
+  background-color: #dc3545; /* 빨간색 */
+}
+
+.toast-info {
+  background-color: #7b68ee; /* 회색 (기본) */
+}
+
+/* 메시지 표시 애니메이션 */
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(20px); /* 아래에서 위로 나타나는 효과 */
+  }
+  10% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+  90% {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(20px);
+  }
+}
+
+/* Modal - 모달 담당 스타일*/
+
+.modal-overlay {
+  position: fixed; /* 화면에 고정 */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* 반투명 검정 배경 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 다른 요소 위에 표시 */
+  opacity: 0;
+  visibility: hidden;
+  animation: fadeIn 0.3s ease-in-out forwards; /* 나타날 때 페이드인 애니메이션 */
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 80%;
+  max-width: 400px; /* 모달의 최대 너비 */
+  transform: translateY(
+    20px
+  ); /* 아래에서 약간 올라오는 효과를 위한 초기 위치 */
+  animation: slideUp 0.3s ease-out forwards; /* 나타날 때 슬라이드업 애니메이션 */
+}
+
+/* 페이드인 애니메이션 (오버레이) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+/* 슬라이드업 애니메이션 (모달 콘텐츠) */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 추가: 모달이 닫힐 때의 애니메이션 (JavaScript에서 클래스 추가/제거 필요) */
+/*
+.modal-overlay.fadeOut {
+    animation: fadeOut 0.3s ease-out forwards;
+}
+.modal-content.slideDown {
+    animation: slideDown 0.3s ease-in forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; visibility: visible; }
+    to { opacity: 0; visibility: hidden; }
+}
+@keyframes slideDown {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
+}
+*/
+
+/* progress - 프로그래스바 담당 스타일*/
+
+.progress-modal-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%; /* 부모(모달 콘텐츠)의 너비에 맞춤 */
+}
+
+.progress-message {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.progress-bar-wrapper {
+  background-color: #e0e0e0; /* 배경색 */
+  border-radius: 10px;
+  width: 100%;
+  height: 20px; /* 프로그레스 바 높이 */
+  overflow: hidden; /* 채워지는 부분이 밖으로 넘어가지 않도록 */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1); /* 내부 그림자 */
+}
+
+.progress-bar-fill {
+  background-color: #7b68ee; /* 프로그레스 바 채워지는 색상 (보라색) */
+  height: 100%;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white; /* 텍스트 색상 */
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: width 0.3s ease-in-out; /* 너비 변경 시 부드러운 전환 */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* 텍스트 그림자 */
+}
+
+/* 프로그레스 바 라벨이 채워지는 바 안에 표시되지 않을 경우를 대비 */
+.progress-bar-label {
+  /* 만약 텍스트가 바 외부로 나와야 한다면 여기에 스타일 추가 */
+}
+
+/* ocr-scan-progress - ocr모달창 담당 스타일*/
+
+.ocr-scan-progress-modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px; /* 내부 여백 (Modal.css의 padding과 함께 적용) */
+}
+
+.ocr-scan-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 15px;
+  line-height: 1.3;
+}
+
+.ocr-scan-message {
+  font-size: 1rem;
+  color: #555;
+  margin-bottom: 25px;
+  line-height: 1.4;
+}
+
+/* ProgressBar 내부의 .progress-message (ProgressBar.css의 스타일을 오버라이드) */
+.ocr-scan-progress-modal-content .progress-message {
+  margin-top: 15px; /* 프로그레스 바 위쪽 여백 조절 */
+  font-weight: 600;
+  color: #000; /* 더 진한 색상 */
+}
+
+/* 필요하다면 이 모달 내의 특정 아이콘이나 로더 등의 스타일 */
+/*
+.ocr-scan-loader-icon {
+    margin-bottom: 20px;
+    width: 60px;
+    height: 60px;
+    animation: rotate 2s linear infinite;
+}
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+*/

@@ -11,7 +11,7 @@ import lombok.Setter;
  * 이름 : 박윤성
  * 작성자 : 박윤성
  * 수정자 :
- * 작성일 : 25.07.30
+ * 작성일 : 25.07.29
  * 파일명 : LoginHistoryDTO.java
  */
 

@@ -1,16 +1,19 @@
 // users 테이블 관련 비즈니스 로직을 처리하는 UserService를 구현
 package realty.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 import realty.domain.dto.UserDTO;
 import realty.domain.model.RolePermission;
 import realty.domain.model.User;
 import realty.domain.repository.UserRepository;
+import realty.exception.AccountDeletedException;
+import realty.exception.InvalidCredentialsException;
+import realty.exception.UserNotFoundException;
+import realty.exception.EmailNotVerifiedException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 
 /*
  * 수업명 : 가비아 2회차
@@ -29,19 +32,51 @@ public class UserService {
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
 
+    @Autowired
+    private LoginHistoryService loginHistoryService;
 
     /**
-     * 사용자 ID로 조회
-     * @param userId 사용자 ID
-     * @return 사용자 정보
+     * 로그인 처리
+     * @param userDTO
+     * @param request
+     * @return 로그인 성공 시 User 객체
+     * @throws UserNotFoundException 사용자 ID를 찾을 수 없을 때
+     * @throws AccountDeletedException 탈퇴한 사용자인 경우
+     * @throws InvalidCredentialsException 비밀번호가 일치하지 않을 때
      */
-    public User findByUserId(String userId) {
-        return userRepository.findByUserId(userId);
+    public User userLogin(UserDTO userDTO, HttpServletRequest request) {
+        // userId로 유저 객체 찾아옴
+        User user = findByUserId(userDTO.getUserId());
+
+        // 찾아오지 못할 경우
+        if (user == null) {
+            throw new UserNotFoundException("존재하지 않는 아이디입니다.");
+        }
+
+        // 탈퇴한 사용자인 경우
+        if (user.getIsDeleted() == 1) {
+            throw new AccountDeletedException("탈퇴한 사용자입니다.");
+        }
+
+        // 비밀번호가 일치하지 않을 경우
+        if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
+            throw new InvalidCredentialsException("아이디 혹은 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 모든 검증 통과 후 로그인 기록 남기기
+        String ipAddress = request.getRemoteAddr();
+        String userAgent = request.getHeader("User-Agent");
+        loginHistoryService.saveLoginHistory(user, ipAddress, userAgent);
+        
+        return user;
     }
     
     /**
      * 사용자 등록
-     * @param user User 객체
+     * @param userDTO UserDTO 객체
+     * @param request HttpServletRequest 객체
+     * @throws EmailNotVerifiedException 이메일 인증이 완료되지 않았을 때
+     * @throws RuntimeException userSeq가 null일 때
      */
     @Transactional
     public void registerUser(UserDTO userDTO, HttpServletRequest request) {
@@ -54,7 +89,7 @@ public class UserService {
         Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("email_verified_" + userDTO.getEmail());
         // 이메일 인증 여부를 확인할 수 없거나 안 받았으면
         if (isEmailVerified == null || !isEmailVerified) {
-            throw new RuntimeException("이메일 인증 실패!");
+            throw new EmailNotVerifiedException("이메일 인증이 완료되지 않았습니다.");
         }
 
         // UserDTO 객체에 담겨 있는 회원가입 시 입력 정보를 User 객체에 다시 옮겨 담음
@@ -88,7 +123,7 @@ public class UserService {
 
     /**
      * 회원탈퇴
-     * @param userDTO UserDTO 객체
+     * @param userId 사용자 ID
      */
     public void deleteAccount(String userId) {
         // 사용자 ID로 데이터베이스에서 사용자 찾기
@@ -103,5 +138,113 @@ public class UserService {
         } else {
             System.out.println("사용자를 찾을 수 없습니다");
         }
+    }
+
+    /**
+     * 사용자 ID 찾기
+     * @param userDTO
+     * @return 찾아낸 사용자 ID
+     * @throws UserNotFoundException 사용자 ID를 찾을 수 없을 때
+     * @throws AccountDeletedException 탈퇴한 사용자인 경우
+     */
+    public String findUserId(UserDTO userDTO) {
+        // 이름과 이메일로 유저 찾아옴
+        User foundUser = findByNameAndEmail(userDTO.getName(), userDTO.getEmail());
+
+        // 유저 정보를 찾지 못하면
+        if (foundUser == null) {
+            throw new UserNotFoundException("입력하신 정보와 일치하는 사용자를 찾을 수 없습니다.");
+        }
+        
+        // 탈퇴한 사용자인 경우
+        if (foundUser.getIsDeleted() == 1) {
+            throw new AccountDeletedException("탈퇴한 사용자입니다.");
+        }
+
+        // 찾은 유저의 아이디 반환
+        return foundUser.getUserId();
+    }
+
+    /**
+     * 비밀번호 찾기
+     * @param userDTO
+     * @param request
+     * @throws UserNotFoundException 사용자 ID를 찾을 수 없을 때
+     * @throws EmailNotVerifiedException 이메일 인증이 완료되지 않았을 때
+     */
+    public User authToFindPassword(UserDTO userDTO, HttpServletRequest request) {
+        // 입력받은 사용자 ID와 이메일로 유저 찾아옴
+        User foundUser = findByUserIdAndEmail(userDTO.getUserId(), userDTO.getEmail());
+
+        // 일치하는 사용자를 찾을 수 없는 경우
+        if (foundUser == null) {
+            throw new UserNotFoundException("입력하신 정보와 일치하는 사용자를 찾을 수 없습니다.");
+        }
+
+        // EmailService의 verifyEmailCode 메서드에서 성공 시 "email_verified_" 속성을 세션에 저장
+        Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("email_verified_" + userDTO.getEmail());
+
+        // 이메일 인증 여부를 확인할 수 없거나 인증을 받지 않았으면 오류 처리
+        if (isEmailVerified == null || !isEmailVerified) {
+            throw new EmailNotVerifiedException("이메일 인증을 완료해야 비밀번호를 재설정할 수 있습니다.");
+        }
+
+        // 인증 성공 후 이메일 인증 세션 플래그 제거
+        request.getSession().removeAttribute("email_verified_" + userDTO.getEmail());
+        // 찾아낸 사용자 객체 반환
+        return foundUser;
+    }
+
+    /**
+     * 패스워드 재설정
+     * @param userId 사용자 ID
+     * @param resetPassword 재설정할 비밀번호
+     * @throws UserNotFoundException 사용자 ID를 찾을 수 없을 때
+     */
+    @Transactional
+    public void resetPass(String userId, String resetPassword) {
+
+        // 데이터베이스에서 사용자 ID로 사용자 찾아옴
+        User user = userRepository.findByUserId(userId);
+        
+        // 사용자를 찾을 수 없으면
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
+        }
+        
+        // 사용자 비밀번호 업데이트
+        user.setPassword(passwordEncoder.encode(resetPassword));
+        
+        // 데이터베이스에 반영
+        userRepository.save(user);
+    }
+
+    /**
+     * 사용자 ID로 조회
+     * @param userId 사용자 ID
+     * @return 사용자 정보
+     */
+    public User findByUserId(String userId) {
+        return userRepository.findByUserId(userId);
+    }
+
+    /**
+     * 사용자 이름과 이메일로 조회
+     * @param name 사용자 이름
+     * @param email 사용자 이메일
+     * @return 사용자 정보
+     */
+    public User findByNameAndEmail(String name, String email) {
+        return userRepository.findByNameAndEmail(name, email);
+    }
+
+    /**
+     * 사용자 ID와 이메일로 조회
+     * @param userId 사용자 ID
+     * @param email 사용자 이메일
+     * @return 사용자 정보
+     */
+    public User findByUserIdAndEmail(String userId, String email) {
+        return userRepository.findByUserIdAndEmail(userId, email);
     }
 }

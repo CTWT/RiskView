@@ -1,7 +1,6 @@
 package realty.domain.repository;
 
 import realty.domain.model.LoginHistory;
-
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Sort;
@@ -10,7 +9,7 @@ import org.springframework.data.domain.Sort;
  * 이름 : 박윤성
  * 작성자 : 박윤성
  * 수정자 : 
- * 작성일 : 25.07.30
+ * 작성일 : 25.07.29
  * 파일명 : LoginHistoryRepository.java
  */
 

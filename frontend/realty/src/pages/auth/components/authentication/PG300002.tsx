@@ -1,66 +1,150 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../../../styles/common/common.css";
-import userIcon from "../../../../assets/icons/user.png";
-import agentIcon from "../../../../assets/icons/agent.png";
+import axios from "axios";
 
-// Signup Component : 회원유형 선택 페이지
+// Login Component : 로그인 페이지
 
 /*
-* 수업명 : 가비아 2회차
-* 이름 : 이주하
-* 작성자 : 이주하
-* 수정자 : 
-* 작성일 : 25.07.25
-* 파일명 : PG300002.tsx
-*/
-
-/**
- * 
- * @returns JSX.Element 회원 유형 선택 UI를 반환
+ * 수업명 : 가비아 2회차
+ * 이름 : 이주하
+ * 작성자 : 이주하
+ * 수정자 :
+ * 작성일 : 25.07.23
+ * 파일명 : PG300002.tsx
  */
 
-const PG300002 : React.FC = () => {
+interface PG300002Props {
+  onSignUpStart: () => void;
+}
 
+/**
+ * 로그인 컴포넌트
+ * 사용자 이메일과 비밀번호를 입력받아 로그인 처리를 수행하고,
+ * 회원가입 페이지로의 전환
+ * 
+ * @param props - 컴포넌트 props
+ * @param props.onSignUpStart - 회원가입 버튼 클릭 시 호출되는 회원가입 시작 함수
+ * @returns JSX.Element - 로그인 폼과 유효성 검사 및 오류 처리가 포함된 UI 컴포넌트
+ */
+
+const PG300002: React.FC<PG300002Props> = ({ onSignUpStart }) => {
+  useEffect(() => {
+    console.log("PG300002 mounted - 로그인 컴포넌트 렌더링됨");
+  }, []);
+
+  // 상태 관리
+  // 사용자 입력 이메일
+  const [email, setEmail] = useState<string>("");
+  // 사용자 입력 비밀번호
+  const [password, setPassword] = useState<string>("");
+  // 로그인 오류 메시지
+  const [error, setError] = useState<string>("");
+  // 네비게이션 
   const navigate = useNavigate();
 
-  // 개인회원 가입 버튼 클릭 시 호출되는 함수
-  // 개인회원 가입 페이지(PG300003)로 이동
-  const handlePersonalClick = () => {
-    navigate("/PG300003");
-  }
+  /**
+   *
+   *
+   * @param e React.FormEvent - 폼 제출 이벤트 객체
+   * @returns void
+   */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  // 공인중개사 가입 버튼 클릭 시 호출 되는 함수
-  // 추후 공인중고새 가입 페이지로 연결 예정
-  // const handleAgentClick = () => {
-  //   navigate("PG300002/agent");
-  // }
+    // 입력값 검사
+    if (!email || !password) {
+      setError("이메일과 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await axios.post<{ token: string }>("/api/login", {
+        email,
+        password,
+      });
+      // 로그인 성공 시 메인 페이지로 이동 
+      if (res.status === 200) {
+        console.log("로그인 성공 - 메인 페이지로 이동");
+        navigate("/"); // 메인 페이지로 이동
+      }
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+      } else {
+        setError("예기치 않은 오류가 발생했습니다.");
+      }
+    }
+  };
+
+  const handleSignUpClick = () => {
+    console.log("회원가입 버튼 클릭됨");
+    onSignUpStart();
+  };
 
   return (
-    <div className="authCotainer">
-      <h1 className="authlogo">Risk-View</h1>
-      <p className="authSubtitle">Team. Debugging Monster</p>
-      <p className="authwelcome">Risk-View에 오신 것을 환영합니다. <br />
-        이제부터 안심 거래의 시작입니다.</p>
+    <>
+      {/* 로그인 폼 UI */}
+      <div className="authWrapper">
+        <div className="authContainer">
+          <h1 className="authTitle">로그인</h1>
 
-        <div className="cardContainer">
-          {/* 개인회원 카드 */}
-          <div className="card">
-            <p className="cardTitle">개인회원</p>
-            <img src={userIcon} alt="개인회원 아이콘" width={100} />
-            <button className="signupButton" onClick={handlePersonalClick}>가입하기</button>
-          </div>
+          <form onSubmit={handleSubmit}>
+            {error && (
+              <p style={{ color: "red", marginBottom: "12px" }}>{error}</p>
+            )}
 
-          {/* 공인중개사 카드 */}
-          <div className="card">
-            <p className="cardTitle">공인중개사</p>
-            <img src={agentIcon} alt="공인중개사 아이콘" width={100} />
-            <button className="signupButton">가입하기</button>
-          </div>
+            {/* 이메일 입력 */}
+            <input
+              className="authInput"
+              type="email"
+              placeholder="이메일"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {/* 비밀번호 입력 */}
+            <input
+              className="authInput"
+              type="password"
+              placeholder="비밀번호"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
 
+            {/* 이메일/비밀번호 찾기 링크 */}
+            <div className="authFindWrapper">
+              <a href="/find-account" className="authFindLink">
+                이메일/비밀번호 찾기
+              </a>
+            </div>
 
+            {/* 로그인 버튼 */}
+            <button type="submit" className="authButton">
+              로그인
+            </button>
+
+            {/* 또는 Divider */}
+            <div className="authDividerWrapper">
+              <div className="authDivider">
+                <span className="authDividerText">또는</span>
+              </div>
+            </div>
+
+            {/* 회원가입 유도 문구 */}
+            <p className="authPrompt">
+              아직 Risk-View 회원이 아니신가요?
+              <button
+                type="button"
+                onClick={handleSignUpClick}
+                className="authLink"
+              >
+                회원가입
+              </button>
+            </p>
+          </form>
         </div>
-    </div>
+      </div>
+    </>
   );
 };
 

@@ -444,6 +444,16 @@
 
 /*  ------------------------------------------------------------ */
 
+/*
+ * 생성자 : 이주하
+ * 생성일 : 25.07.25
+ * 파일명 : Common.css
+ * 수정자 :
+ * 수정일 :
+ * 설명 : 공용 css 담당 파일
+ */
+
+
 /* Header.tsx -> css */
 
 .headerContainer {
@@ -507,12 +517,17 @@
   font-size: 14px;
 }
 
+
 /* PG3.tsx -> css */
 
 .authContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  /* 세로 정렬 추가 */
+  min-height: 80vh;
+  /* 화면 전체 높이 설정 */
   padding: 40px;
 }
 
@@ -540,7 +555,7 @@
 .authButton {
   width: 330px;
   padding: 14px;
-  background-color: #a290ff;
+  background-color: #A290FF;
   color: white;
   border: none;
   border-radius: 6px;
@@ -592,10 +607,13 @@
 }
 
 .authLink {
+  background: none;
+  border: none;
+  padding: 0;
   margin-left: 6px;
   color: #25252b;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: bold
 }
 
 .authFindLink:hover,
@@ -703,6 +721,7 @@
   pointer-events: none;
 }
 
+
 .cardContainer {
   display: flex;
   justify-content: center;
@@ -737,7 +756,7 @@
 .signupButton {
   width: 180px;
   padding: 14px;
-  background-color: #a290ff;
+  background-color: #A290FF;
   color: white;
   border: none;
   border-radius: 6px;
@@ -745,6 +764,7 @@
   cursor: pointer;
   margin-top: 40px;
 }
+
 
 .authResendButton {
   width: 330px;
@@ -763,4 +783,139 @@
 .authResendButton:hover {
   background-color: #3e3e3e;
   color: white;
+}
+
+.authPasswordInputWrapper {
+  position: relative;
+  width: 330px;
+}
+
+.authPasswordInput {
+  width: 100%;
+  padding: 14px;
+  padding-right: 44px;
+  /* 아이콘 공간 확보 */
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.password-toggle-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-60%);
+  font-size: 18px;
+  color: #999;
+  cursor: pointer;
+}
+
+.authSuccess {
+  color: green;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.nickname-check-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  color: #ccc;
+}
+
+.nickname-check-icon.success {
+  color: #2ecc71;
+}
+
+.nickname-check-icon.error {
+  color: #e74c3c;
+}
+
+/* PG300007 */
+
+/* 성별, 내외국인 선택 버튼 스타일 */
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 12px 0;
+}
+
+.toggle-button {
+  flex: 1;
+  padding: 10px 0;
+  border: 1px solid #ccc;
+  background-color: white;
+  color: #333;
+  font-weight: 400;
+  border-radius: 6px;
+  margin-right: 10px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.toggle-button:last-child {
+  margin-right: 0;
+}
+
+.toggle-button.selected {
+  background-color: #a290ff;
+  /* 라벤더 계열 */
+  color: white;
+  border-color: #a290ff;
+  font-weight: bold;
+  box-shadow: 0 0 0 2px rgba(162, 144, 255, 0.2);
+  /* 약한 포커스 효과 */
+}
+
+/* 언어 선택 드롭다운 */
+.dropdown-wrapper {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.dropdown-toggle {
+  padding: 14px 12px;
+  border: 1px solid #ccc;
+  background-color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.arrow-icon {
+  margin-left: 8px;
+}
+
+.dropdown-list {
+  position: absolute;
+  width: 100%;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  z-index: 10;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-item {
+  padding: 10px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f0f0f0;
+}
+
+.dropdown-item.selected {
+  background-color: #f0edff;
+  color: #5a3eff;
+  font-weight: bold;
 }

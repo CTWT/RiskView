@@ -1,101 +1,98 @@
-import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import React, { useState } from "react";
 import "../../../../styles/common/common.css";
 
-// Signup_VerificationCodePage: 이메일 인증번호 입력 및 확인 페이지
+// Signup_EmailInputComponent : 이메일 인증 페이지
 
 /*
-* 수업명 : 가비아 2회차
-* 이름 : 이주하
-* 작성자 : 이주하
-* 수정자 : 
-* 작성일 : 25.07.28
-* 파일명 : PG300004.tsx
-*/
+ * 수업명 : 가비아 2회차
+ * 이름 : 이주하
+ * 작성자 : 이주하
+ * 수정자 :
+ * 작성일 : 25.07.28
+ * 파일명 : PG300004.tsx
+ */
+
+interface PG300004Props {
+  onNext: (email: string) => void; // 이메일을 매개변수로 받도록 수정
+}
 
 /**
+ * 이메일 인증 시작 컴포넌트
+ * 사용자로부터 이메일 주소를 입력받고 유효성 검사를 수행한 후,
+ * 인증 메일 전송 단계로 진행
  * 
- * @returns 
+ * @param props - 컴포넌트 props
+ * @param props.onNext - 이메일 검증 완료 후 다음 단계로 진행하는 콜백 함수 (이메일 주소를 매개변수로 전달)
+ * @returns JSX.Element - 이메일 입력 폼과 유효성 검사가 포함된 UI 컴포넌트
  */
-const PG300004 : React.FC = () => {
 
-  // 이전 페이지에서 전달된 이메일 정보를 받기 위해 useLocation 사용
-  const location = useLocation();
-  // 인증 실패 메시지 상태
-  const [sendError, setSendError] = useState("");
-  // 입력된 인증번호 상태
-  const [verificationCode, setVerificationCode] = useState("");
-  // 이메일 값 추출, 기본값은 공백
-  const {email} = location.state || {email: ''};
+const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
+  // 사용자 입력 이메일 상태
+  const [email, setEmail] = useState("");
+  // 이메일 유효성 검사용 에러 메시지 상태
+  const [emailError, setEmailError] = useState("");
 
-  // 타이머 (3분)
-  const [timeLeft, setTimeLeft] = useState(180); 
-  // 타이머 만료 여부
-  const isExpired = timeLeft <= 0;
-
-  // 1초마다 타이머 감소
-  useEffect(() => {
-    if (isExpired) return;
-    const timer = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-
-  // 인증번호 검증 로직은 백엔드와 연동되어야 하며, 현재는 프론트에서 처리하지 않음.
-  // 추후 fetch 또는 axios 요청으로 검증 결과 받아올 예정.
-  const handleVerifyCode = () => {
-  // 임시 로직: 인증번호가 "123456"이 아니면 에러 표시
-  if (verificationCode !== "123456") {
-    setSendError("인증번호가 일치하지 않습니다.");
-  } else {
-    setSendError(""); // 에러 초기화
-    console.log("인증번호 확인 완료");
-    // TODO: 다음 페이지로 이동 로직
+  /**
+   * 이메일 주소 유효성 검사 함수
+   * 정규식을 사용하여 이메일 형식의 유효성을 확인
+   *
+   * @param email - 검사할 이메일 주소 문자열
+   * @returns boolean - 유효한 이메일 형식이면 true, 아니면 false
+   */
+  const validateEmail = (email: string): boolean => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
   };
-  }
 
+  /**
+   * 인증 메일 전송 버튼 클릭 핸들러
+   * 입력된 이메일의 유효성을 검사하고, 통과하면 다음 단계로 진행
+   * 실패 시 오류 메시지를 표시
+   */
+  const handleSendEmail = () => {
+    const trimmedEmail = email.trim(); // 앞뒤 공백 제거
 
-  return(
-    <div className="authCotainer">
-      <div className="authHeader">
+    // 이메일 입력 여부 확인
+    if (!trimmedEmail) {
+      setEmailError("이메일을 입력해주세요.");
+    } else if (!validateEmail(trimmedEmail)) {
+      setEmailError("유효한 이메일 주소를 입력해주세요.");
+    } else {
+      setEmailError("");
+      // TODO: 백엔드 API를 통한 실제 인증 메일 전송 구현 예정
+      onNext(trimmedEmail); // 이메일을 부모 컴포넌트에 전달
+    }
+  };
+
+  return (
+    <div className="authWrapper">
+      <div className="authContainer">
+        {/* 서비스 로고 및 제목 */}
         <h1 className="authlogo">Risk-View</h1>
         <p className="authSubtitle">Team. Debugging Monster</p>
-        <p className="authwelcome">이메일 인증번호 입력</p>
-        <p className="emailInfo">{email}으로 메일이 전송되었습니다.</p>
 
-        
+        {/* 안내 메시지 */}
+        <p className="authwelcome">이메일 인증부터 시작해보세요</p>
+
+        {/* 이메일 입력 필드 */}
+        <div className="authFormRow">
+          <input
+            className="authInput"
+            type="email"
+            placeholder="이메일"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
-      <div className="authInputWrapper">
-        <input
-          className="authCodeInput"
-          type="text"
-          placeholder="인증번호"
-          value={verificationCode}
-          onChange={(e) => setVerificationCode(e.target.value)}
-          disabled={isExpired}
-        />
-        {!isExpired && ( 
-          <span className="authTimerInside">
-            {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-          </span>
-        )}
+
+        {/* 이메일 유효성 검사 오류 메시지 표시 */}
+        {emailError && <p className="authError">{emailError}</p>}
+
+        {/* 인증 메일 전송 버튼 */}
+        <button className="authButton" onClick={handleSendEmail}>
+          인증 메일 전송
+        </button>
       </div>
-        {sendError && <p className="authError">{sendError}</p>}
-        
-        {isExpired && (
-          <div className="resendWrapper">
-            {/* 
-              TODO: 추후 실제 인증 메일 재발송 기능을 백엔드와 연동해야 함.
-              현재는 단순 페이지 새로고침만 수행함. 
-            */}
-            <button className="authResendButton" onClick={() => window.location.reload()}>
-              인증 메일 다시 보내기
-            </button>
-          </div>
-        )}
-        <button className="authButton" onClick={handleVerifyCode} disabled={isExpired}>다음</button>
     </div>
   );
 };

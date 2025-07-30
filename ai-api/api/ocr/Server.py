@@ -5,11 +5,21 @@ import os
 import shutil
 import json
 import re
+from dataclasses import dataclass, asdict
 
 # 외부 함수 임포트
 from function.PDFFunction import convertPDFtoJPG
 from function.OCRFunction import runOCR , ocrMapping
-from function.APIFunction import convertToJSON
+from function.MapFunction import getMapInfo
+
+#  수업명 : 가비아 2회차
+#  이름 : 김관호
+#  작성자 : 김관호
+#  수정자 : 
+#  작성일 : 25.07.21
+#  파일명 : Server.py
+
+# FastAPI 서버 가동 파일
 
 app = FastAPI()
 
@@ -51,14 +61,21 @@ async def process_file(file: UploadFile = File(...)):
 
     # OCR 실행
     ocr_list = runOCR(image_path)
-    joined_list = (''.join(ocr_list))
-
-    cleaned = re.sub(r"\s+", "", joined_list)
-    print(cleaned)
-
+    
+    # ocr결과물 leaseContract 인스턴스에 매핑
     outputContract = ocrMapping(ocr_list)
-    #print(outputContract)
-    json_str = convertToJSON(outputContract)
 
+    # 네이버 맵 API 데이터 추출 후 mapInfo 인스턴스에 매핑
+    mapInfo = getMapInfo(outputContract.location)
 
-    return JSONResponse(content=json.loads(json_str))
+    # 인스턴스 -> 딕셔너리
+    contract_dict = asdict(outputContract) if outputContract is not None else None
+    mapinfo_dict = asdict(mapInfo) if mapInfo is not None else None
+
+    response_dict = {
+        "leaseContract": contract_dict,
+        "mapInfo": mapinfo_dict
+    }
+
+    response_json = json.dumps(response_dict, ensure_ascii=False, default=str)
+    return JSONResponse(content=json.loads(response_json))

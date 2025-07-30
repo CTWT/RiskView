@@ -3,6 +3,7 @@ from data.LeaseContract import LeaseContract
 from dotenv import load_dotenv
 from datetime import date
 import requests
+from dataclasses import asdict, is_dataclass
 import uuid
 import time
 import base64
@@ -23,8 +24,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 
 dotenv_path = os.path.join(os.path.dirname(__file__), '..' , '.env')
 load_dotenv(dotenv_path)
-secret_key = os.getenv('secret_key')
-api_url = os.getenv('api_url')
+ocr_secret_key = os.getenv('ocr_secret_key')
+ocr_api_url = os.getenv('ocr_api_url')
 
 
 # @Param imagePath JPG파일에 대해 OCR 실행
@@ -45,10 +46,10 @@ def runOCR(imagePath: str) -> list[str]:
 
     headers = {
         'Content-Type': 'application/json',
-        'X-OCR-SECRET': secret_key
+        'X-OCR-SECRET': ocr_secret_key
     }
 
-    response = requests.post(api_url, headers=headers, data=json.dumps(payload))
+    response = requests.post(ocr_api_url, headers=headers, data=json.dumps(payload))
 
     if response.status_code == 200:
         result = response.json()
@@ -86,8 +87,8 @@ def search_and_cut(prefix: str, suffix: str, text: str) -> tuple[str, str]:
 def ocrMapping(ocrList: list[str]) -> LeaseContract:
     leaseContract = LeaseContract()
 
+    #OCR 리스트 모두 스트링으로 합치고 공백제거
     joined_list = (''.join(ocrList))
-
     text = re.sub(r"\s+", "", joined_list)
 
     # 임대 유형(전세:JEONSE, 월세:MONTHLY)
@@ -334,3 +335,12 @@ def ocrMapping(ocrList: list[str]) -> LeaseContract:
         leaseContract.realtorAgentSignature2 = realtorAgentSignature2
 
     return leaseContract
+
+# @Param contract 계약서 데이터
+# LeaseContract를 JSON으로 바꿔줌
+def convertToJSON(object)->str:
+    if object is None:
+        raise ValueError("contract 값이 None입니다.")
+    if not is_dataclass(object):
+        raise TypeError("convertToJSON()는 dataclass 인스턴스만 변환할 수 있습니다.")
+    return json.dumps(asdict(object), ensure_ascii=False, default=str)

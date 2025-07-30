@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.LeaseContract;
+import realty.domain.dto.OCRResponse;
 import realty.service.ContractService;
 
 /*
@@ -80,12 +80,16 @@ public class ContractController {
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         String fastApiUrl = "http://localhost:8000/ocr"; // FastAPI POST endpoint
-        ResponseEntity<LeaseContract> response = restTemplate.postForEntity(fastApiUrl, requestEntity,
-                LeaseContract.class);
+        ResponseEntity<OCRResponse> response = restTemplate.postForEntity(fastApiUrl, requestEntity,
+                OCRResponse.class);
 
         // 3. 결과 저장
-        LeaseContract result = response.getBody();
-        model.addAttribute("contract", result);
+        OCRResponse result = response.getBody();
+
+        if(result != null){
+            model.addAttribute("contract", result.getLeaseContract());
+            model.addAttribute("mapInfo", result.getMapInfo());
+        }
 
         return "ocr/OCRResult";
     }

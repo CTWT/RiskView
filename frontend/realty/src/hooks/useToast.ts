@@ -1,4 +1,18 @@
-// src/hooks/useToast.ts (수정)
+// src/hooks/useToast.ts
+
+/**
+ * @file useToast.ts
+ * @description 토스트 메시지를 작동하기 위해 만든 커스텀 훅 입니다
+ */
+
+/*
+ * 생성자 : 문원주
+ * 생성일 : 25.07.30
+ * 파일명 : useToast.css
+ * 수정자 :
+ * 수정일 :
+ * 설명 : 토스트 메시지를 위한 커스텀 훅 useToast
+ */
 
 import { useState, useCallback /*, useEffect */ } from "react"; // useEffect 제거
 

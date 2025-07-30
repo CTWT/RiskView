@@ -1,3 +1,17 @@
+/**
+ * @file components.css
+ * @description 컴포넌트들의 css를 담당하는 css 파일 입니다
+ */
+
+/*
+ * 생성자 : 문원주
+ * 생성일 : 25.07.30
+ * 파일명 : components.css
+ * 수정자 :
+ * 수정일 :
+ * 설명 : 컴포넌트 css 담당 파일
+ */
+
 /* Toast - 토스트 메시지 담당 스타일*/
 
 .toast-container {

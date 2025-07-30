@@ -1,5 +1,23 @@
 // src/pages/analysis/PG100003.tsx
 
+/**
+ * @file PG100003.tsx
+ * @description 계약서 분석의 OCR추출 이후 사용자가 검증하는 페이지 입니다
+ * 실제 계약서에서 OCR로 단어들을 추출하고 사용자가 직접 추출된 단어들을 보면서 누락되거나 틀린 부분을 집고
+ * 수정하며 에러를 고치고
+ * OCR에서 나온 지역에 맞춰서 지도 API를 띄워 실거래가가 어느 지역을 기준으로 데이터화 하였는지
+ * 보여주는 페이지 입니다
+ */
+
+/*
+ * 생성자 : 문원주
+ * 생성일 : 25.07.30
+ * 파일명 : PG100003.tsx
+ * 수정자 :
+ * 수정일 :
+ * 설명 : 계약서 분석 중 OCR 추출한 이후 사용자가 보고 AI 추출을 하기 전 검증하는 페이지 입니다
+ */
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // 내부에서 다른 페이지로 이동할 경우 여전히 필요할 수 있음
 import "../../styles/common/common.css"; // common.css 경로 확인

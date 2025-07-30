@@ -19,8 +19,8 @@ import React, { useState, useRef, useCallback } from "react";
 import "../../styles/common/common.css";
 import uploadIconImage from "../../assets/images/upload-img.png"; // 기본 업로드 아이콘 이미지 경로 확인
 import useToast from "../../hooks/useToast"; // useToast 훅 임포트
-import Toast from "../../components/Toast"; // Toast 컴포넌트 임포트
-import OcrProgressModal from "../../components/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
+import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
+import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
 
 // PG100001로부터 받을 props 정의
 interface PG100002Props {

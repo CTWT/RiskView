@@ -422,24 +422,124 @@
   margin-top: 20px;
 }
 
-/* 반응형 디자인 (선택 사항이지만 모바일/태블릿 고려 시 필수) */
-@media (max-width: 768px) {
-  .an03-content-wrapper {
-    flex-direction: column; /* 작은 화면에서는 수직으로 쌓이도록 */
-  }
+/* PG100004 - 계약서 분석 로딩페이지 담당 스타일*/
+.an04-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 중앙 정렬 */
+  gap: 25px;
+}
 
-  .an03-pane {
-    min-width: unset; /* 최소 너비 제한 해제 */
-  }
+/* 헤더 영역 (an02-subtitle, an02-title, an02-description은 위 common에 정의되어 있으므로 여기서는 클래스만 사용) */
+.an04-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
 
-  .an03-container {
-    padding: 20px;
-  }
+/* 로딩 카드 스타일 */
+.an04-loading-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 100%;
+  max-width: 600px; /* 로딩 카드 최대 너비 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
 
-  .an03-actions {
-    flex-direction: column;
-    gap: 15px;
+/* 스피너 영역 */
+.an04-spinner-wrapper {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+/* CSS 애니메이션 스피너 */
+.an04-spinner {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #6a4ffc;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 메인 메시지 */
+.an04-main-message {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+/* 서브 메시지 */
+.an04-sub-message {
+  font-size: 1.1em;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+/* 분석 단계 목록 */
+.an04-steps-list {
+  width: 90%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.an04-step-item {
+  font-size: 1.05em;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 0.3s ease;
+}
+
+.an04-step-item.an04-step-completed {
+  color: #333;
+  font-weight: 500;
+}
+
+.an04-check-icon {
+  color: #008000;
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.an04-pending-icon {
+  width: 1.3em;
+  height: 1.3em;
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  display: inline-block;
+  box-sizing: border-box;
 }
 
 /*  ------------------------------------------------------------ */
@@ -452,7 +552,6 @@
  * 수정일 :
  * 설명 : 공용 css 담당 파일
  */
-
 
 /* Header.tsx -> css */
 
@@ -517,7 +616,6 @@
   font-size: 14px;
 }
 
-
 /* PG3.tsx -> css */
 
 .authContainer {
@@ -555,7 +653,7 @@
 .authButton {
   width: 330px;
   padding: 14px;
-  background-color: #A290FF;
+  background-color: #a290ff;
   color: white;
   border: none;
   border-radius: 6px;
@@ -613,7 +711,7 @@
   margin-left: 6px;
   color: #25252b;
   text-decoration: none;
-  font-weight: bold
+  font-weight: bold;
 }
 
 .authFindLink:hover,
@@ -721,7 +819,6 @@
   pointer-events: none;
 }
 
-
 .cardContainer {
   display: flex;
   justify-content: center;
@@ -756,7 +853,7 @@
 .signupButton {
   width: 180px;
   padding: 14px;
-  background-color: #A290FF;
+  background-color: #a290ff;
   color: white;
   border: none;
   border-radius: 6px;
@@ -764,7 +861,6 @@
   cursor: pointer;
   margin-top: 40px;
 }
-
 
 .authResendButton {
   width: 330px;

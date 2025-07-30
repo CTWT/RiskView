@@ -6,7 +6,6 @@ from pdf2image import exceptions
 from dotenv import load_dotenv
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 
 
 #  수업명 : 가비아 2회차
@@ -17,9 +16,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 #  파일명 : PDFFunction.py
 
 # OCR할 때 필요한 PDF 처리 관련 함수들을 모아 놓은 파일
-
-dotenv_path = os.path.join(os.path.dirname(__file__), '..' , '.env')
-load_dotenv(dotenv_path)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
+load_dotenv()
 poppler_path = os.getenv('poppler_path')
 
 #@Param pdf_path pdf    파일경로

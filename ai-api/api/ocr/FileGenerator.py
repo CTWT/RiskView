@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 #  작성자 : 김관호
 #  수정자 : 
 #  작성일 : 25.07.21
-#  파일명 : main.py
+#  파일명 : FileGenerator.py
 
 # 테스트케이스 생성기
 

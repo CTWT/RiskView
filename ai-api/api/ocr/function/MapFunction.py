@@ -15,8 +15,7 @@ import json
 # 네이버 맵 API(geocoding) 을 처리해주는 파일
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
-dotenv_path = os.path.join(os.path.dirname(__file__), '..' , '.env')
-load_dotenv(dotenv_path)
+load_dotenv()
 naver_map_client_id = os.getenv('naver_map_client_id')
 naver_map_client_secret = os.getenv('naver_map_client_secret')
 

@@ -11,7 +11,6 @@ import json
 import os
 import sys
 import re
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -22,8 +21,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) 
 
 # OCR을 구동시키고 데이터 정제하는 파일
 
-dotenv_path = os.path.join(os.path.dirname(__file__), '..' , '.env')
-load_dotenv(dotenv_path)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
+load_dotenv()
 ocr_secret_key = os.getenv('ocr_secret_key')
 ocr_api_url = os.getenv('ocr_api_url')
 

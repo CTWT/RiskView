@@ -32,7 +32,7 @@ public class NewsArticlesController {
      * @return 부동산 뉴스 페이지
      */
     @GetMapping("")
-    public String getNewsArticles(@RequestParam(defaultValue = "1") int pageNum, @RequestParam(defaultValue = "10") int size, Model model) {
+    public String getNewsArticles(@RequestParam(name = "pageNum", defaultValue = "1") int pageNum, @RequestParam(name = "size", defaultValue = "10") int size, Model model) {
         // 기사 목록과 페이징 정보를 담은 객체인 NewsArticlesPage 객체를 받아옴
         NewsArticlesPage articlesData = newsArticlesService.getNewsPages(pageNum, size);
         

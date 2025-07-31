@@ -28,10 +28,10 @@ const Header: React.FC = () => {
         </Link>
       </div>
       <nav className="headerNav">
-        <Link to="/serviceIntro">서비스 소개</Link>
+        <Link to="/PG600001">서비스 소개</Link>
         <Link to="/PG100001">계약서 분석</Link>
-        <Link to="/news">부동산 뉴스</Link>
-        <Link to="/community">커뮤니티</Link>
+        <Link to="/PG400001">부동산 뉴스</Link>
+        <Link to="/PG500001">커뮤니티</Link>
       </nav>
       <div className="headerAuth">
         {/* 로그인은 PG300001로 (기본 authStep=0) */}

@@ -542,6 +542,113 @@
   box-sizing: border-box;
 }
 
+/* PG600001 - 서비스 소개 담당 스타일*/
+
+.in01-container {
+  padding: 50px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: "Segoe UI", "Malgun Gothic", "맑은 고딕", sans-serif;
+}
+
+/* 좌우 패널 컨테이너 */
+.in01-content-wrapper {
+  display: flex;
+  gap: 40px;
+  /* ⭐ flex-wrap: wrap; 을 제거하여 항상 한 줄에 배치 ⭐ */
+  align-items: flex-start;
+  /* ⭐ 패널이 찌그러지지 않도록 최소 너비 설정 ⭐ */
+  min-width: 700px;
+  overflow-x: auto; /* 내용이 넘칠 경우 스크롤바 생성 */
+}
+
+/* 좌측 패널: 기능 목록 */
+.in01-left-panel {
+  /* flex: 1 1 350px; 을 삭제하고, 콘텐츠에 맞춰 너비를 유지하도록 설정 */
+  display: flex;
+  flex-wrap: wrap; /* ⭐ 버튼이 넘칠 때 다음 줄로 넘어가도록 설정 ⭐ */
+  gap: 15px;
+  justify-content: center; /* ⭐ 버튼들을 중앙 정렬 ⭐ */
+}
+
+.in01-feature-list {
+  display: grid;
+  /* ⭐ 작은 화면에서도 2열 레이아웃을 유지하도록 minmax 설정 ⭐ */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.in01-feature-button {
+  width: 250px;
+  background-color: #fff;
+  border: 1px solid #7b68ee;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: left;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  flex-direction: row;
+  height: auto;
+}
+
+.in01-feature-button:hover {
+  border-color: #7b68ee;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.1);
+}
+
+.in01-feature-button-active {
+  background-color: #e6f2ff;
+  border-color: #7b68ee;
+  box-shadow: 0 4px 10px rgba(74, 144, 226, 0.2);
+}
+
+/* 아이콘 wrapper */
+.in01-feature-icon-wrapper {
+  flex-shrink: 0;
+  color: #7b68ee;
+  padding-top: 5px;
+}
+
+/* 텍스트 wrapper */
+.in01-feature-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.in01-feature-title {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+/* 부제목 스타일 */
+.in01-feature-subtitle {
+  font-size: 0.9em;
+  color: #888;
+  line-height: 1.4;
+}
+
+/* 우측 패널 공통 스타일  */
+.in01-right-panel {
+  flex: 2 1 600px;
+  min-width: 400px; /* 패널이 찌그러지는 것을 방지 */
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5em;
+  color: #ccc;
+  min-height: 578px;
+}
+
 /*  ------------------------------------------------------------ */
 
 /*

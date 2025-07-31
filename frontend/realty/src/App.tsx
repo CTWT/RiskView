@@ -3,6 +3,7 @@ import Layout from "./components/layout/Layout";
 import PG200001 from "./pages/home/PG200001";
 import PG100001 from "./pages/analysis/PG100001";
 import PG300001 from "./pages/auth/components/authentication/PG300001";
+import PG600001 from "./pages/serviceIntro/PG600001";
 import "./App.css";
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<PG200001 />} /> {/* 메인페이지 */}
                 <Route path="/PG100001" element={<PG100001 />} /> {/* 계약서분석 페이지 */}
+                <Route path="/PG600001" element={<PG600001 />} /> {/* 서비스 소개 페이지 */}
               </Routes>
             </Layout>
           }

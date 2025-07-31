@@ -27,8 +27,7 @@ public class UserDTO {
     private String userNickname;
     private String email;
     private String preferredLanguage;
-    // 비밀번호 찾기에서 새 비밀번호 지정할 때 사용
-    private String resetPassword;
-    // 비밀번호 찾기에서 새 비밀번호 확인할 때 사용
-    private String confirmResetPassword; 
+    private String currentPassword;
+    private String newPassword;
+    private String confirmNewPassword; 
 }

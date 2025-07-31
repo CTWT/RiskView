@@ -75,15 +75,15 @@
 
     <form th:action="@{/reset_pass}" th:method="post" th:object="${userDTO}">
         <div class="form-group">
-            <label for="resetPassword">새 비밀번호:</label>
+            <label for="newPassword">새 비밀번호:</label>
             <input type="password"
-                    th:field="*{resetPassword}"
+                    th:field="*{newPassword}"
                     required />
         </div>
         <div class="form-group">
-            <label for="confirmResetPassword">비밀번호 확인:</label>
+            <label for="confirmNewPassword">비밀번호 확인:</label>
             <input type="password"
-                    th:field="*{confirmResetPassword}"
+                    th:field="*{confirmNewPassword}"
                     required />
         </div>
         <div class="form-group">

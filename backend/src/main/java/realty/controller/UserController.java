@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 
+
 /*
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
@@ -159,6 +160,97 @@ public class UserController {
             model.addAttribute("error", "회원가입 실패: " + e.getMessage());
             // 회원가입 실패 시 다시 회원가입 화면으로 이동
             return "user/register";
+        }
+    }
+
+    /**
+     * 마이페이지 화면으로 이동
+     * @param session
+     * @param model
+     * @return
+     */
+    @GetMapping("/mypage")
+    public String getMyPage(HttpSession session, Model model) {
+        // 세션에서 로그인된 사용자 가져오기
+        User loggedInUser = (User) session.getAttribute("user");
+
+        // 로그인 안 한 경우
+        if (loggedInUser == null) {
+            // 로그인 페이지로 이동
+            return "redirect:/login";
+        }
+
+        // 데이터베이스에서 유저 정보 조회
+        User userFromDb = userService.findByUserId(loggedInUser.getUserId());
+
+        if (userFromDb == null) {
+            model.addAttribute("error", "사용자 정보를 불러올 수 없습니다.");
+            return "index";
+        }
+
+        // User → UserDTO 변환
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(userFromDb.getUserId());
+        userDTO.setUserNickname(userFromDb.getUserNickname());
+        userDTO.setEmail(userFromDb.getEmail());
+        userDTO.setName(userFromDb.getName());
+        userDTO.setPreferredLanguage(userFromDb.getPreferredLanguage());
+        userDTO.setCurrentPassword("");
+        userDTO.setNewPassword("");
+        userDTO.setConfirmNewPassword("");
+
+        // 모델 객체에 담아 뷰로 전달
+        model.addAttribute("userDTO", userDTO);
+        // 마이페이지 화면으로 이동
+        return "user/mypage";
+    }
+
+    /**
+     * 마이페이지 정보 수정 처리
+     * @param userDTO
+     * @param session
+     * @param model
+     * @return
+     */
+    @PostMapping("/mypage")
+    public String postMyPage(@ModelAttribute UserDTO userDTO, HttpSession session, Model model) {
+        // 세션에서 로그인된 사용자 가져오기
+        User loggedInUser = (User) session.getAttribute("user");
+
+        // 로그인 안 한 경우
+        if (loggedInUser == null) {
+            // 로그인 페이지로 이동
+            return "redirect:/login";
+        }
+
+        try {
+            // 사용자 정보 수정 처리
+            userService.updateUserInfo(loggedInUser.getUserId(), userDTO);
+            // 세션의 사용자 정보도 업데이트
+            User updatedUser = userService.findByUserId(loggedInUser.getUserId());
+            session.setAttribute("user", updatedUser);
+            // 성공 메시지 추가
+            model.addAttribute("success", "정보가 성공적으로 수정되었습니다.");
+            // 마이페이지로 돌아가기
+            return "user/mypage";
+        } catch (UserNotFoundException e) {
+            model.addAttribute("error", e.getMessage());
+            // 입력값 유지
+            model.addAttribute("userDTO", userDTO);
+            // 다시 마이페이지로 돌아가기
+            return "user/mypage";
+        } catch (InvalidCredentialsException e) {
+            model.addAttribute("error", e.getMessage());
+            // 입력값 유지
+            model.addAttribute("userDTO", userDTO);
+            // 다시 마이페이지로 돌아가기
+            return "user/mypage";
+        } catch (Exception e) {
+            model.addAttribute("error", "정보 수정 중 오류가 발생했습니다: " + e.getMessage());
+            // 입력값 유지
+            model.addAttribute("userDTO", userDTO);
+            // 다시 마이페이지로 돌아가기
+            return "user/mypage";
         }
     }
 
@@ -344,13 +436,13 @@ public class UserController {
                 throw new RuntimeException("올바르지 않은 접근입니다.");
             }
             // 비밀번호와 비밀번호 확인 입력이 일치하지 않으면
-            if (!userDTO.getResetPassword().equals(userDTO.getConfirmResetPassword())) {
+            if (!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())) {
                 model.addAttribute("error", "비밀번호가 일치하지 않습니다.");
                 model.addAttribute("userDTO", userDTO);
                 return "user/reset_pass";
             }
             // 비밀번호 재설정 처리
-            userService.resetPass((String) session.getAttribute("reset_pass_user_id"), userDTO.getResetPassword());
+            userService.resetPassword((String) session.getAttribute("reset_pass_user_id"), userDTO.getNewPassword());
             // 세션에서 사용자 ID 제거
             session.removeAttribute("reset_pass_user_id");
             // 성공 메시지를 모델에 추가

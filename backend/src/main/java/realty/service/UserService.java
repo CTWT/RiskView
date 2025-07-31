@@ -122,6 +122,67 @@ public class UserService {
     }
 
     /**
+     * 사용자 정보 수정
+     * @param userId 사용자 ID
+     * @param userDTO 사용자 정보
+     * @throws UserNotFoundException 사용자를 찾을 수 없을 때
+     * @throws InvalidCredentialsException 비밀번호가 일치하지 않을 때
+     */
+    @Transactional
+    public void updateUserInfo(String userId, UserDTO userDTO) {
+        // 데이터베이스에서 사용자 ID로 해당되는 사용자 정보 찾아옴
+        User user = userRepository.findByUserId(userId);
+        
+        // 사용자를 찾을 수 없으면
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        // 새 비밀번호를 입력한 상태라면
+        if (userDTO.getNewPassword() != null && !userDTO.getNewPassword().trim().isEmpty()) {
+            // 현재 비밀번호를 입력하지 않으면
+            if (userDTO.getCurrentPassword() == null || userDTO.getCurrentPassword().trim().isEmpty()) {
+                throw new InvalidCredentialsException("현재 비밀번호를 입력해주세요.");
+            }
+            // 현재 비밀번호가 일치하지 않으면
+            if (!passwordEncoder.matches(userDTO.getCurrentPassword(), user.getPassword())) {
+                throw new InvalidCredentialsException("현재 비밀번호가 일치하지 않습니다.");
+            }
+
+            // 새 비밀번호와 비밀번호 확인이 일치하지 않으면
+            if (!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())) {
+                throw new InvalidCredentialsException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
+            }
+
+            // 새 비밀번호 저장
+            user.setPassword(passwordEncoder.encode(userDTO.getNewPassword()));
+        }
+        // 이름이 입력된 상태라면
+        if (userDTO.getName() != null && !userDTO.getName().trim().isEmpty()) {
+            // 이름 저장
+            user.setName(userDTO.getName().trim());
+        }
+        // 닉네임이 입력된 상태라면
+        if (userDTO.getUserNickname() != null && !userDTO.getUserNickname().trim().isEmpty()) {
+            // 닉네임 저장
+            user.setUserNickname(userDTO.getUserNickname().trim());
+        }
+        // 이메일이 입력된 상태라면
+        if (userDTO.getEmail() != null && !userDTO.getEmail().trim().isEmpty()) {
+            // 이메일 저장
+            user.setEmail(userDTO.getEmail().trim());
+        }
+        // 언어가 입력된 상태라면
+        if (userDTO.getPreferredLanguage() != null && !userDTO.getPreferredLanguage().trim().isEmpty()) {
+            // 언어 저장
+            user.setPreferredLanguage(userDTO.getPreferredLanguage());
+        }
+
+        // 데이터베이스에 변경사항 저장
+        userRepository.save(user);
+    }
+
+    /**
      * 회원탈퇴
      * @param userId 사용자 ID
      */
@@ -198,11 +259,11 @@ public class UserService {
     /**
      * 패스워드 재설정
      * @param userId 사용자 ID
-     * @param resetPassword 재설정할 비밀번호
+     * @param newPassword 재설정할 비밀번호
      * @throws UserNotFoundException 사용자 ID를 찾을 수 없을 때
      */
     @Transactional
-    public void resetPass(String userId, String resetPassword) {
+    public void resetPassword(String userId, String newPassword) {
 
         // 데이터베이스에서 사용자 ID로 사용자 찾아옴
         User user = userRepository.findByUserId(userId);
@@ -213,7 +274,7 @@ public class UserService {
         }
         
         // 사용자 비밀번호 업데이트
-        user.setPassword(passwordEncoder.encode(resetPassword));
+        user.setPassword(passwordEncoder.encode(newPassword));
         
         // 데이터베이스에 반영
         userRepository.save(user);

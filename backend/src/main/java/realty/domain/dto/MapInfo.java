@@ -24,20 +24,20 @@ public class MapInfo {
     private String roadAddress = "";       // 도로명 주소
     private String jibunAddress = "";      // 지번 주소
     private String englishAddress = "";    // 영어 주소
-    private String x = "";                  // X 좌표(경도)
-    private String y = "";                  // Y 좌표(위도)
-    private String distance = "";           // 중심 좌표로부터의 거리(m)
+    private String x = "";                 // X 좌표(경도)
+    private String y = "";                 // Y 좌표(위도)
+    private String distance = "";          // 중심 좌표로부터의 거리(m)
 
     // addressElements
-    private String sido = "";               // 시/도
-    private String sigugun = "";            // 시/구/군
-    private String dongmyun = "";           // 동/면
-    private String ri = "";                 // 리
-    private String roadName = "";           // 도로명
-    private String buildingNumber = "";     // 건물 번호
-    private String buildingName = "";       // 건물 이름
-    private String landNumber = "";         // 번지 (Python은 LandNumber였는데 변수명 통일 위해 소문자로)
-    private String postalCode = "";         // 우편번호
+    private String sido = "";              // 시/도
+    private String sigugun = "";           // 시/구/군
+    private String dongmyun = "";          // 동/면
+    private String ri = "";                // 리
+    private String roadName = "";          // 도로명
+    private String buildingNumber = "";    // 건물 번호
+    private String buildingName = "";      // 건물 이름
+    private String landNumber = "";        // 번지 (Python은 LandNumber였는데 변수명 통일 위해 소문자로)
+    private String postalCode = "";        // 우편번호
 
     @Override
     public String toString() {

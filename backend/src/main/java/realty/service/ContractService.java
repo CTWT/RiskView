@@ -1,6 +1,12 @@
 package realty.service;
 
-import realty.domain.dto.LeaseContract;
+import java.io.File;
+import java.io.IOException;
+
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.multipart.MultipartFile;
+
+import realty.domain.dto.ContractDTO;
 
 /*
  * 수업명 : 가비아 2회차
@@ -16,7 +22,9 @@ import realty.domain.dto.LeaseContract;
   */
 
 public interface ContractService {
-    public LeaseContract findByDocumentcode(String documentcode);
-    public void save(LeaseContract leaseContract);
+    public ContractDTO.StructuredContractDataDTO findByDocumentcode(String documentcode);
+    public void save(ContractDTO.StructuredContractDataDTO leaseContract);
+    public MultiValueMap<String, Object> getHttpBodyFromFile(File file);
+    public File getFileFromMultipartFile(MultipartFile file) throws IOException;
     
 }

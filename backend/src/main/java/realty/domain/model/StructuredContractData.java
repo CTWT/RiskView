@@ -1,6 +1,8 @@
 package realty.domain.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,10 +27,12 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "structured_contract_data")
+@Builder
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
+@AllArgsConstructor
 public class StructuredContractData implements Serializable {
 
     @Id

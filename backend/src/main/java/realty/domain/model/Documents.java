@@ -19,13 +19,22 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 김관호
+ * 작성자 : 김관호
+ * 수정자 : 
+ * 작성일 : 25.07.31
+ * 파일명 : Documents.java
+ */
+
 @Entity
 @Table(name = "documents")
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @ToString
 public class Documents {
 

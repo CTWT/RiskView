@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass, asdict
 
 # 외부 함수 임포트
-from function.PDFFunction import convertPDFtoJPG
+from function.PDFFunction import convertPDFBytesToImageBytes
 from function.OCRFunction import runOCR , ocrMapping
 from function.MapFunction import getMapInfo
 
@@ -35,32 +35,19 @@ app.add_middleware(
 # 파일업로드 요청을 받는 post 함수
 @app.post("/ocr")
 async def process_file(file: UploadFile = File(...)):
-    CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-    output_dir = os.path.join(CURRENT_DIR , "output")
+    file_bytes = await file.read()
 
-    output_path = os.path.join(output_dir, file.filename)
-    output_path = os.path.abspath(output_path)
-
-    # 업로드된 파일 저장
-    with open(output_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    image_path = "None"
-
-    # PDF인 경우: JPG로 변환
+    # PDF 처리
     if file.content_type == "application/pdf":
-        image_path = output_path.replace(".pdf", ".jpg")
-        convertPDFtoJPG(output_path, image_path)
+        image_bytes = convertPDFBytesToImageBytes(file_bytes)
+        ocr_list = runOCR(image_bytes)
 
-    # 이미지(jpg, png 등)인 경우: 그대로 사용
+    # 이미지 처리
     elif file.content_type in ["image/jpeg", "image/jpg", "image/png"]:
-        image_path = output_path
+        ocr_list = runOCR(file_bytes)
 
     else:
         raise HTTPException(status_code=400, detail="지원하지 않는 파일 형식입니다.")
-
-    # OCR 실행
-    ocr_list = runOCR(image_path)
     
     # ocr결과물 leaseContract 인스턴스에 매핑
     outputContract = ocrMapping(ocr_list)
@@ -73,7 +60,7 @@ async def process_file(file: UploadFile = File(...)):
     mapinfo_dict = asdict(mapInfo) if mapInfo is not None else None
 
     response_dict = {
-        "leaseContract": contract_dict,
+        "structuredContractDataDTO": contract_dict,
         "mapInfo": mapinfo_dict
     }
 

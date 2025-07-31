@@ -3,6 +3,8 @@ from data.LeaseContract import LeaseContract
 from tools.StringHelper import *
 from pdf2image import convert_from_path  # PDF를 이미지(JPG)로 변환하는 함수
 from pdf2image import exceptions
+from pdf2image import convert_from_bytes
+from io import BytesIO
 from dotenv import load_dotenv
 import os
 import sys
@@ -29,6 +31,16 @@ def convertPDFtoJPG(pdf_path:str, image_path:str):
     # 첫 번째 페이지만 JPG로 저장
     pages[0].save(image_path, 'JPEG')     # 첫 페이지를 JPG 형식으로 저장
     print(f'이미지 저장 완료: {image_path}')  # 변환 완료 메시지 출력
+
+def convertPDFBytesToImageBytes(pdf_bytes: bytes) -> bytes:
+    # PDF 페이지들을 이미지로 변환 (기본 첫 페이지만 사용)
+    images = convert_from_bytes(pdf_bytes, dpi=300)
+    image = images[0]
+
+    # PIL 이미지를 bytes로 저장
+    img_byte_arr = BytesIO()
+    image.save(img_byte_arr, format='JPEG')
+    return img_byte_arr.getvalue()
 
 #@Param pdf_path pdf    파일경로
 #PDF가 유효한지 확인해주는 함수

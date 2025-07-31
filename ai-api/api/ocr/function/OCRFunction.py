@@ -28,9 +28,12 @@ ocr_api_url = os.getenv('ocr_api_url')
 
 
 # @Param imagePath JPG파일에 대해 OCR 실행
-def runOCR(imagePath: str) -> list[str]:
-    with open(imagePath, 'rb') as f:
-        imageData = base64.b64encode(f.read()).decode()
+def runOCR(image: bytes) -> list[str]:
+    
+    if isinstance(image, bytes):
+        imageData = base64.b64encode(image).decode()
+    else:
+        raise ValueError("지원하지 않는 이미지 입력 형식입니다.")
 
     payload = {
         'version': 'V1',

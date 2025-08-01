@@ -1,5 +1,9 @@
 // src/pages/analysis/PG100004.tsx
 
+import React, { useState, useEffect } from "react";
+import "../../styles/common/common.css"; // ⭐ common.css만 임포트 ⭐
+import ProgressBar from "../../components/ui/ProgressBar"; // ProgressBar 컴포넌트 임포트 경로 확인 및 수정
+
 /**
  * @file PG100004.tsx
  * @description AI 분석의 결과가 오래걸리니 사용자 UX적으로 실제로 어느정도 작업이 되었다 라는걸 시각화
@@ -14,9 +18,6 @@
  * 수정일 :
  * 설명 : 계약서의 AI 분석 중 어느정도 진행되었나 진행도를 확인할 수 있는 로딩창 입니다.
  */
-import React, { useState, useEffect } from "react";
-import "../../styles/common/common.css"; // ⭐ common.css만 임포트 ⭐
-import ProgressBar from "../../components/ui/ProgressBar"; // ProgressBar 컴포넌트 임포트 경로 확인 및 수정
 
 interface PG100004Props {
   onAnalysisComplete?: () => void; // 모든 분석이 완료되면 호출될 콜백

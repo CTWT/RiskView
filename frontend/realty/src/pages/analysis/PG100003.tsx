@@ -1,5 +1,9 @@
 // src/pages/analysis/PG100003.tsx
 
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // 내부에서 다른 페이지로 이동할 경우 여전히 필요할 수 있음
+import "../../styles/common/common.css"; // common.css 경로 확인
+
 /**
  * @file PG100003.tsx
  * @description 계약서 분석의 OCR추출 이후 사용자가 검증하는 페이지 입니다
@@ -17,10 +21,6 @@
  * 수정일 :
  * 설명 : 계약서 분석 중 OCR 추출한 이후 사용자가 보고 AI 추출을 하기 전 검증하는 페이지 입니다
  */
-
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // 내부에서 다른 페이지로 이동할 경우 여전히 필요할 수 있음
-import "../../styles/common/common.css"; // common.css 경로 확인
 
 // ⭐ PG100001로부터 받을 props 인터페이스 정의 ⭐
 interface PG100003Props {

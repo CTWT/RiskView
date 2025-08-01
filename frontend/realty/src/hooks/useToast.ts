@@ -1,5 +1,7 @@
 // src/hooks/useToast.ts
 
+import { useState, useCallback } from "react";
+
 /**
  * @file useToast.ts
  * @description 토스트 메시지를 작동하기 위해 만든 커스텀 훅 입니다
@@ -13,8 +15,6 @@
  * 수정일 :
  * 설명 : 토스트 메시지를 위한 커스텀 훅 useToast
  */
-
-import { useState, useCallback /*, useEffect */ } from "react"; // useEffect 제거
 
 export type ToastType = "success" | "error" | "info";
 

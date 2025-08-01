@@ -1,5 +1,10 @@
 // src/pages/Home/PG200001.tsx
 
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import "../../styles/common/Common.css";
+import { LuScanLine } from "react-icons/lu"; // 아이콘 사용(npm install react-icons)
+
 /**
  * @file PG200001.tsx
  * @description 메인 페이지 컴포넌트입니다.
@@ -14,11 +19,6 @@
  * 수정일 :
  * 설명 : 메인 페이지 컴포넌트
  */
-
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import "../../styles/common/Common.css";
-import { LuScanLine } from "react-icons/lu"; // 아이콘 사용(npm install react-icons)
 
 const PG200001 = () => {
   const navigate = useNavigate();

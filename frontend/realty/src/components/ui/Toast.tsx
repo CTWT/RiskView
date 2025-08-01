@@ -1,5 +1,9 @@
 // src/components/ui/Toast.tsx
 
+import React from "react";
+import "../components.css";
+import type { ToastType } from "../../hooks/useToast"; // ⭐ 정확한 경로로 ToastType 임포트
+
 /**
  * @file Toast.tsx
  * @description 토스트 메시지(잠깐 나왔다 사라지는 메시지)를 위해 위치를 지정해둔 파일 입니다
@@ -13,10 +17,6 @@
  * 수정일 :
  * 설명 : 각 페이지에서 사용될 컴포넌트 중 하나인 토스트 메시지에 관련된 파일 입니다.
  */
-
-import React from "react";
-import "../components.css";
-import type { ToastType } from "../../hooks/useToast"; // ⭐ 정확한 경로로 ToastType 임포트
 
 interface ToastProps {
   message: string;

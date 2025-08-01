@@ -235,3 +235,50 @@
     to { transform: rotate(360deg); }
 }
 */
+
+/* Breadcrumb - 브레드 크램(바로가기) 담당 스타일*/
+.breadcrumb-container {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* 아이템 사이의 기본 간격 */
+  font-size: 0.95em;
+  color: #666;
+  margin-bottom: 20px; /* 아래쪽 콘텐츠와의 간격 */
+}
+
+.breadcrumb-item-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-separator {
+  color: #999;
+  font-weight: 300;
+  margin: 0 4px;
+}
+
+.breadcrumb-item {
+  text-decoration: none;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb-item:hover {
+  color: #333;
+}
+
+.breadcrumb-home-link {
+  display: flex;
+  align-items: center;
+  color: #333;
+}
+
+.breadcrumb-home-link:hover {
+  color: #7b68ee;
+}
+
+.breadcrumb-active {
+  color: #333;
+  font-weight: 600;
+  cursor: default; /* 마지막 아이템은 클릭 불가 */
+}

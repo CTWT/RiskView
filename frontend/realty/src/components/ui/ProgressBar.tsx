@@ -1,5 +1,8 @@
 // src/componets/ui/ProgressBar.tsx
 
+import React from "react";
+import "../components.css";
+
 /**
  * @file ProgressBar.tsx
  * @description 각 페이지에서 사용될 가장 기본적인 프로그래스바(진행도바) 입니다.
@@ -13,9 +16,6 @@
  * 수정일 :
  * 설명 : 각 페이지에서 사용될 컴포넌트 중 하나인 프로그래스바 입니다.
  */
-
-import React from "react";
-import "../components.css";
 
 interface ProgressBarProps {
   progress: number;

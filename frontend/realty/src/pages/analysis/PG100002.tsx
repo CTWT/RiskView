@@ -1,5 +1,12 @@
 // src/pages/analysis/PG100002.tsx
 
+import React, { useState, useRef, useCallback } from "react";
+import "../../styles/common/common.css";
+import uploadIconImage from "../../assets/images/upload-img.png"; // 기본 업로드 아이콘 이미지 경로 확인
+import useToast from "../../hooks/useToast"; // useToast 훅 임포트
+import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
+import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
+
 /**
  * @file PG100002.tsx
  * @description 계약서 분석 전 단계 (문서 업로드 및 촬영)를 담당하는 컴포넌트입니다.
@@ -15,12 +22,6 @@
  * 수정일 :
  * 설명 : 계약서 분석을 시작하기 전, 문서 업로드 및 준비 과정등을 담당하는 페이지입니다.
  */
-import React, { useState, useRef, useCallback } from "react";
-import "../../styles/common/common.css";
-import uploadIconImage from "../../assets/images/upload-img.png"; // 기본 업로드 아이콘 이미지 경로 확인
-import useToast from "../../hooks/useToast"; // useToast 훅 임포트
-import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
-import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
 
 // PG100001로부터 받을 props 정의
 interface PG100002Props {

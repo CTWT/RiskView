@@ -1,5 +1,8 @@
 // src/componets/ui/Modal.tsx
 
+import React from "react";
+import "../components.css";
+
 /**
  * @file Modal.tsx
  * @description 가장 상위 모달 창 생성에 관련된 파일 입니다
@@ -13,9 +16,6 @@
  * 수정일 :
  * 설명 : 모달 창을 총괄하는 파일 입니다.
  */
-
-import React from "react";
-import "../components.css";
 
 interface ModalProps {
   isOpen: boolean;

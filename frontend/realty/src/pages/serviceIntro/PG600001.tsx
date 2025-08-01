@@ -1,5 +1,8 @@
 // src/pages/serviceIntro/PG600001.tsx
 
+import React, { useState } from "react";
+import "../../styles/common/common.css"; // 공통 스타일 임포트
+
 /**
  * @file PG600001.tsx
  * @description 서비스 소개에 대한 페이지 입니다.
@@ -17,9 +20,6 @@
  * 수정일 :
  * 설명 : 서비스 소개를 총괄하는 페이지입니다.
  */
-
-import React, { useState } from "react";
-import "../../styles/common/common.css"; // 공통 스타일 임포트
 
 import {
   FaRegFileAlt,

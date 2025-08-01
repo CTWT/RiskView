@@ -1,5 +1,11 @@
 // src/pages/analysis/PG100001.tsx (Root Component)
 
+import React, { useState, useCallback } from "react";
+import PG100002 from "./PG100002"; // 계약서 분석 전
+import PG100003 from "./PG100003"; // OCR분석 후 화면
+import PG100004 from "./PG100004"; // 계약서 분석 중 로딩 화면
+import PG100005 from "./PG100005"; // 분석 결과 보고서 화면
+
 /**
  * @file PG100001.tsx
  * @description 계약서 분석 페이지의 총괄 컴포넌트입니다
@@ -15,12 +21,6 @@
  * 수정일 :
  * 설명 : 계약서 분석 페이지의 전체 흐름과 컴포넌트 통합등을 담당하는 파일입니다.
  */
-
-import React, { useState, useCallback } from "react";
-import PG100002 from "./PG100002"; // 계약서 분석 전
-import PG100003 from "./PG100003"; // OCR분석 후 화면
-import PG100004 from "./PG100004"; // 계약서 분석 중 로딩 화면
-import PG100005 from "./PG100005"; // 분석 결과 보고서 화면
 
 const PG100001: React.FC = () => {
   // 현재 분석 진행 단계를 나타내는 상태 (0: 분석 전, 1: 분석 중(OCR 결과 확인), 2: AI분석 중(로딩창), 3: 분석 완료 후 보고서)

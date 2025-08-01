@@ -1,16 +1,19 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import os
+import os, sys
 import shutil
 import json
 import re
 from dataclasses import dataclass, asdict
 
-# 외부 함수 임포트
-from function.PDFFunction import convertPDFBytesToImageBytes
-from function.OCRFunction import runOCR , ocrMapping
-from function.MapFunction import getMapInfo
+
+
+# 외부 함수 정상 import
+from ocr.function.PDFFunction import convertPDFBytesToImageBytes
+from ocr.function.OCRFunction import runOCR, ocrMapping
+from ocr.function.MapFunction import getMapInfo
+
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -21,19 +24,19 @@ from function.MapFunction import getMapInfo
 
 # FastAPI 서버 가동 파일
 
-app = FastAPI()
+# app = FastAPI()
 
 # CORS 허용 (필요 시 프론트 연결을 위해 사용)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 프론트 URL로 제한 가능
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=["*"],  # 프론트 URL로 제한 가능
+#     allow_credentials=True,
+#     allow_methods=["*"],
+#     allow_headers=["*"],
+# )
 
 # 파일업로드 요청을 받는 post 함수
-@app.post("/ocr")
+# @app.post("/ocr")
 async def process_file(file: UploadFile = File(...)):
     file_bytes = await file.read()
 

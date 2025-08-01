@@ -1,6 +1,7 @@
 package realty.domain.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import realty.domain.model.StructuredContractData;
 
@@ -17,6 +18,7 @@ import realty.domain.model.StructuredContractData;
   * 계약서 레포지토리(JPA)
   */
 
-public interface ContractRepository extends JpaRepository<StructuredContractData, Long>{
+@Repository
+public interface StructuredContractDataRepository extends JpaRepository<StructuredContractData, Long>{
     StructuredContractData findByDocumentcode(String documentcode);
 }

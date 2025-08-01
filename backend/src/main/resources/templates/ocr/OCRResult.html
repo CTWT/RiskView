@@ -13,82 +13,91 @@
 </head>
 
 <body>
+    <form th:action="@{/contracts}" th:object="${contractInfo}" method="post">
+        <!-- 히든 정보 -->
+        <input type="hidden" th:field="*{documentsDTO.title}">
+        <input type="hidden" th:field="*{documentsDTO.status}">
+        <input type="hidden" th:field="*{documentsDTO.isDeleted}">
+        <input type="hidden" th:field="*{fileStorageMetadataDTO.originalName}" />
+        <input type="hidden" th:field="*{fileStorageMetadataDTO.storedPath}" />
+        <input type="hidden" th:field="*{fileStorageMetadataDTO.fileSizeKb}" />
+        <input type="hidden" th:field="*{fileStorageMetadataDTO.fileType}" />
+        <input type="hidden" th:field="*{fileStorageMetadataDTO.isEncrypted}" />
 
-    <form th:action="@{/contracts}" th:object="${contract}" method="post">
         <div class="section">
             <h2>📋 계약 기본 정보</h2>
-            <div class="item"><span class="label">임대 유형:</span> <input type="text" th:field="*{leaseType}" /></div>
-            <div class="item"><span class="label">소재지:</span> <input type="text" th:field="*{location}" /></div>
-            <div class="item"><span class="label">토지 구분:</span> <input type="text" th:field="*{landType}" /></div>
-            <div class="item"><span class="label">토지 면적:</span> <input type="number" th:field="*{landArea}" />㎡</div>
+            <div class="item"><span class="label">임대 유형:</span> <input type="text" th:field="*{structuredContractDataDTO.leaseType}" /></div>
+            <div class="item"><span class="label">소재지:</span> <input type="text" th:field="*{structuredContractDataDTO.location}" /></div>
+            <div class="item"><span class="label">토지 구분:</span> <input type="text" th:field="*{structuredContractDataDTO.landType}" /></div>
+            <div class="item"><span class="label">토지 면적:</span> <input type="number" th:field="*{structuredContractDataDTO.landArea}" />㎡</div>
             <div class="item"><span class="label">건물 구조 및 용도:</span> <input type="text"
-                    th:field="*{buildingStructureUse}" /></div>
-            <div class="item"><span class="label">건물 면적:</span> <input type="number" th:field="*{buildingArea}" />㎡
+                    th:field="*{structuredContractDataDTO.buildingStructureUse}" /></div>
+            <div class="item"><span class="label">건물 면적:</span> <input type="number" th:field="*{structuredContractDataDTO.buildingArea}" />㎡
             </div>
-            <div class="item"><span class="label">임대 부위:</span> <input type="text" th:field="*{leasePart}" /></div>
-            <div class="item"><span class="label">임대 면적:</span> <input type="number" th:field="*{leaseArea}" />㎡</div>
+            <div class="item"><span class="label">임대 부위:</span> <input type="text" th:field="*{structuredContractDataDTO.leasePart}" /></div>
+            <div class="item"><span class="label">임대 면적:</span> <input type="number" th:field="*{structuredContractDataDTO.leaseArea}" />㎡</div>
         </div>
 
         <div class="section">
             <h2>💰 금액 및 기간 정보</h2>
-            <div class="item"><span class="label">보증금:</span> <input type="number" th:field="*{deposit}" />원</div>
-            <div class="item"><span class="label">계약금:</span> <input type="number" th:field="*{downPayment}" />원</div>
+            <div class="item"><span class="label">보증금:</span> <input type="number" th:field="*{structuredContractDataDTO.deposit}" />원</div>
+            <div class="item"><span class="label">계약금:</span> <input type="number" th:field="*{structuredContractDataDTO.downPayment}" />원</div>
             <div class="item"><span class="label">계약금 서명 여부:</span>
-                <select th:field="*{downPaymentSigned}">
+                <select th:field="*{structuredContractDataDTO.downPaymentSigned}">
                     <option th:value="true">서명 완료</option>
                     <option th:value="false">미서명</option>
                 </select>
             </div>
-            <div class="item"><span class="label">중도금:</span> <input type="number" th:field="*{middlePayment}" />원</div>
-            <div class="item"><span class="label">중도금 날짜:</span> <input type="date" th:field="*{middlePaymentDate}" />
+            <div class="item"><span class="label">중도금:</span> <input type="number" th:field="*{structuredContractDataDTO.middlePayment}" />원</div>
+            <div class="item"><span class="label">중도금 날짜:</span> <input type="date" th:field="*{structuredContractDataDTO.middlePaymentDate}" />
             </div>
-            <div class="item"><span class="label">잔금:</span> <input type="number" th:field="*{balance}" />원</div>
-            <div class="item"><span class="label">잔금 날짜:</span> <input type="date" th:field="*{balanceDate}" /></div>
-            <div class="item"><span class="label">임대료:</span> <input type="number" th:field="*{rentAmount}" />원</div>
+            <div class="item"><span class="label">잔금:</span> <input type="number" th:field="*{structuredContractDataDTO.balance}" />원</div>
+            <div class="item"><span class="label">잔금 날짜:</span> <input type="date" th:field="*{structuredContractDataDTO.balanceDate}" /></div>
+            <div class="item"><span class="label">임대료:</span> <input type="number" th:field="*{structuredContractDataDTO.rentAmount}" />원</div>
             <div class="item"><span class="label">계약금 서명 여부:</span>
-                <select th:field="*{rentType}">
+                <select th:field="*{structuredContractDataDTO.rentType}">
                     <option th:value="선불">선불</option>
                     <option th:value="후불">후불</option>
                 </select>
             </div>
-            <div class="item"><span class="label">임대료 지급일:</span> <input type="date" th:field="*{rentDate}" /></div>
+            <div class="item"><span class="label">임대료 지급일:</span> <input type="date" th:field="*{structuredContractDataDTO.rentDate}" /></div>
             <div class="item"><span class="label">임대 기간:</span>
-                <input type="date" th:field="*{leasePeriodStart}" /> ~
-                <input type="date" th:field="*{leasePeriodEnd}" />
+                <input type="date" th:field="*{structuredContractDataDTO.leasePeriodStart}" /> ~
+                <input type="date" th:field="*{structuredContractDataDTO.leasePeriodEnd}" />
             </div>
-            <div class="item"><span class="label">중개 수수료:</span> <input type="number" th:field="*{commissionAmount}" />%
+            <div class="item"><span class="label">중개 수수료:</span> <input type="number" th:field="*{structuredContractDataDTO.commissionAmount}" />%
             </div>
-            <div class="item"><span class="label">특약사항:</span> <input type="text" th:field="*{specialTerms}" /></div>
+            <div class="item"><span class="label">특약사항:</span> <input type="text" th:field="*{structuredContractDataDTO.specialTerms}" /></div>
         </div>
 
         <div class="section">
             <h2>🧑 임대인 정보</h2>
-            <div class="item"><span class="label">이름:</span> <input type="text" th:field="*{lessorName}" /></div>
-            <div class="item"><span class="label">주소:</span> <input type="text" th:field="*{lessorAddress}" /></div>
-            <div class="item"><span class="label">전화번호:</span> <input type="text" th:field="*{lessorPhone}" /></div>
-            <div class="item"><span class="label">주민등록번호:</span> <input type="text" th:field="*{lessorIdNumber}" />
+            <div class="item"><span class="label">이름:</span> <input type="text" th:field="*{structuredContractDataDTO.lessorName}" /></div>
+            <div class="item"><span class="label">주소:</span> <input type="text" th:field="*{structuredContractDataDTO.lessorAddress}" /></div>
+            <div class="item"><span class="label">전화번호:</span> <input type="text" th:field="*{structuredContractDataDTO.lessorPhone}" /></div>
+            <div class="item"><span class="label">주민등록번호:</span> <input type="text" th:field="*{structuredContractDataDTO.lessorIdNumber}" />
             </div>
-            <div class="item"><span class="label">대리인 이름:</span> <input type="text" th:field="*{lessorAgentName}" />
+            <div class="item"><span class="label">대리인 이름:</span> <input type="text" th:field="*{structuredContractDataDTO.lessorAgentName}" />
             </div>
-            <div class="item"><span class="label">대리인 주소:</span> <input type="text" th:field="*{lessorAgentAddress}" />
+            <div class="item"><span class="label">대리인 주소:</span> <input type="text" th:field="*{structuredContractDataDTO.lessorAgentAddress}" />
             </div>
             <div class="item"><span class="label">대리인 주민등록번호:</span> <input type="text"
-                    th:field="*{lessorAgentIdNumber}" /></div>
+                    th:field="*{structuredContractDataDTO.lessorAgentIdNumber}" /></div>
         </div>
 
         <div class="section">
             <h2>🏠 임차인 정보</h2>
-            <div class="item"><span class="label">이름:</span> <input type="text" th:field="*{lesseeName}" /></div>
-            <div class="item"><span class="label">주소:</span> <input type="text" th:field="*{lesseeAddress}" /></div>
-            <div class="item"><span class="label">전화번호:</span> <input type="text" th:field="*{lesseePhone}" /></div>
-            <div class="item"><span class="label">주민등록번호:</span> <input type="text" th:field="*{lesseeIdNumber}" />
+            <div class="item"><span class="label">이름:</span> <input type="text" th:field="*{structuredContractDataDTO.lesseeName}" /></div>
+            <div class="item"><span class="label">주소:</span> <input type="text" th:field="*{structuredContractDataDTO.lesseeAddress}" /></div>
+            <div class="item"><span class="label">전화번호:</span> <input type="text" th:field="*{structuredContractDataDTO.lesseePhone}" /></div>
+            <div class="item"><span class="label">주민등록번호:</span> <input type="text" th:field="*{structuredContractDataDTO.lesseeIdNumber}" />
             </div>
-            <div class="item"><span class="label">대리인 이름:</span> <input type="text" th:field="*{lesseeAgentName}" />
+            <div class="item"><span class="label">대리인 이름:</span> <input type="text" th:field="*{structuredContractDataDTO.lesseeAgentName}" />
             </div>
-            <div class="item"><span class="label">대리인 주소:</span> <input type="text" th:field="*{lesseeAgentAddress}" />
+            <div class="item"><span class="label">대리인 주소:</span> <input type="text" th:field="*{structuredContractDataDTO.lesseeAgentAddress}" />
             </div>
             <div class="item"><span class="label">대리인 주민등록번호:</span> <input type="text"
-                    th:field="*{lesseeAgentIdNumber}" /></div>
+                    th:field="*{structuredContractDataDTO.lesseeAgentIdNumber}" /></div>
         </div>
 
         <div class="section">
@@ -97,29 +106,29 @@
                 <!-- 좌측: 첫 번째 공인중개사 -->
                 <div class="realtor-column">
                     <div class="item"><span class="label">사무소소재지:</span> <input type="text"
-                            th:field="*{realtorOfficeAddress1}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorOfficeAddress1}" /></div>
                     <div class="item"><span class="label">사무소명칭:</span> <input type="text"
-                            th:field="*{realtorOfficeName1}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorOfficeName1}" /></div>
                     <div class="item"><span class="label">대표 서명:</span> <input type="text"
-                            th:field="*{realtorSignature1}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorSignature1}" /></div>
                     <div class="item"><span class="label">등록번호 및 전화번호:</span> <input type="text"
-                            th:field="*{realtorLicensePhone1}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorLicensePhone1}" /></div>
                     <div class="item"><span class="label">소속공인중개사 서명:</span> <input type="text"
-                            th:field="*{realtorAgentSignature1}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorAgentSignature1}" /></div>
                 </div>
 
                 <!-- 우측: 두 번째 공인중개사 -->
                 <div class="realtor-column">
                     <div class="item"><span class="label">사무소소재지:</span> <input type="text"
-                            th:field="*{realtorOfficeAddress2}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorOfficeAddress2}" /></div>
                     <div class="item"><span class="label">사무소명칭:</span> <input type="text"
-                            th:field="*{realtorOfficeName2}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorOfficeName2}" /></div>
                     <div class="item"><span class="label">대표 서명:</span> <input type="text"
-                            th:field="*{realtorSignature2}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorSignature2}" /></div>
                     <div class="item"><span class="label">등록번호 및 전화번호:</span> <input type="text"
-                            th:field="*{realtorLicensePhone2}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorLicensePhone2}" /></div>
                     <div class="item"><span class="label">소속공인중개사 서명:</span> <input type="text"
-                            th:field="*{realtorAgentSignature2}" /></div>
+                            th:field="*{structuredContractDataDTO.realtorAgentSignature2}" /></div>
                 </div>
             </div>
         </div>

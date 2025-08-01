@@ -181,4 +181,10 @@ public class StructuredContractData implements Serializable {
     @Column(name = "realtor_agent_signature_2", length = 255)
     private String realtorAgentSignature2;
 
+    // 연관관계 매핑 (선택적)
+    // 문서와의 다대일 관계
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "document_code", referencedColumnName = "document_code",
+                insertable = false, updatable = false)
+    private Documents documents;
 }

@@ -99,6 +99,10 @@
         <form th:action="@{/delete_account}" method="post">
             <button type="submit">회원탈퇴</button>
         </form>
+
+        <form th:action="@{/upload}" method="get">
+            <button type="submit">계약서 분석</button>
+        </form>
         
         <!-- 로그인 이력 표시 -->
         <div th:if="${session.loginHistoryList != null and !#lists.isEmpty(session.loginHistoryList)}">

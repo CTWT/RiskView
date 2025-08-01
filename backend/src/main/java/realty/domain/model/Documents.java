@@ -52,9 +52,6 @@ public class Documents {
     @Column(name = "title", length = 255, columnDefinition = "VARCHAR(255) COMMENT '문서 제목'")
     private String title;
 
-    @Column(name = "uploaded_at", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '업로드 시각'")
-    private LocalDateTime uploadedAt;
-
     @Column(name = "status", length = 50, columnDefinition = "VARCHAR(50) DEFAULT 'UPLOAD' COMMENT '문서 처리 상태'")
     private String status;
 

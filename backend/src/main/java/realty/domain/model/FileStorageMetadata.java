@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +18,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 김관호
+ * 작성자 : 김관호
+ * 수정자 : 
+ * 작성일 : 25.07.31
+ * 파일명 : FileStorageMetadata.java
+ */
 
 @Entity
 @Table(name = "file_storage_metadata")
@@ -70,5 +80,10 @@ public class FileStorageMetadata {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_code", referencedColumnName = "document_code",
                 insertable = false, updatable = false)
-    private Documents document;
+    private Documents documents;
+
+    @PrePersist
+    public void onPrePersist(){
+        uploadAt = LocalDateTime.now();
+    }
 }

@@ -2,7 +2,6 @@ package realty.domain.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 
@@ -45,14 +44,12 @@ public class ContractDTO {
     @AllArgsConstructor
     public static class DocumentsDTO{
         private String title;               
-        private LocalDateTime uploadedAt;
         private String status;
         private Boolean isDeleted;
 
         public static DocumentsDTO from(Documents entity) {
             return DocumentsDTO.builder()
                     .title(entity.getTitle())
-                    .uploadedAt(entity.getUploadedAt())
                     .status(entity.getStatus())
                     .isDeleted(entity.getIsDeleted())
                     .build();
@@ -61,7 +58,6 @@ public class ContractDTO {
         public static Documents toEntity(DocumentsDTO documentsDTO) {
             return Documents.builder()
                     .title(documentsDTO.getTitle())
-                    .uploadedAt(documentsDTO.getUploadedAt())
                     .status(documentsDTO.getStatus())
                     .isDeleted(documentsDTO.getIsDeleted())
                     .build();
@@ -294,6 +290,18 @@ public class ContractDTO {
     public static class OCRResponse {
         private ContractDTO.StructuredContractDataDTO structuredContractDataDTO;
         private MapInfo mapInfo;
+    }
+
+    @Builder 
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    @ToString
+    public static class ContractInfo {
+        private DocumentsDTO documentsDTO;
+        private StructuredContractDataDTO structuredContractDataDTO;
+        private FileStorageMetadataDTO fileStorageMetadataDTO;
     }
 
     // LocalDate -> Date

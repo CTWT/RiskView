@@ -17,14 +17,23 @@ import realty.domain.dto.ContractDTO;
  * 파일명 : ContractService.java
  */
 
- /**
-  * 계약서 서비스 인터페이스
-  */
+/**
+ * 계약서 서비스 인터페이스
+ */
 
 public interface ContractService {
-    public ContractDTO.StructuredContractDataDTO findByDocumentcode(String documentcode);
-    public void save(ContractDTO.StructuredContractDataDTO leaseContract);
-    public MultiValueMap<String, Object> getHttpBodyFromFile(File file);
-    public File getFileFromMultipartFile(MultipartFile file) throws IOException;
-    
+  public ContractDTO.DocumentsDTO findByUsercode(String Usercode);
+
+  public ContractDTO.StructuredContractDataDTO findByDocumentcode(String documentcode);
+
+  public ContractDTO.FileStorageMetadataDTO findByDocumentCode(String documentcode);
+
+  public void save(ContractDTO.ContractInfo contractInfo, String userCode);
+
+  public MultiValueMap<String, Object> getHttpBodyFromFile(File file);
+
+  public File getFileFromMultipartFile(MultipartFile file) throws IOException;
+
+  public ContractDTO.FileStorageMetadataDTO getFileMetadata(MultipartFile file);
+
 }

@@ -2,6 +2,7 @@ import React from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./Header";
+import "../../styles/common/common.css";
 
 import Breadcrumb from "../breadcrumb/Breadcrumb";
 
@@ -24,10 +25,14 @@ const Layout = ({ children }: LayoutProps) => {
     return false;
   };
 
+  const mainContentClass = !shouldHideHeader()
+    ? "main-content has-header-margin"
+    : "main-content";
+
   return (
     <div className="layout-container">
       {!shouldHideHeader() && <Header />}
-      <main className="main-content">
+      <main className={mainContentClass}>
         <Breadcrumb />
         {children}
       </main>

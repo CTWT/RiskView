@@ -25,6 +25,10 @@ const Breadcrumb: React.FC = () => {
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
+  if (pathnames.length === 0) {
+    return null;
+  }
+
   return (
     <div className="breadcrumb-container">
       <Link to="/" className="breadcrumb-item breadcrumb-home-link">

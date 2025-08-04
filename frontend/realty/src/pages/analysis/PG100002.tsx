@@ -242,7 +242,11 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 // 요청 성공 시
                 // ⭐ 이 부분을 수정해야 합니다.
                 // 백엔드 응답이 HTML 템플릿의 데이터 구조와 동일한 객체라고 가정합니다.
-                const backendOcrResult = response.data;
+                const backendOcrResult = response.data; // ContractResponse 객체
+                const ocrDataPayload = {
+                    ...backendOcrResult.contractInfo,
+                    mapInfo: backendOcrResult.mapInfo,
+                };
 
                 // OCR 완료 시 모달 및 상태 업데이트
                 setProgress(100);
@@ -256,7 +260,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 // 부모 컴포넌트로 OCR 결과와 파일 정보 전달
                 // ⭐ ocrResult 키 대신 ocrData 키를 사용하고 객체를 전달합니다.
                 onStartAnalysis({
-                    ocrData: backendOcrResult,
+                    ocrData: ocrDataPayload,
                     uploadedFilePreview: previewImage,
                     scannedFile: selectedFile.name,
                 });

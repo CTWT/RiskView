@@ -62,10 +62,19 @@ export interface StructuredContractDataDTO {
 }
 
 export interface MapInfo {
-    roadAddress: string;
-    jibunAddress: string;
-    englishAddress: string;
-    y: number;
-    x: number;
-    distance: number;
+    roadAddress: string | null;
+    jibunAddress: string | null;
+    englishAddress: string | null;
+    y: string | null;
+    x: string | null;
+    distance: string | null;
+    sido: string | null;
+    sigugun: string | null;
+    dongmyun: string | null;
+    ri: string | null;
+    roadName: string | null;
+    buildingNumber: string | null;
+    buildingName: string | null;
+    landNumber: string | null;
+    postalCode: string | null;
 }

@@ -244,7 +244,12 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 // 백엔드 응답이 HTML 템플릿의 데이터 구조와 동일한 객체라고 가정합니다.
                 const backendOcrResult = response.data; // ContractResponse 객체
                 const ocrDataPayload = {
-                    ...backendOcrResult.contractInfo,
+                    ...(backendOcrResult.contractInfo || {
+                        // contractInfo가 null일 경우, 이 3가지 DTO를 null로 초기화합니다.
+                        documentsDTO: null,
+                        fileStorageMetadataDTO: null,
+                        structuredContractDataDTO: null,
+                    }),
                     mapInfo: backendOcrResult.mapInfo,
                 };
 

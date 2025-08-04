@@ -1,9 +1,9 @@
 // src/pages/analysis/PG100003.tsx
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // 내부에서 다른 페이지로 이동할 경우 여전히 필요할 수 있음
+import { useNavigate } from "react-router-dom";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
-import "../../styles/common/common.css"; // common.css 경로 확인
+import "../../styles/common/common.css";
 
 import type {
     DocumentsDTO,
@@ -15,10 +15,6 @@ import type {
 /**
  * @file PG100003.tsx
  * @description 계약서 분석의 OCR추출 이후 사용자가 검증하는 페이지 입니다
- * 실제 계약서에서 OCR로 단어들을 추출하고 사용자가 직접 추출된 단어들을 보면서 누락되거나 틀린 부분을 집고
- * 수정하며 에러를 고치고
- * OCR에서 나온 지역에 맞춰서 지도 API를 띄워 실거래가가 어느 지역을 기준으로 데이터화 하였는지
- * 보여주는 페이지 입니다
  */
 
 /*
@@ -30,36 +26,33 @@ import type {
  * 설명 : 계약서 분석 중 OCR 추출한 이후 사용자가 보고 AI 추출을 하기 전 검증하는 페이지 입니다
  */
 
-// ⭐ 1. ocrData의 타입을 별도 인터페이스로 분리 ⭐
+//  1. ocrData의 타입을 별도 인터페이스로 분리
 export interface OcrDataType {
     documentsDTO: DocumentsDTO;
     fileStorageMetadataDTO: FileStorageMetadataDTO;
-    structuredContractDataDTO: StructuredContractDataDTO;
+    structuredContractDataDTO: StructuredContractDataDTO | null; // null 가능성을 추가
     mapInfo: MapInfo | null;
 }
 
-// ⭐ 2. PG100001로부터 받을 props 인터페이스 정의 ⭐
+//  2. PG100001로부터 받을 props 인터페이스 정의
 interface PG100003Props {
     scannedFile: string;
-    ocrData: OcrDataType; // <-- 분리된 인터페이스 사용
+    ocrData: OcrDataType;
     uploadedFilePreview: string | null;
-    // ⭐ 3. onAnalysisComplete prop에서도 분리된 인터페이스 사용 ⭐
+    //  3. onAnalysisComplete prop에서도 분리된 인터페이스 사용
     onAnalysisComplete?: (result: OcrDataType) => void;
     onBackToPreviousPhase?: () => void;
 }
 
-// ⭐ props를 구조 분해 할당으로 받도록 변경 ⭐
 const PG100003: React.FC<PG100003Props> = ({
     scannedFile,
-    ocrData, // 객체로 변경
+    ocrData,
     uploadedFilePreview,
     onAnalysisComplete,
     onBackToPreviousPhase,
 }) => {
     const navigate = useNavigate();
 
-    // ⭐ 상태 초기값을 props로 받은 ocrData 객체로 설정 ⭐
-    // 사용자가 데이터를 수정할 수 있으므로, ocrData 객체 전체를 `useState`로 관리합니다.
     const [currentOcrData, setCurrentOcrData] =
         useState<typeof ocrData>(ocrData);
     const [currentScannedFileName] = useState<string>(scannedFile);
@@ -67,32 +60,45 @@ const PG100003: React.FC<PG100003Props> = ({
         uploadedFilePreview
     );
 
-    // ⭐ OCR 결과에서 추출될 주소 정보는 이제 `ocrData` 객체에서 바로 가져옵니다. ⭐
+    //  수정: ocrData.structuredContractDataDTO가 null일 수 있으므로 옵셔널 체이닝 사용
     const [recognizedAddress, setRecognizedAddress] = useState<string | null>(
-        ocrData.structuredContractDataDTO.location || null
+        ocrData.structuredContractDataDTO?.location || null
     );
 
-    // useEffect는 이제 더 이상 복잡한 로직을 수행할 필요가 없습니다.
-    // props로 받은 주소 정보가 변경될 때마다 상태를 업데이트합니다.
+    //  수정: useEffect 내부에서도 옵셔널 체이닝 사용
     useEffect(() => {
         setRecognizedAddress(
-            currentOcrData.structuredContractDataDTO.location ||
+            currentOcrData.structuredContractDataDTO?.location ||
                 "주소 인식 실패"
         );
     }, [currentOcrData]);
 
-    // 구조화된 데이터의 특정 필드를 업데이트하는 범용 핸들러
     const handleDataChange = (
         field: keyof StructuredContractDataDTO,
         value: string
     ) => {
-        setCurrentOcrData((prevData) => ({
-            ...prevData,
-            structuredContractDataDTO: {
-                ...prevData.structuredContractDataDTO,
-                [field]: value,
-            },
-        }));
+        setCurrentOcrData((prevData) => {
+            // structuredContractDataDTO가 null이면 빈 객체를 사용하여 오류 방지
+            const prevStructuredData = prevData.structuredContractDataDTO || {};
+
+            let newValue: string | number | null = value;
+            // deposit 필드는 숫자로 변환
+            if (field === "deposit") {
+                newValue = value ? Number(value) : null;
+                // 숫자로 변환 실패 시 null 처리
+                if (isNaN(Number(newValue))) {
+                    newValue = null;
+                }
+            }
+
+            return {
+                ...prevData,
+                structuredContractDataDTO: {
+                    ...prevStructuredData,
+                    [field]: newValue,
+                } as StructuredContractDataDTO, // 타입 단언(type assertion)으로 컴파일러 오류 해결
+            };
+        });
     };
 
     const handleBackToUpload = () => {
@@ -104,7 +110,6 @@ const PG100003: React.FC<PG100003Props> = ({
     };
 
     const handleProcessResult = () => {
-        // '다음 단계로 진행' 버튼 클릭 시, 수정된 `currentOcrData` 객체 전체를 부모 컴포넌트로 전달
         if (onAnalysisComplete) {
             onAnalysisComplete(currentOcrData);
         } else {
@@ -117,8 +122,7 @@ const PG100003: React.FC<PG100003Props> = ({
             <CommonContainerHeader
                 subtitle="계약 분석 결과"
                 title="OCR 분석 결과 확인"
-                description="업로드하신 파일의 OCR 분석 결과입니다. 인식된 텍스트를
-                    확인하고 필요한 경우 수정해주세요."
+                description="업로드하신 파일의 OCR 분석 결과입니다. 인식된 텍스트를 확인하고 필요한 경우 수정해주세요."
             />
 
             <div className="an03-content-wrapper">
@@ -145,7 +149,6 @@ const PG100003: React.FC<PG100003Props> = ({
                 </div>
 
                 {/* 오른쪽: OCR 인식 텍스트 (이제는 구조화된 데이터) */}
-                {/* ⭐ 기존의 textarea를 제거하고, 구조화된 데이터를 보여주는 UI로 변경 ⭐ */}
                 <div className="an03-pane an03-ocr-text-pane">
                     <h3 className="an03-pane-title">OCR 분석 결과</h3>
                     <div className="an03-structured-data-form">
@@ -156,8 +159,9 @@ const PG100003: React.FC<PG100003Props> = ({
                                 id="location"
                                 type="text"
                                 value={
+                                    // 수정: 옵셔널 체이닝으로 안전하게 접근하도록 수정
                                     currentOcrData.structuredContractDataDTO
-                                        .location || ""
+                                        ?.location || ""
                                 }
                                 onChange={(e) =>
                                     handleDataChange("location", e.target.value)
@@ -171,7 +175,7 @@ const PG100003: React.FC<PG100003Props> = ({
                                 id="deposit"
                                 type="text"
                                 value={
-                                    currentOcrData.structuredContractDataDTO.deposit?.toString() ||
+                                    currentOcrData.structuredContractDataDTO?.deposit?.toString() ||
                                     ""
                                 }
                                 onChange={(e) =>

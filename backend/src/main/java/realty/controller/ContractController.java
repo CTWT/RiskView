@@ -9,7 +9,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.ContractDTO;
-import realty.domain.dto.ContractDTO.ContractInfo;
 import realty.domain.dto.MapInfo;
 import realty.domain.model.User;
 import realty.service.ContractService;
@@ -37,14 +35,14 @@ public class ContractController {
      * 계약서를 저장하는 PostMapping
      */
     @PostMapping("/contracts")
-    public String insertData(@ModelAttribute ContractDTO.ContractInfo contractInfo, HttpSession session) {
+    public ResponseEntity<String> insertData(@ModelAttribute ContractDTO.ContractInfo contractInfo, HttpSession session) {
         
         System.out.println(session.getId());
         System.out.println("user: " + session.getAttribute("user"));
         User user = (User)session.getAttribute("user");
         String userCode = user.getUserCode();
         contractService.save(contractInfo, userCode);
-        return "ocr/InsertSuccess";
+        return ResponseEntity.ok("Contract 저장 완료!");
     }
 
     /**
@@ -91,21 +89,23 @@ public class ContractController {
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             ContractDTO.OCRResponse ocrResponse = response.getBody();
 
-            // 모든 분석결과 추출
-            mapInfo = ocrResponse.getMapInfo();
-            ContractDTO.StructuredContractDataDTO structuredContractDataDTO = ocrResponse.getStructuredContractDataDTO();
-            ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO = contractService.getFileMetadata(file);
-            ContractDTO.DocumentsDTO documentsDTO = ContractDTO.DocumentsDTO.builder()
-                    .title(convertedFile.getName())
-                    .status("UPLOAD")
-                    .isDeleted(false)
-                    .build();
+            if(ocrResponse != null) {
+                // 모든 분석결과 추출
+                mapInfo = ocrResponse.getMapInfo();
+                ContractDTO.StructuredContractDataDTO structuredContractDataDTO = ocrResponse.getStructuredContractDataDTO();
+                ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO = contractService.getFileMetadata(file);
+                ContractDTO.DocumentsDTO documentsDTO = ContractDTO.DocumentsDTO.builder()
+                        .title(convertedFile.getName())
+                        .status("UPLOAD")
+                        .isDeleted(false)
+                        .build();
 
-            contractInfo = ContractDTO.ContractInfo.builder()
-                    .structuredContractDataDTO(structuredContractDataDTO)
-                    .fileStorageMetadataDTO(fileStorageMetadataDTO)
-                    .documentsDTO(documentsDTO)
-                    .build();
+                contractInfo = ContractDTO.ContractInfo.builder()
+                        .structuredContractDataDTO(structuredContractDataDTO)
+                        .fileStorageMetadataDTO(fileStorageMetadataDTO)
+                        .documentsDTO(documentsDTO)
+                        .build();
+            }
         }
 
         // 최종 Response 생성

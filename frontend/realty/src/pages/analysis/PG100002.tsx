@@ -9,6 +9,9 @@ import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 
+import * as pdfjs from "pdfjs-dist";
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.mjs";
+
 import type {
     DocumentsDTO,
     FileStorageMetadataDTO,
@@ -60,44 +63,98 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
     const [isModalOpen, setIsModalOpen] = useState(false); // 모달 열림/닫힘 상태
     const [progress, setProgress] = useState(0); // 프로그레스 바 진행률 (0-100)
 
+    // PDF 파일을 이미지로 렌더링하는 비동기 함수
+    const renderPdfToImage = useCallback(
+        async (file: File): Promise<string> => {
+            return new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (event) => {
+                    const arrayBuffer = event.target?.result as ArrayBuffer;
+                    if (!arrayBuffer) {
+                        reject("PDF 파일을 읽을 수 없습니다.");
+                        return;
+                    }
+                    try {
+                        const loadingTask = pdfjs.getDocument(arrayBuffer);
+                        const pdf = await loadingTask.promise;
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({ scale: 1.5 });
+                        const canvas = document.createElement("canvas");
+                        const canvasContext = canvas.getContext("2d");
+
+                        if (canvasContext) {
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            // ⭐ 수정된 부분: canvas 속성 추가 ⭐
+                            await page.render({
+                                canvasContext,
+                                viewport,
+                                canvas,
+                            }).promise;
+
+                            resolve(canvas.toDataURL("image/png"));
+                        } else {
+                            reject("Canvas Context를 가져올 수 없습니다.");
+                        }
+                    } catch (error) {
+                        reject(`PDF 렌더링 오류: ${error}`);
+                    }
+                };
+                reader.onerror = (error) => reject(`파일 읽기 오류: ${error}`);
+                reader.readAsArrayBuffer(file);
+            });
+        },
+        []
+    );
+
     // 파일 유효성 검사 및 설정 함수
     const processFile = useCallback(
-        (file: File) => {
-            // PNG, JPG, PDF 파일만 허용
+        async (file: File) => {
+            // ⭐ [수정된 부분] 파일 유효성 검사 후 미리보기 생성 로직 분리 ⭐
             const acceptedTypes = [
                 "application/pdf",
                 "image/png",
                 "image/jpeg",
                 "image/jpg",
             ];
-            if (acceptedTypes.includes(file.type)) {
-                setSelectedFile(file);
-                showToast(`파일이 성공적으로 선택되었습니다: ${file.name}`, {
-                    type: "success",
-                });
 
-                // 이미지 파일인 경우 미리보기 URL 생성
-                if (file.type.startsWith("image/")) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        setPreviewImage(reader.result as string); // 파일을 Data URL로 읽어 미리보기 URL 설정
-                    };
-                    reader.readAsDataURL(file); // 파일을 Data URL 형식으로 읽기 시작
-                } else {
-                    setPreviewImage(null); // 이미지 파일이 아니면 미리보기 제거
-                }
-                return true;
-            } else {
+            if (!acceptedTypes.includes(file.type)) {
                 setSelectedFile(null);
+                setPreviewImage(null);
                 showToast(
                     "지원되지 않는 파일 형식입니다. PNG, JPG, PDF 파일만 업로드 가능합니다.",
                     { type: "error", duration: 4000 }
                 );
-                setPreviewImage(null); // 실패 시 미리보기 제거
-                return false;
+                return;
+            }
+
+            setSelectedFile(file);
+            showToast(`파일이 성공적으로 선택되었습니다: ${file.name}`, {
+                type: "success",
+            });
+
+            // 파일 타입에 따라 미리보기 생성
+            if (file.type.startsWith("image/")) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreviewImage(reader.result as string);
+                };
+                reader.readAsDataURL(file);
+            } else if (file.type === "application/pdf") {
+                try {
+                    const pdfPreview = await renderPdfToImage(file);
+                    setPreviewImage(pdfPreview);
+                } catch (error) {
+                    console.error("PDF 미리보기 생성 실패:", error);
+                    setPreviewImage(null);
+                    showToast("PDF 미리보기 생성에 실패했습니다.", {
+                        type: "error",
+                    });
+                }
             }
         },
-        [showToast]
+        [showToast, renderPdfToImage]
     );
 
     // 파일 선택 input 변경 핸들러
@@ -255,15 +312,6 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                         className="an02-upload-image-icon"
                     />
                 )}
-
-                {/* PDF 파일일 경우, 파일 아이콘이나 텍스트로 미리보기 대체 (선택 사항) */}
-                {selectedFile &&
-                    !previewImage &&
-                    selectedFile.type === "application/pdf" && (
-                        <p className="an02-pdf-placeholder">
-                            PDF 파일이 선택되었습니다
-                        </p>
-                    )}
                 <input
                     type="file"
                     ref={fileInputRef}

@@ -1,12 +1,20 @@
 // src/pages/analysis/PG100002.tsx
 
 import React, { useState, useRef, useCallback } from "react";
+import axios from "axios";
 import "../../styles/common/common.css";
 import uploadIconImage from "../../assets/images/upload-img.png"; // 기본 업로드 아이콘 이미지 경로 확인
 import useToast from "../../hooks/useToast"; // useToast 훅 임포트
 import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
+
+import type {
+    DocumentsDTO,
+    FileStorageMetadataDTO,
+    StructuredContractDataDTO,
+    MapInfo,
+} from "../../types/contract";
 
 /**
  * @file PG100002.tsx
@@ -27,7 +35,12 @@ import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 // PG100001로부터 받을 props 정의
 interface PG100002Props {
     onStartAnalysis: (data: {
-        ocrResult: string;
+        ocrData: {
+            documentsDTO: DocumentsDTO;
+            fileStorageMetadataDTO: FileStorageMetadataDTO;
+            structuredContractDataDTO: StructuredContractDataDTO;
+            mapInfo: MapInfo | null;
+        };
         uploadedFilePreview: string | null;
         scannedFile: string;
     }) => void;
@@ -145,70 +158,65 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
     // "AI 분석 시작하기" 버튼 클릭 핸들러
     const handleAnalyzeClick = useCallback(async () => {
         if (selectedFile) {
-            setIsModalOpen(true); // 모달 열기
-            setProgress(0); // 프로그레스 바 초기화
+            setIsModalOpen(true);
+            setProgress(0);
             setIsUploading(true);
-            showToast("계약서 파일 업로드 및 OCR 스캔 요청 중...", {
+            showToast("계약서 파일 업로드 및 AI 분석 요청 중...", {
                 type: "info",
                 duration: 4000,
             });
 
-            // ⭐ 실제 fetch 요청 대신 시뮬레이션된 비동기 처리 ⭐
-            // job_id는 실제로는 백엔드에서 받아오지만, 여기서는 임의로 생성하거나 필요 없음
+            const formData = new FormData();
+            formData.append("file", selectedFile);
 
-            // OCR 진행 시뮬레이션 (프로그레스 바 업데이트)
-            let currentProgress = 0;
-            const simulationInterval = setInterval(() => {
-                currentProgress += 5; // 5%씩 증가
-                if (currentProgress <= 100) {
-                    setProgress(currentProgress);
-                } else {
-                    clearInterval(simulationInterval);
-                }
-            }, 100); // 0.1초마다 5% 증가 (총 2초)
+            try {
+                // progress 이벤트 추적을 위해 axios 옵션에 onUploadProgress를 추가할 수 있지만,
+                // 여기서는 단순화하여 요청이 시작되면 모달을 열고, 완료되면 닫는 방식으로 구현.
+                const response = await axios.post(
+                    `http://localhost:8080/upload`,
+                    formData,
+                    {
+                        headers: {
+                            "Content-Type": "multipart/form-data",
+                        },
+                    }
+                );
 
-            // OCR 완료 시뮬레이션 (2초 후)
-            setTimeout(() => {
-                clearInterval(simulationInterval); // 확실히 인터벌 종료
-                setProgress(100); // 최종 100% 설정
+                // 요청 성공 시
+                // ⭐ 이 부분을 수정해야 합니다.
+                // 백엔드 응답이 HTML 템플릿의 데이터 구조와 동일한 객체라고 가정합니다.
+                const backendOcrResult = response.data;
+
+                // OCR 완료 시 모달 및 상태 업데이트
+                setProgress(100);
                 setIsUploading(false);
-                setIsModalOpen(false); // 모달 닫기
+                setIsModalOpen(false);
 
                 showToast("OCR 스캔 완료! 다음 단계로 이동합니다.", {
                     type: "success",
                 });
 
-                // ⭐ 임시 OCR 결과 텍스트 (더미 데이터)
-                const dummyOcrResult = `
-        서울특별시 강남구 테헤란로 123
-        (역삼동, 테헤란빌딩) 5층
-
-        매매 계약서
-        매도인: 김철수 (주민등록번호: 123456-1234567)
-        매수인: 이영희 (주민등록번호: 765432-7654321)
-
-        제1조 (목적) 본 계약은 매도인이 소유한 부동산의 매매에 관한 사항을 정함을 목적으로 한다.
-        제2조 (부동산의 표시)
-        소재지: 서울특별시 강남구 역삼동 123-456
-        토지: 대 100㎡
-        건물: 철근콘크리트조 단독주택 80㎡ (1층 40㎡, 2층 40㎡)
-        제3조 (매매대금) 총 매매대금은 일금 오억원정 (500,000,000원)으로 하며, 다음과 같이 지불한다.
-        계약금: 50,000,000원 (본 계약 체결 시 지불)
-        중도금: 200,000,000원 (2025년 8월 15일 지불)
-        잔금: 250,000,000원 (2025년 9월 30일 지불, 소유권 이전 등기 시)
-
-        특약사항
-        1. 현 시설 상태에서의 계약이며, 별도의 시설물 인수인계 목록은 작성하지 않는다.
-        2. 잔금일은 상호 협의 하에 조정 가능하다.
-        3. 등기부등본상 제3자 권리사항은 잔금일까지 매도인이 모두 말소한다.
-      `.trim(); // 앞뒤 공백 제거
-
+                // 부모 컴포넌트로 OCR 결과와 파일 정보 전달
+                // ⭐ ocrResult 키 대신 ocrData 키를 사용하고 객체를 전달합니다.
                 onStartAnalysis({
-                    ocrResult: dummyOcrResult, // 더미 OCR 결과 전달
+                    ocrData: backendOcrResult,
                     uploadedFilePreview: previewImage,
                     scannedFile: selectedFile.name,
                 });
-            }, 2000); // 2초 후에 완료 및 다음 단계로 이동
+            } catch (error) {
+                // 요청 실패 시
+                setIsUploading(false);
+                setIsModalOpen(false); // 모달 닫기
+
+                console.error("파일 업로드 및 분석 실패:", error);
+                showToast(
+                    "파일 업로드 및 분석에 실패했습니다. 다시 시도해 주세요.",
+                    {
+                        type: "error",
+                        duration: 5000,
+                    }
+                );
+            }
         } else {
             showToast("분석할 계약서 파일을 먼저 선택해주세요.", {
                 type: "error",

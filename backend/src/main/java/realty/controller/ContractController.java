@@ -16,16 +16,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.ContractDTO;
+import realty.domain.dto.ContractDTO.ContractInfo;
 import realty.domain.dto.MapInfo;
 import realty.domain.model.User;
 import realty.service.ContractService;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class ContractController {
 
@@ -49,7 +51,7 @@ public class ContractController {
      * 파일 업로드 후 OCR 실행
      */
     @PostMapping("/upload")
-    public String handleFileUpload(@RequestParam("file") MultipartFile file, Model model)
+    public ResponseEntity<ContractDTO.ContractResponse> handleFileUpload(@RequestParam("file") MultipartFile file, Model model)
             throws IOException {
 
         // 1. Trigger 호출 (FastAPI event_flags 활성화)
@@ -77,11 +79,20 @@ public class ContractController {
         ResponseEntity<ContractDTO.OCRResponse> response = restTemplate.postForEntity(fastApiUrl, requestEntity,
                 ContractDTO.OCRResponse.class);
 
+        // contractInfo, mapInfo 초기화
+        ContractDTO.ContractInfo contractInfo = ContractDTO.ContractInfo.builder()
+                    .structuredContractDataDTO(new ContractDTO.StructuredContractDataDTO())
+                    .fileStorageMetadataDTO(new ContractDTO.FileStorageMetadataDTO())
+                    .documentsDTO(new ContractDTO.DocumentsDTO())
+                    .build();
+        MapInfo mapInfo = null;
+
+        // OCRResponse가 올바르게 왔으면 값 채워줌
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             ContractDTO.OCRResponse ocrResponse = response.getBody();
 
             // 모든 분석결과 추출
-            MapInfo mapInfo = ocrResponse.getMapInfo();
+            mapInfo = ocrResponse.getMapInfo();
             ContractDTO.StructuredContractDataDTO structuredContractDataDTO = ocrResponse.getStructuredContractDataDTO();
             ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO = contractService.getFileMetadata(file);
             ContractDTO.DocumentsDTO documentsDTO = ContractDTO.DocumentsDTO.builder()
@@ -90,27 +101,20 @@ public class ContractController {
                     .isDeleted(false)
                     .build();
 
-            ContractDTO.ContractInfo contractInfo = ContractDTO.ContractInfo.builder()
+            contractInfo = ContractDTO.ContractInfo.builder()
                     .structuredContractDataDTO(structuredContractDataDTO)
                     .fileStorageMetadataDTO(fileStorageMetadataDTO)
                     .documentsDTO(documentsDTO)
                     .build();
-
-            // 모델 설정
-            model.addAttribute("contractInfo", contractInfo);
-            model.addAttribute("mapInfo", mapInfo);
-        } else {
-            ContractDTO.ContractInfo contractInfo = ContractDTO.ContractInfo.builder()
-                    .structuredContractDataDTO(new ContractDTO.StructuredContractDataDTO())
-                    .fileStorageMetadataDTO(new ContractDTO.FileStorageMetadataDTO())
-                    .documentsDTO(new ContractDTO.DocumentsDTO())
-                    .build();
-
-            model.addAttribute("contractInfo", contractInfo);
-            model.addAttribute("mapInfo", null);
         }
 
-        return "ocr/OCRResult";
+        // 최종 Response 생성
+        ContractDTO.ContractResponse contractResponse = ContractDTO.ContractResponse.builder()
+                                                                            .contractInfo(contractInfo)
+                                                                            .mapInfo(mapInfo)
+                                                                            .build();
+
+        return ResponseEntity.ok(contractResponse);
     }
 
     /**

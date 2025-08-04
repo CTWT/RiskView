@@ -304,6 +304,16 @@ public class ContractDTO {
         private FileStorageMetadataDTO fileStorageMetadataDTO;
     }
 
+    @Builder
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ContractResponse {
+        private ContractInfo contractInfo;
+        private MapInfo mapInfo;
+    }
+
     // LocalDate -> Date
     private static Date toDate(LocalDate localDate) {
          return localDate != null ? java.sql.Date.valueOf(localDate) : null;

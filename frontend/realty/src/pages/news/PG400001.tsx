@@ -3,99 +3,160 @@ import { FiHome } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import "../../styles/common/common.css";
 
-// 뉴스 데이터 타입 정의
+/*
+ * 생성자 : 이주하
+ * 생성일 : 25.08.01
+ * 파일명 : PG400001.tsx
+ * 수정자 : 박윤성
+ * 수정일 : 25.08.04
+ * 설명 : 뉴스 페이지 컴포넌트
+ */
+
+// 뉴스 데이터 타입
 interface NewsItem {
   id: number;
   title: string;
   date: string;
-  content?: string;
-  url?: string;
-  source?: string;
+  content?: string; // 선택적 속성
+  url?: string; // 선택적 속성
+  source?: string; // 선택적 속성
 }
 
-// 키워드 데이터 타입 정의
+// 키워드 데이터 타입
 interface KeywordItem {
   text: string;
   weight: number;
-  color?: string;
+  color?: string; // 선택적 속성
+}
+
+// 페이지네이션 정보 타입
+interface PaginationInfo {
+  totalPages: number; // 총 페이지 수
+  currentPage: number; // 현재 페이지
+  startPage: number; // 시작 페이지
+  endPage: number; // 끝 페이지
+  hasPrevBlock: boolean; // 이전 블록 존재 여부
+  hasNextBlock: boolean; // 다음 블록 존재 여부
+  prevBlockStartPage?: number; // 이전 블록의 시작 페이지
+  nextBlockStartPage?: number; // 다음 블록의 시작 페이지
 }
 
 // 뉴스 페이지 컴포넌트
 const PG400001: React.FC = () => {
+  // 활성화된 탭 상태
   const [activeTab, setActiveTab] = useState<string>("News");
+  // 뉴스 목록 상태
   const [newsData, setNewsData] = useState<NewsItem[]>([]);
+  // 키워드 상태
   const [keywords, setKeywords] = useState<KeywordItem[]>([]);
+  // 로딩 상태
   const [loading, setLoading] = useState<boolean>(true);
+  // 선택된 뉴스 상태
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  // 페이지네이션 정보 상태
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    // 초기값 설정
+    totalPages: 1, // 총 페이지 수
+    currentPage: 1, // 현재 페이지
+    startPage: 1, // 시작 페이지
+    endPage: 1, // 끝 페이지
+    hasPrevBlock: false, // 이전 블록 존재 여부
+    hasNextBlock: false, // 다음 블록 존재 여부
+  });
 
+  // 뉴스 상세 DOM 참조
   const detailRef = useRef<HTMLDivElement | null>(null);
 
+  // 컴포넌트 외부 클릭 감지
   useEffect(() => {
+    // 마우스 클릭 이벤트 핸들러
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
+      // 클릭된 요소가 뉴스 아이템 클릭 영역인지 확인
       const isNewsItem = (target as HTMLElement).closest(".news-item-click-area");
 
+      // 상세 영역 밖을 클릭 시 닫기
       if (detailRef.current && !detailRef.current.contains(target) && !isNewsItem) {
         setSelectedNews(null);
       }
     };
 
+    // 상세보기가 열려 있을 때만 이벤트 리스너 등록
     if (selectedNews) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
+    // 클린업 함수: 이벤트 리스너 제거
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [selectedNews]);
 
-  // 임시 뉴스 데이터 (실제로는 API에서 받아올 데이터)
-  const mockNewsData: NewsItem[] = [
-    {
-      id: 1,
-      title: "은행권, 대출모집인 통한 주담대 신청 줄줄이 중단",
-      date: "2025.07.08",
-      content: "기사 내용이 여기에 표시됩니다...",
-      source: "연합뉴스"
-    },
-    {
-      id: 2,
-      title: "강남구, 청년·신혼부부 전월세 대출이자 지원예산 2.3배로 늘려",
-      date: "2025.07.08",
-      content: "기사 내용이 여기에 표시됩니다...",
-      source: "조선비즈"
-    },
-    {
-      id: 3,
-      title: "6월 서울 아파트 낙찰가율 98.5%...3년 만에 최고치",
-      date: "2025.07.08",
-      content: "기사 내용이 여기에 표시됩니다...",
-      source: "부동산114"
-    },
-    {
-      id: 4,
-      title: "전국 아파트 분양전망지수 97.0...4개월 연속 상승",
-      date: "2025.07.08",
-      content: "기사 내용이 여기에 표시됩니다...",
-      source: "연합뉴스"
-    },
-    {
-      id: 5,
-      title: "자양4동 A구역 정비계획 결정고시...한강변 2천999세대 대단지로",
-      date: "2025.07.09",
-      content: "기사 내용이 여기에 표시됩니다...",
-      source: "조선비즈"
-    },
-    {
-      id: 6,
-      title: "독산·시흥동 일대 대변신...13만평 주거·교통 통합정비 추진",
-      date: "2025.07.09",
-      content: "기사 내용이 여기에 표시됩니다...",
-      source: "부동산114"
-    },
-  ];
+  // API 호출 함수
+  const fetchNewsData = async (pageNum: number) => {
+    // 데이터를 불러오기 시작했으므로 로딩 상태를 true로 설정
+    setLoading(true);
+    // 지정된 주소로 API 호출 보냄
+    fetch(`/api/board/news_articles?pageNum=${pageNum}&size=6`)
+      // 서버로부터 응답을 받았으면
+      .then(response => {
+        console.log('Response status:', response.status);
+        // 응답이 성공적이지 못하면
+        if (!response.ok) {
+          // 에러 발생
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        // 응답의 Content-Type이 JSON인지 확인
+        const contentType = response.headers.get('content-type') || '';
+        // 만약 JSON 형식이 아니면
+        if (!contentType.toLowerCase().includes('application/json')) {
+          // 경고 메시지 띄움
+          console.warn('예상치 못한 Content-Type:', contentType);
+          // JSON 파싱 시도
+          return response.json().catch(() => { throw new Error('JSON 파싱 실패') });
+        }
+        // JSON 형식이면
+        return response.json();
+      })
+      // JSON 데이터를 받았으면
+      .then(data => {
+        console.log('API 응답 데이터:', data);
+        // 뉴스 데이터 설정
+        setNewsData(data.content);
+        // 페이지네이션 데이터 설정
+        setPagination({
+          totalPages: data.totalPages,
+          currentPage: data.number,
+          startPage: data.startPage,
+          endPage: data.endPage,
+          hasPrevBlock: data.hasPrevBlock,
+          hasNextBlock: data.hasNextBlock,
+          prevBlockStartPage: data.prevBlockStartPage,
+          nextBlockStartPage: data.nextBlockStartPage
+        });
+        // 키워드 데이터 설정
+        setKeywords(mockKeywords);
+        // 로딩 상태 false로 설정
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("뉴스 데이터 로딩 오류:", error);
+        // 뉴스 데이터를 빈 배열로 설정
+        setNewsData([]); 
+        // 로딩 상태 false로 설정
+        setLoading(false);
+      });
+  };
 
-  // 임시 키워드 데이터 (실제로는 뉴스 분석 결과에서 받아올 데이터)
+  // 컴포넌트 마운트 시 API 호출
+  useEffect(() => {
+    // 뉴스 페이지네이션 API 호출하여 페이지 1로 이동
+    fetchNewsData(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 임시 키워드 데이터
   const mockKeywords: KeywordItem[] = [
     { text: "재개발", weight: 100, color: "#E91E63" },
     { text: "대출", weight: 85, color: "#9C27B0" },
@@ -119,51 +180,82 @@ const PG400001: React.FC = () => {
     { text: "안정", weight: 22, color: "#673AB7" },
   ];
 
-  // 탭 목록
+  // 탭 목록 데이터
   const tabs = ["연합뉴스", "조선비즈", "부동산114"];
 
-  // 컴포넌트 마운트 시 데이터 로드
-  useEffect(() => {
-    // 실제로는 API 호출
-    setTimeout(() => {
-      setNewsData(mockNewsData);
-      setKeywords(mockKeywords);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  // 페이지 이동 (페이지네이션용) - TODO: 백엔드 연동 예정
+  // 페이지네이션 클릭 핸들러
   const goToPage = (pageNumber: number) => {
-    console.log("페이지 이동:", pageNumber);
-    // TODO: 백엔드 페이지네이션 API 연동 예정
+    // 페이지 번호가 1개 이상이고 총 페이지 수보다 작거나 같으면
+    if (pageNumber >= 1 && pageNumber <= pagination.totalPages) {
+      // 뉴스 페이지네이션 API 호출하여 해당되는 페이지로 이동
+      fetchNewsData(pageNumber);
+    }
   };
 
-  // 워드클라우드 스타일(임시)
+  // 이전 페이지로 이동
+  const goToPrevPage = () => {
+    // 현재 페이지가 1보다 크면
+    if (pagination.currentPage > 1) {
+      // 이전 페이지로 이동
+      goToPage(pagination.currentPage - 1);
+    }
+  };
+
+  // 다음 페이지로 이동
+  const goToNextPage = () => {
+    // 현재 페이지가 총 페이지 수보다 작으면
+    if (pagination.currentPage < pagination.totalPages) {
+      // 다음 페이지로 이동
+      goToPage(pagination.currentPage + 1);
+    }
+  };
+
+  // 이전 블록으로 이동
+  const goToPrevBlock = () => {
+    // 이전 블록이 존재하고 이전 블록의 시작 페이지가 있으면
+    if (pagination.hasPrevBlock && pagination.prevBlockStartPage) {
+      // 이전 블록의 시작 페이지로 이동
+      goToPage(pagination.prevBlockStartPage);
+    }
+  };
+
+  // 다음 블록으로 이동
+  const goToNextBlock = () => {
+    // 다음 블록이 존재하고 다음 블록의 시작 페이지가 있으면
+    if (pagination.hasNextBlock && pagination.nextBlockStartPage) {
+      // 다음 블록의 시작 페이지로 이동
+      goToPage(pagination.nextBlockStartPage);
+    }
+  };
+
+  // 페이지 번호 배열 생성
+  const getPageNumbers = () => {
+    // 페이지 번호 배열 생성
+    const pages = [];
+    // 페이지 번호 배열에 페이지 번호 추가
+    for (let i = pagination.startPage; i <= pagination.endPage; i++) {
+      pages.push(i);
+    }
+    // 페이지 번호 배열 반환
+    return pages;
+  };
+
+  // 워드클라우드 스타일 계산
   const getWordCloudStyle = (keyword: KeywordItem, index: number) => {
     const fontSize = Math.max(12, (keyword.weight / 100) * 48);
+    // 키워드 위치 배열
     const positions = [
-      { top: "20%", left: "15%" },
-      { top: "35%", left: "45%" },
-      { top: "15%", left: "70%" },
-      { top: "50%", left: "25%" },
-      { top: "40%", left: "65%" },
-      { top: "65%", left: "15%" },
-      { top: "70%", left: "50%" },
-      { top: "25%", left: "35%" },
-      { top: "55%", left: "75%" },
-      { top: "80%", left: "30%" },
-      { top: "30%", left: "80%" },
-      { top: "75%", left: "65%" },
-      { top: "45%", left: "10%" },
-      { top: "60%", left: "40%" },
-      { top: "85%", left: "70%" },
-      { top: "10%", left: "50%" },
-      { top: "90%", left: "15%" },
-      { top: "35%", left: "90%" },
-      { top: "65%", left: "5%" },
-      { top: "20%", left: "25%" },
+      { top: "20%", left: "15%" }, { top: "35%", left: "45%" },
+      { top: "15%", left: "70%" }, { top: "50%", left: "25%" },
+      { top: "40%", left: "65%" }, { top: "65%", left: "15%" },
+      { top: "70%", left: "50%" }, { top: "25%", left: "35%" },
+      { top: "55%", left: "75%" }, { top: "80%", left: "30%" },
+      { top: "30%", left: "80%" }, { top: "75%", left: "65%" },
+      { top: "45%", left: "10%" }, { top: "60%", left: "40%" },
+      { top: "85%", left: "70%" }, { top: "10%", left: "50%" },
+      { top: "90%", left: "15%" }, { top: "35%", left: "90%" },
+      { top: "65%", left: "5%" }, { top: "20%", left: "25%" },
     ];
-
     const position = positions[index % positions.length];
 
     return {
@@ -178,10 +270,12 @@ const PG400001: React.FC = () => {
     };
   };
 
+  // 렌더링
   return (
     <div className="news-page">
       {/* 브레드크럼 네비게이션 */}
       <nav className="breadcrumb">
+        {/* 홈으로 가는 링크 */}
         <Link to="/">
           <FiHome className="breadcrumb-home" />
         </Link>
@@ -195,6 +289,7 @@ const PG400001: React.FC = () => {
           <div className="news-header">
             <div className="news-title-row">
               <h3>News</h3>
+              {/* 뉴스 탭 목록 */}
               <div className="tab-inline-navigation">
                 {tabs.map((tab) => (
                   <button
@@ -211,6 +306,7 @@ const PG400001: React.FC = () => {
 
           {/* 뉴스 목록 */}
           <div className="news-list">
+            {/* 로딩 중 로딩 스피너 표시 */}
             {loading ? (
               <div className="loading-spinner">
                 <div className="spinner"></div>
@@ -218,8 +314,10 @@ const PG400001: React.FC = () => {
               </div>
             ) : (
               <>
+                {/* 뉴스 기사 목록 렌더링 */}
                 {newsData.map((news) => (
                   <article key={news.id} className="news-item">
+                    {/* 클릭 시 상세 보기 */}
                     <div className="news-item-click-area" onClick={() => setSelectedNews(news)}>
                       <div className="news-date">{news.date}</div>
                       <h3 className="news-title">{news.title}</h3>
@@ -228,25 +326,69 @@ const PG400001: React.FC = () => {
                 ))}
 
                 {/* 페이지네이션 UI */}
-                <div className="pagination">
-                  {[1, 2, 3, 4, 5].map((page) => (
+                {pagination.totalPages > 1 && (
+                  <div className="pagination-container">
+                    {/* 앞 블록으로 이동 */}
                     <button
-                      key={page}
-                      className="page-button"
-                      onClick={() => goToPage(page)}
+                      className={`pagination-button nav-button ${!pagination.hasPrevBlock ? 'disabled' : ''}`}
+                      onClick={goToPrevBlock}
+                      disabled={!pagination.hasPrevBlock}
+                      title="이전 블록"
                     >
-                      {page}
+                      ≪
                     </button>
-                  ))}
-                </div>
+
+                    {/* 이전 페이지로 이동 */}
+                    <button
+                      className={`pagination-button nav-button ${pagination.currentPage <= 1 ? 'disabled' : ''}`}
+                      onClick={goToPrevPage}
+                      disabled={pagination.currentPage <= 1}
+                      title="이전 페이지"
+                    >
+                      ＜
+                    </button>
+
+                    {/* 페이지 번호들 */}
+                    {getPageNumbers().map((page) => (
+                      <button
+                        key={page}
+                        className={`pagination-button ${pagination.currentPage === page ? 'active' : ''}`}
+                        onClick={() => goToPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                    {/* 다음 페이지로 이동 */}
+                    <button
+                      className={`pagination-button nav-button ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}`}
+                      onClick={goToNextPage}
+                      disabled={pagination.currentPage >= pagination.totalPages}
+                      title="다음 페이지"
+                    >
+                      ＞
+                    </button>
+
+                    {/* 뒤 블록으로 이동 */}
+                    <button
+                      className={`pagination-button nav-button ${!pagination.hasNextBlock ? 'disabled' : ''}`}
+                      onClick={goToNextBlock}
+                      disabled={!pagination.hasNextBlock}
+                      title="다음 블록"
+                    >
+                      ≫
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </div>
         </div>
 
-        {/* 오른쪽: 연관 키워드 워드클라우드 또는 뉴스 상세 */}
+        {/* 오른쪽: 연관 키워드 또는 뉴스 상세 */}
         <div className="keyword-section">
           <div className="keyword-card">
+            {/* selectedNews가 있으면 상세 내용 표시 */}
             {selectedNews ? (
               <div className="news-detail" ref={detailRef}>
                 <h2>{selectedNews.title}</h2>
@@ -254,8 +396,10 @@ const PG400001: React.FC = () => {
                 <p className="news-content">{selectedNews.content}</p>
               </div>
             ) : (
+              // 없으면 워드클라우드 표시
               <>
                 <h2 className="keyword-title">연관 키워드</h2>
+                {/* 로딩 중 로딩 스피너 표시 */}
                 {loading ? (
                   <div className="keyword-loading">
                     <div className="spinner"></div>
@@ -263,13 +407,16 @@ const PG400001: React.FC = () => {
                   </div>
                 ) : (
                   <>
+                    {/* 워드클라우드 컨테이너 */}
                     <div className="wordcloud-container">
                       {keywords.map((keyword, index) => (
                         <span
                           key={`${keyword.text}-${index}`}
                           className="keyword-item"
+                          // 동적 스타일 적용
                           style={getWordCloudStyle(keyword, index)}
                           onClick={() => console.log(`키워드 클릭: ${keyword.text}`)}
+                          // 마우스 호버 효과
                           onMouseEnter={(e) => {
                             e.currentTarget.style.transform = "scale(1.1)";
                             e.currentTarget.style.opacity = "0.8";

@@ -7,7 +7,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from datetime import datetime
 import time, json, re, os
-import mysql.connector
+# import mysql.connector
 
 #  이름 : 임해균
 #  작성자 : 임해균
@@ -109,42 +109,42 @@ def save_to_json(news_list, folder="app/json"):
     print(f"✅ JSON 파일 저장 완료 ({filepath})")
 
 
-def save_to_db(news_list):
-    conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="12345",
-        database="realestate_news"
-    )
-    cursor = conn.cursor()
+# def save_to_db(news_list):
+#     conn = mysql.connector.connect(
+#         host="localhost",
+#         user="root",
+#         password="12345",
+#         database="realestate_news"
+#     )
+#     cursor = conn.cursor()
 
-    query = "INSERT INTO chosun (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
-    check_query = "SELECT COUNT(*) FROM chosun WHERE title = %s"
-    inserted_count = 0
+#     query = "INSERT INTO chosun (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
+#     check_query = "SELECT COUNT(*) FROM chosun WHERE title = %s"
+#     inserted_count = 0
 
-    for item in news_list:
-        title = item.get("title", "").strip()
+#     for item in news_list:
+#         title = item.get("title", "").strip()
 
-        cursor.execute(check_query, (title,))
-        count = cursor.fetchone()[0]
-        if count == 0:
-            cursor.execute(query, (
-                item.get("news_title", "").strip(),
-                title,
-                item.get("content", "").strip(),
-                item.get("date", "").strip()
-            ))
-            inserted_count += 1
-        else:
-            print(f"⏩ 중복으로 건너뜀: {title}")
+#         cursor.execute(check_query, (title,))
+#         count = cursor.fetchone()[0]
+#         if count == 0:
+#             cursor.execute(query, (
+#                 item.get("news_title", "").strip(),
+#                 title,
+#                 item.get("content", "").strip(),
+#                 item.get("date", "").strip()
+#             ))
+#             inserted_count += 1
+#         else:
+#             print(f"⏩ 중복으로 건너뜀: {title}")
 
-    conn.commit()
-    cursor.close()
-    conn.close()
-    print(f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨.")
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+#     print(f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨.")
 
 
-def Chosun_Save():
+def News_Chosun_Save():
     news = crawl_news()
     save_to_json(news)
-    save_to_db(news)
+    # save_to_db(news)

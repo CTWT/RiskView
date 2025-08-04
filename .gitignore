@@ -45,10 +45,14 @@ backend/*.log
 # -----------------------------
 # 🐍 FastAPI (ai-api/)
 # -----------------------------
-ai-server/.pytest_cache/
-ai-server/venv/
-ai-server/.env*
-ai-server/*.log
+ai-api/.pytest_cache/
+ai-api/venv/
+ai-api/.env*
+ai-api/*.log
+
+ai-api/__pycahche__
+ai-api/api/news_scraper/app/json/*.json
+
 .vscode/settings.json
 # ocr propertis
 

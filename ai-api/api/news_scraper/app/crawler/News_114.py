@@ -162,9 +162,4 @@ def save_to_json(news_list, filename_base="News_114"):
 def News_114_Save():
     news = crawl_news()
     save_to_json(news)
-    # save_to_db(news)
 
-
-if __name__ == "__main__":
-    News_114_Save()
-    # News_Yeonhap_Save()

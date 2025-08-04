@@ -19,46 +19,46 @@ import { useState, useCallback } from "react";
 export type ToastType = "success" | "error" | "info";
 
 interface ToastOptions {
-  duration?: number;
-  type?: ToastType;
+    duration?: number;
+    type?: ToastType;
 }
 
 interface ToastState {
-  message: string;
-  type: ToastType;
-  isVisible: boolean;
+    message: string;
+    type: ToastType;
+    isVisible: boolean;
 }
 
 const useToast = () => {
-  const [toast, setToast] = useState<ToastState>({
-    message: "",
-    type: "info",
-    isVisible: false,
-  });
-
-  const showToast = useCallback((message: string, options?: ToastOptions) => {
-    setToast({
-      message,
-      type: options?.type || "info",
-      isVisible: true,
+    const [toast, setToast] = useState<ToastState>({
+        message: "",
+        type: "info",
+        isVisible: false,
     });
 
-    const timer = setTimeout(() => {
-      setToast((prev) => ({ ...prev, isVisible: false }));
-    }, options?.duration || 3500);
+    const showToast = useCallback((message: string, options?: ToastOptions) => {
+        setToast({
+            message,
+            type: options?.type || "info",
+            isVisible: true,
+        });
 
-    return () => clearTimeout(timer);
-  }, []); // 의존성 배열에 아무것도 없으므로 함수는 한 번만 생성됩니다.
+        const timer = setTimeout(() => {
+            setToast((prev) => ({ ...prev, isVisible: false }));
+        }, options?.duration || 3500);
 
-  const hideToast = useCallback(() => {
-    setToast((prev) => ({ ...prev, isVisible: false }));
-  }, []);
+        return () => clearTimeout(timer);
+    }, []); // 의존성 배열에 아무것도 없으므로 함수는 한 번만 생성됩니다.
 
-  return {
-    toast,
-    showToast,
-    hideToast,
-  };
+    const hideToast = useCallback(() => {
+        setToast((prev) => ({ ...prev, isVisible: false }));
+    }, []);
+
+    return {
+        toast,
+        showToast,
+        hideToast,
+    };
 };
 
 export default useToast;

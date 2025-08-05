@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
+import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
 
 // Signup_EmailInputComponent : 이메일 인증 페이지
@@ -27,6 +29,9 @@ interface PG300004Props {
  */
 
 const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
+  // useToast 훅 사용
+  const { toast, showToast} = useToast(); // toast 상태도 가져오기
+
   // 사용자 입력 이메일 상태
   const [email, setEmail] = useState("");
   // 이메일 유효성 검사용 에러 메시지 상태
@@ -40,7 +45,7 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
    * @returns boolean - 유효한 이메일 형식이면 true, 아니면 false
    */
   const validateEmail = (email: string): boolean => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
     return regex.test(email);
   };
 
@@ -50,17 +55,18 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
    * 실패 시 오류 메시지를 표시
    */
   const handleSendEmail = () => {
-    const trimmedEmail = email.trim(); // 앞뒤 공백 제거
+    const cleanedEmail = email.replace(/\s+/g, "");
+    setEmail(cleanedEmail); // 이메일 상태 업데이트
 
     // 이메일 입력 여부 확인
-    if (!trimmedEmail) {
-      setEmailError("이메일을 입력해주세요.");
-    } else if (!validateEmail(trimmedEmail)) {
-      setEmailError("유효한 이메일 주소를 입력해주세요.");
+    if (!cleanedEmail) {
+      showToast("이메일을 입력해주세요.", { type: "error" });
+    } else if (!validateEmail(cleanedEmail)) {
+      showToast("유효한 이메일 주소를 입력해주세요.", { type: "error" });
     } else {
       setEmailError("");
       // TODO: 백엔드 API를 통한 실제 인증 메일 전송 구현 예정
-      onNext(trimmedEmail); // 이메일을 부모 컴포넌트에 전달
+      onNext(cleanedEmail); // 이메일을 부모 컴포넌트에 전달
     }
   };
 
@@ -93,6 +99,12 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
           인증 메일 전송
         </button>
       </div>
+      {/* 토스트 컴포넌트 */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+      />
     </div>
   );
 };

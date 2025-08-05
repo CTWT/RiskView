@@ -275,12 +275,6 @@ const PG400001: React.FC = () => {
     <div className="news-page">
       {/* 브레드크럼 네비게이션 */}
       <nav className="breadcrumb">
-        {/* 홈으로 가는 링크 */}
-        <Link to="/">
-          <FiHome className="breadcrumb-home" />
-        </Link>
-        <span className="breadcrumb-separator">{">"}</span>
-        <span className="breadcrumb-current">부동산 뉴스</span>
       </nav>
 
       <div className="news-container">

@@ -15,7 +15,8 @@
  */
 
 .has-header-margin {
-    margin-top: 55px; /* ⭐ 헤더가 있을 때만 이 마진이 적용 ⭐ */
+    margin-top: 72px; /* ⭐ 헤더가 있을 때만 이 마진이 적용 ⭐ */
+    box-sizing: border-box;
 }
 
 /* PG200001 - 메인페이지 담당 스타일*/
@@ -862,6 +863,50 @@
     font-size: 14px;
 }
 
+@media (max-width: 768px) {
+  .headerContainer {
+    padding: 0 20px;
+    /* 좌우 여백 줄이기 */
+    height: 60px;
+    /* 높이 줄이기 */
+  }
+
+  .headerLogoText {
+    font-size: 14px;
+    /* 글자 크기 축소 */
+  }
+
+  .headerNav a {
+    margin: 0 8px;
+    font-size: 10px;
+  }
+
+  .headerLogin,
+  .headerSignup {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  .headerAuth {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    max-width: 100%;
+  }
+
+  .headerAuth a {
+    margin-left: 0;
+    padding: 4px 8px;
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 /* PG3.tsx -> css */
 
 .authContainer {
@@ -989,6 +1034,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     gap: 10px;
 }
 
@@ -1157,7 +1203,7 @@
     margin-top: 4px;
 }
 
-.nickname-check-icon {
+.input-check-icon {
     position: absolute;
     right: 16px;
     top: 50%;
@@ -1166,11 +1212,11 @@
     color: #ccc;
 }
 
-.nickname-check-icon.success {
+.input-check-icon.success {
     color: #2ecc71;
 }
 
-.nickname-check-icon.error {
+.input-check-icon.error {
     color: #e74c3c;
 }
 
@@ -1619,72 +1665,6 @@
     margin-top: 4px;
 }
 
-/* 토스트 메시지 스타일 */
-.toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    /* 중앙 정렬을 위한 transform */
-    z-index: 1000;
-    min-width: 300px;
-    max-width: 500px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    animation: slideDown 0.3s ease-out;
-    /* 애니메이션도 위에서 아래로 변경 */
-}
-
-.toast-success {
-    background-color: #10b981;
-    color: white;
-}
-
-.toast-error {
-    background-color: #ef4444;
-    color: white;
-}
-
-.toast-info {
-    background-color: #3b82f6;
-    color: white;
-}
-
-.toast-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-}
-
-.toast-message {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 1.4;
-}
-
-.toast-close {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0;
-    margin-left: 12px;
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-}
-
-.toast-close:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
 
 @keyframes slideIn {
     from {
@@ -1743,7 +1723,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    margin-top: 50px;
 }
 
 /* 브레드크럼 네비게이션 */

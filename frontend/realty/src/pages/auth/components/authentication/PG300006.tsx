@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
+import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
+import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
 
 // Signup_InfoInputPage: 비밀번호 및 닉네임 설정 페이지
@@ -31,13 +33,18 @@ interface PG300006Props {
  * @returns JSX.Element - 이메일(읽기전용), 비밀번호, 닉네임 입력 폼이 포함된 UI 컴포넌트
  */
 const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
+  // useToast 훅 사용
+  const { toast, showToast } = useToast(); // toast 상태도 가져오기
   // 비밀번호 관련 상태
   const [password, setPassword] = useState(""); // 사용자가 입력한 비밀번호
   const [confirmPassword, setConfirmPassword] = useState(""); // 비밀번호 확인 입력값
   const [showPassword, setShowPassword] = useState(false); // 비밀번호 입력란 표시/숨김 상태
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // 비밀번호 확인란 표시/숨김 상태
-  const [passwordError, setPasswordError] = useState(""); // 비밀번호 유효성 검사 오류 메시지
-  const [confirmPasswordError, setConfirmPasswordError] = useState(""); // 비밀번호 확인 오류 메시지
+
+  // 아이디 관련 상태
+  const [username, setUsername] = useState(""); // 사용자가 입력한 아이디
+  const [usernameError, setUsernameError] = useState(""); // 아이디 유효성 검사 오류 메시지
+  const [usernameSuccessMessage, setUsernameSuccessMessage] = useState(""); // 아이디 사용 가능 메시지
 
   // 닉네임 관련 상태
   const [nickname, setNickname] = useState(""); // 사용자가 입력한 닉네임
@@ -52,6 +59,36 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
   };
 
   /**
+   * 아이디 중복 확인 함수
+   * 입력된 아이디의 중복 여부를 확인
+   * 현재는 테스트용 로직이며, 추후 백엔드 API와 연동 예정
+   *
+   * @param usernameToCheck - 중복 여부를 확인할 아이디 문자열
+   */
+  const handleUsernameCheck = async (usernameToCheck: string) => {
+    if (!usernameToCheck.trim()) {
+      showToast("아이디를 입력해주세요.", { type: "error" });
+      setUsernameSuccessMessage("");
+      return;
+    }
+
+    try {
+      if (usernameToCheck === "debugging") {
+        showToast("이미 사용 중인 아이디입니다.", { type: "error" });
+        setUsernameError("이미 사용 중인 아이디입니다.");
+        setUsernameSuccessMessage("");
+      } else {
+        setUsernameError("");
+        showToast("사용 가능한 아이디입니다.", { type: "success" });
+        setUsernameSuccessMessage("");
+      }
+    } catch (error) {
+      setUsernameError("아이디 확인 중 오류가 발생했습니다.");
+      setUsernameSuccessMessage("");
+    }
+  };
+
+  /**
    * 닉네임 중복 확인 함수
    * 입력된 닉네임의 중복 여부를 확인
    * 현재는 테스트용 로직이며, 추후 백엔드 API와 연동 예정
@@ -61,7 +98,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
   const handleNicknameCheck = async (nicknameToCheck: string) => {
     // 닉네임 입력 여부 확인
     if (!nicknameToCheck.trim()) {
-      setNicknameError("닉네임을 입력해주세요.");
+      showToast("닉네임을 입력해주세요.", { type: "error" });
       setNicknameSuccessMessage("");
       return;
     }
@@ -73,10 +110,12 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
 
       // 임시 테스트 로직 - "debugging"은 중복으로 처리
       if (nicknameToCheck === "debugging") {
+        showToast("이미 사용 중인 닉네임입니다.", { type: "error" });
         setNicknameError("이미 사용 중인 닉네임입니다.");
         setNicknameSuccessMessage("");
       } else {
         setNicknameError(""); // 사용 가능한 닉네임
+        showToast("사용 가능한 닉네임입니다.", { type: "success" });
         setNicknameSuccessMessage("");
       }
     } catch (error) {
@@ -84,6 +123,16 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
       setNicknameSuccessMessage("");
     }
   };
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (username.trim()) {
+        handleUsernameCheck(username);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounce);
+  }, [username]);
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -96,46 +145,98 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
   }, [nickname]);
 
   /**
+   * 비밀번호와 비밀번호 확인이 일치하지 않을 경우 또는 일치할 경우 토스트 메시지를 표시 (디바운스 적용)
+   * 사용자가 비밀번호 확인 입력 중 실수하거나 정확하게 입력했을 때 즉시 피드백을 줌
+   */
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (confirmPassword && password) {
+        if (confirmPassword !== password) {
+          showToast("비밀번호가 일치하지 않습니다.", { type: "error" });
+        } else {
+          showToast("비밀번호가 일치합니다.", { type: "success" });
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [confirmPassword, password]);
+
+  /**
+   * 비밀번호 유효성 검사 함수
+   * @returns boolean - 유효하면 true, 아니면 false
+   */
+  const isPasswordValid = (): boolean => {
+    if (password.length < 6) {
+      showToast("비밀번호는 최소 6자 이상이어야 합니다.", { type: "error" });
+      return false;
+    }
+    if (confirmPassword !== password) {
+      showToast("비밀번호가 일치하지 않습니다.", { type: "error" });
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * 닉네임 유효성 검사 함수
+   * @returns boolean - 유효하면 true, 아니면 false
+   */
+  const isNicknameValid = (): boolean => {
+    if (!nickname.trim()) {
+      showToast("닉네임을 입력해주세요.", { type: "error" });
+      return false;
+    }
+    if (nicknameError) {
+      return false;
+    }
+    return true;
+  };
+
+  /**
+   * 아이디 유효성 검사 함수
+   * @returns boolean - 유효하면 true, 아니면 false
+   */
+  const isUsernameValid = (): boolean => {
+    if (!username.trim()) {
+      showToast("아이디를 입력해주세요.", { type: "error" });
+      return false;
+    }
+    if (usernameError) {
+      return false;
+    }
+    return true;
+  };
+
+  /**
    * 폼 제출 처리 핸들러
    * @param e 폼 이벤트 객체
    */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    let valid = true;
 
-    // 비밀번호 유효성 검사 (6자 이상)
-    if (password.length < 6) {
-      setPasswordError("비밀번호는 최소 6자 이상이어야 합니다.");
-      valid = false;
-    } else {
-      setPasswordError("");
-    }
+    const validPassword = isPasswordValid();
+    const validNickname = isNicknameValid();
+    const validUsername = isUsernameValid();
 
-    // 비밀번호 확인이 일치하는지 검사
-    if (confirmPassword !== password) {
-      setConfirmPasswordError("비밀번호가 일치하지 않습니다.");
-      valid = false;
-    } else {
-      setConfirmPasswordError("");
-    }
-
-    // 닉네임이 입력되었는지 검사
-    if (!nickname.trim()) {
-      setNicknameError("닉네임을 입력해주세요.");
-      valid = false;
-    } else if (nicknameError) {
-      // 닉네임 중복 에러가 있으면 폼 제출 불가
-      valid = false;
-    } else {
-      setNicknameError("");
-    }
-
-    if (valid) {
+    if (validPassword && validNickname && validUsername) {
       // 모든 조건 통과 시 다음 페이지로 이동
-      console.log("폼 제출 완료:", { email: userEmail, password, nickname });
+      console.log("폼 제출 완료:", { email: userEmail, password, nickname, username });
       onNext();
     }
   };
+
+  const nicknameStatus = nickname
+    ? nicknameError
+      ? "error"
+      : "success"
+    : "";
+
+  const usernameStatus = username
+    ? usernameError
+      ? "error"
+      : "success"
+    : "";
 
   /**
    * 사용자 비밀번호 및 닉네임 입력 폼
@@ -159,8 +260,32 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
               value={userEmail}
               readOnly
               className="authInput"
-              style={{ backgroundColor: "#d9d9d9", color: "#828282" }}
+              style={{
+                backgroundColor: "#d9d9d9",
+                color: "#828282",
+                userSelect: "none",
+              }}
+              onMouseDown={(e) => e.preventDefault()} // 드래그 차단
             />
+          </div>
+
+          {/* 아이디 입력 필드 */}
+          <div className="authFormRow">
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="아이디"
+              className="authInput"
+            />
+            {/**
+             * 아이디 중복 여부를 시각적으로 표시하는 아이콘
+             * - 중복 확인 완료 && 사용 가능: 초록색 (success 클래스)
+             * - 중복 확인 완료 && 사용 불가: 빨간색 (error 클래스)
+             */}
+            <span className={`input-check-icon ${usernameStatus}`}>
+              <FiCheckCircle />
+            </span>
           </div>
 
           {/* 비밀번호 입력 필드 */}
@@ -179,7 +304,6 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </span>
           </div>
-          {passwordError && <p className="authError">{passwordError}</p>}
 
           {/* 비밀번호 확인 입력 필드 */}
           <div className="authPasswordInputWrapper">
@@ -198,10 +322,6 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
             </span>
           </div>
 
-          {confirmPasswordError && (
-            <p className="authError">{confirmPasswordError}</p>
-          )}
-
           {/* 닉네임 입력 필드 */}
           <div className="authPasswordInputWrapper">
             <input
@@ -217,25 +337,10 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
              * - 중복 확인 완료 && 사용 가능: 초록색 (success 클래스)
              * - 중복 확인 완료 && 사용 불가: 빨간색 (error 클래스)
              */}
-            <span
-              className={`nickname-check-icon ${
-                nickname && !nicknameError
-                  ? "success"
-                  : nicknameError
-                  ? "error"
-                  : ""
-              }`}
-            >
+            <span className={`input-check-icon ${nicknameStatus}`}>
               <FiCheckCircle />
             </span>
           </div>
-          {/* 닉네임 또는 비밀번호 확인 오류 메시지 */}
-          {(nicknameError ||
-            (confirmPassword && password && confirmPassword !== password)) && (
-            <p className="authError">
-              {nicknameError ? nicknameError : "비밀번호가 일치하지 않습니다."}
-            </p>
-          )}
 
           {/* 제출 버튼 */}
           <button
@@ -244,6 +349,8 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
             disabled={
               !!nicknameError ||
               !nickname.trim() ||
+              !!usernameError ||
+              !username.trim() ||
               password.length < 6 ||
               confirmPassword !== password
             }
@@ -267,6 +374,12 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
           </p>
         </form>
       </div>
+      {/* 토스트 컴포넌트 */}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+      />
     </div>
   );
 };

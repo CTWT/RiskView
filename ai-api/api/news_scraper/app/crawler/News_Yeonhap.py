@@ -6,7 +6,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time, json, re, os
 from datetime import datetime
-import mysql.connector
+# import mysql.connector
 
 
 #  이름 : 유연우
@@ -135,18 +135,19 @@ def save_to_json(news_list, filename_base="news_articles"):
         print(f"❌ JSON 저장 중 오류 발생: {e}")
 
 
-def save_to_db(news_list):
-    try:
-        conn = mysql.connector.connect(
-            host="localhost", user="root", password="12345", database="newsdb"
-        )
-        print("✅ DB 연결 성공!")
-    except mysql.connector.Error as err:
-        print("❌ DB 연결 실패:", err)
-        return
+# def save_to_db(news_list):
+#     try:
+#         conn = mysql.connector.connect(
+#             host="localhost", user="root", password="12345", database="newsdb"
+#         )
+#         print("✅ DB 연결 성공!")
+#     except mysql.connector.Error as err:
+#         print("❌ DB 연결 실패:", err)
+#         return
 
-    cursor = conn.cursor()
+#     cursor = conn.cursor()
 
+<<<<<<< HEAD
     for article in news_list:
         article_code = "연합뉴스"
         title = article["title"]
@@ -160,14 +161,29 @@ def save_to_db(news_list):
             print(f"✅ 저장됨: {title}")
         except mysql.connector.IntegrityError:
             print(f"❌ 중복 건너뜀: {title}")
+=======
+#     for article in news_list:
+#         news_title = "연합뉴스"
+#         title = article["title"]
+#         content = article["content"]
+#         date = article["date"]
 
-    conn.commit()
-    cursor.close()
-    conn.close()
-    print("✅ DB 저장 완료!")
+#         query = "INSERT INTO yeonhap (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
+
+#         try:
+#             cursor.execute(query, (news_title, title, content, date))
+#             print(f"✅ 저장됨: {title}")
+#         except mysql.connector.IntegrityError:
+#             print(f"❌ 중복 건너뜀: {title}")
+>>>>>>> f5f12749a340950b4a402095c5b57772a48eb1b9
+
+#     conn.commit()
+#     cursor.close()
+#     conn.close()
+#     print("✅ DB 저장 완료!")
 
 
 def News_Yeonhap_Save():
     data = crawl_yeonhap_news()
     save_to_json(data)
-    save_to_db(data)
+    # save_to_db(data)

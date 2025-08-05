@@ -161,4 +161,8 @@ def save_to_db(news_list):
 def News_114_Save():
     news = crawl_news()
     save_to_json(news)
+<<<<<<< HEAD
     save_to_db(news)
+=======
+
+>>>>>>> f5f12749a340950b4a402095c5b57772a48eb1b9

@@ -283,9 +283,11 @@ public class ContractDTO {
     /**
      * OCRResponse
      */
+    @Builder
     @Getter
     @Setter
     @RequiredArgsConstructor
+    @AllArgsConstructor
     @ToString
     public static class OCRResponse {
         private ContractDTO.StructuredContractDataDTO structuredContractDataDTO;
@@ -302,6 +304,16 @@ public class ContractDTO {
         private DocumentsDTO documentsDTO;
         private StructuredContractDataDTO structuredContractDataDTO;
         private FileStorageMetadataDTO fileStorageMetadataDTO;
+    }
+
+    @Builder
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ContractResponse {
+        private ContractInfo contractInfo;
+        private MapInfo mapInfo;
     }
 
     // LocalDate -> Date

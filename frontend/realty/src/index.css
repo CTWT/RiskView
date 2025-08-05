@@ -3,7 +3,7 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
+  color-scheme: light;
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
@@ -69,5 +69,19 @@ button:focus-visible {
 
   button {
     background-color: #f9f9f9;
+  }
+}
+
+#root {
+  padding: 0
+  box-sizing: border-box;
+  max-width: 1280px;
+  text-align: center;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding-top: 60px;
   }
 }

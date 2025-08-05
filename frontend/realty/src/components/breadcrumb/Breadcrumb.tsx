@@ -14,48 +14,48 @@ import { AiOutlineHome } from "react-icons/ai";
  */
 
 const nameMap: { [key: string]: string } = {
-  PG100001: "계약서 분석",
-  PG400001: "부동산 뉴스",
-  PG500001: "커뮤니티",
-  PG600001: "서비스 소개",
-  // ... 필요에 따라 다른 PG 코드 추가
+    PG100001: "계약서 분석",
+    PG400001: "부동산 뉴스",
+    PG500001: "커뮤니티",
+    PG600001: "서비스 소개",
+    // ... 필요에 따라 다른 PG 코드 추가
 };
 
 const Breadcrumb: React.FC = () => {
-  const location = useLocation();
-  const pathnames = location.pathname.split("/").filter((x) => x);
+    const location = useLocation();
+    const pathnames = location.pathname.split("/").filter((x) => x);
 
-  if (pathnames.length === 0) {
-    return null;
-  }
+    if (pathnames.length === 0) {
+        return null;
+    }
 
-  return (
-    <div className="breadcrumb-container">
-      <Link to="/" className="breadcrumb-item breadcrumb-home-link">
-        <AiOutlineHome size={20} />
-      </Link>
-      {pathnames.map((name, index) => {
-        const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
-        const isLast = index === pathnames.length - 1;
+    return (
+        <div className="breadcrumb-container">
+            <Link to="/" className="breadcrumb-item breadcrumb-home-link">
+                <AiOutlineHome size={20} />
+            </Link>
+            {pathnames.map((name, index) => {
+                const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
+                const isLast = index === pathnames.length - 1;
 
-        return (
-          <span key={name} className="breadcrumb-item-wrapper">
-            <span className="breadcrumb-separator"> &gt; </span>
-            {isLast ? (
-              // nameMap을 사용하여 PG 코드를 사용자 친화적인 이름으로 표시
-              <span className="breadcrumb-item breadcrumb-active">
-                {nameMap[name] || name}
-              </span>
-            ) : (
-              <Link to={routeTo} className="breadcrumb-item">
-                {nameMap[name] || name}
-              </Link>
-            )}
-          </span>
-        );
-      })}
-    </div>
-  );
+                return (
+                    <span key={name} className="breadcrumb-item-wrapper">
+                        <span className="breadcrumb-separator"> &gt; </span>
+                        {isLast ? (
+                            // nameMap을 사용하여 PG 코드를 사용자 친화적인 이름으로 표시
+                            <span className="breadcrumb-item breadcrumb-active">
+                                {nameMap[name] || name}
+                            </span>
+                        ) : (
+                            <Link to={routeTo} className="breadcrumb-item">
+                                {nameMap[name] || name}
+                            </Link>
+                        )}
+                    </span>
+                );
+            })}
+        </div>
+    );
 };
 
 export default Breadcrumb;

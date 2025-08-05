@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
+import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
 
 // Signup_VerificationCodePage: 이메일 인증번호 입력 및 확인 페이지
@@ -28,6 +30,8 @@ interface PG300005Props {
  * @returns JSX.Element - 인증번호 입력 폼과 타이머가 포함된 UI 컴포넌트
  */
 const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
+  // useToast 훅 사용
+  const { toast, showToast } = useToast(); // toast 상태도 가져오기
   // 인증 실패 메시지 상태
   const [sendError, setSendError] = useState("");
   // 입력된 인증번호 상태
@@ -58,7 +62,7 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
 
     // 임시 검증 로직 (테스트용)
     if (verificationCode !== "123456") {
-      setSendError("인증번호가 일치하지 않습니다.");
+      showToast("인증번호가 일치하지 않습니다.", { type: "error" });
     } else {
       setSendError(""); // 에러 초기화
       console.log("인증번호 확인 완료");
@@ -123,6 +127,11 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
           </button>
         )}
       </div>
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+      />
     </div>
   );
 };

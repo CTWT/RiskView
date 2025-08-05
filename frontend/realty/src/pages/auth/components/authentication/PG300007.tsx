@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast"; // useToast 훅 import
 import "../../../../styles/common/common.css";
 
@@ -253,7 +254,7 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
         if (typeof onLogin === "function") {
           onLogin();
         }
-      }, 2000);
+      }, 1000);
 
     } catch (error) {
       console.error('회원가입 완료 처리 오류:', error);
@@ -468,21 +469,11 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
         </div>
       </form>
 
-      {/* 토스트 메시지 컴포넌트 */}
-      {toast.isVisible && (
-        <div className={`toast toast-${toast.type}`}>
-          <div className="toast-content">
-            <span className="toast-message">{toast.message}</span>
-            <button
-              className="toast-close"
-              onClick={hideToast}
-              aria-label="토스트 닫기"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isVisible={toast.isVisible}
+      />
     </div>
   );
 };

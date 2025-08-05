@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.07.28
  * 파일명 : NewsArticlesService.java
  */
@@ -40,12 +40,12 @@ public class NewsArticlesService {
         Page<NewsArticlesDTO> newsPage = newsArticlesRepository.findAll(pageable)
             // Page<NewsArticles> 타입을 Page<NewsArticleDTO>로 매핑
             .map(news -> new NewsArticlesDTO(
-                // 제목을 꺼냄
+                news.getArticleId(),
                 news.getTitle(),
-                // 내용을 꺼냄
                 news.getContent(),
-                // 발행일을 꺼내 2000-01-01과 같은 형식으로 만듬
-                news.getPublishedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                news.getPublishedAt() != null ? news.getPublishedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "",
+                news.getSourceUrl(),
+                "뉴스출처" // source (DB에 필드 있으면 news.getSource()로 교체)
             )
         );
 
@@ -57,12 +57,12 @@ public class NewsArticlesService {
         }
 
         // --- PaginationInfo의 로직을 NewsArticlesPage 생성 시 직접 계산하여 전달하도록 변경 ---
-        // 현재 블록: 0블록은 1~10페이지, 1블록은 11~20페이지, ... (blockSize는 10으로 고정)
-        int blockSize = 10;
+        // 현재 블록: 0블록은 1~5페이지, 1블록은 6~10페이지, ... (blockSize는 5로 고정)
+        int blockSize = 5;
         int currentBlock = (pageNum - 1) / blockSize;
-        // (각 블록의)시작페이지 : 1, 11, 21, 31, ...
+        // (각 블록의)시작페이지 : 1, 6, 11, 16, ...
         int startPage = currentBlock * blockSize + 1;
-        // (각 블록의)마지막 페이지: 10, 20, 30, 40, ... 단, 총 페이지 수를 넘지 않도록
+        // (각 블록의)마지막 페이지: 5, 10, 15, 20, ... 단, 총 페이지 수를 넘지 않도록
         int endPage = Math.min(startPage + blockSize - 1, totalPages);
         // 이전 블록 존재 여부
         boolean hasPrevBlock = startPage > 1;

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
+import contractFieldLabels from "../../contracts/contractFieldLabels";
 
 import type {
     DocumentsDTO,
@@ -152,38 +153,40 @@ const PG100003: React.FC<PG100003Props> = ({
                 <div className="an03-pane an03-ocr-text-pane">
                     <h3 className="an03-pane-title">OCR 분석 결과</h3>
                     <div className="an03-structured-data-form">
-                        {/* 예시: 주소지 입력 필드 */}
-                        <div className="an03-form-field">
-                            <label htmlFor="location">주소지</label>
-                            <input
-                                id="location"
-                                type="text"
-                                value={
-                                    // 수정: 옵셔널 체이닝으로 안전하게 접근하도록 수정
-                                    currentOcrData.structuredContractDataDTO
-                                        ?.location || ""
-                                }
-                                onChange={(e) =>
-                                    handleDataChange("location", e.target.value)
-                                }
-                            />
-                        </div>
-                        {/* 예시: 보증금 입력 필드 */}
-                        <div className="an03-form-field">
-                            <label htmlFor="deposit">보증금</label>
-                            <input
-                                id="deposit"
-                                type="text"
-                                value={
-                                    currentOcrData.structuredContractDataDTO?.deposit?.toString() ||
-                                    ""
-                                }
-                                onChange={(e) =>
-                                    handleDataChange("deposit", e.target.value)
-                                }
-                            />
-                        </div>
-                        {/* 다른 계약 항목들도 여기에 추가됩니다. */}
+                        {Object.entries(contractFieldLabels).map(
+                            ([fieldKey, label]) => {
+                                const value =
+                                    currentOcrData.structuredContractDataDTO?.[
+                                        fieldKey as keyof StructuredContractDataDTO
+                                    ];
+
+                                return (
+                                    <div
+                                        key={fieldKey}
+                                        className="an03-form-field"
+                                    >
+                                        <label htmlFor={fieldKey}>
+                                            {label}
+                                        </label>
+                                        <input
+                                            id={fieldKey}
+                                            type="text"
+                                            value={
+                                                value != null
+                                                    ? value.toString()
+                                                    : ""
+                                            }
+                                            onChange={(e) =>
+                                                handleDataChange(
+                                                    fieldKey as keyof StructuredContractDataDTO,
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                );
+                            }
+                        )}
                     </div>
                 </div>
             </div>

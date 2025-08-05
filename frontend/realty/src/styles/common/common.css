@@ -325,30 +325,49 @@
     margin-top: 10px;
 }
 
-.an03-ocr-textarea {
+.an03-structured-data-form {
     width: 100%;
-    height: 400px; /* 텍스트 에리어 높이 고정 */
+    max-height: 600px;
+    overflow-y: auto; /* 세로 스크롤 허용 */
     padding: 15px;
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1em;
     line-height: 1.6;
-    resize: vertical; /* 수직으로만 크기 조절 가능 */
-    font-family: "Malgun Gothic", "맑은 고딕", sans-serif; /* 가독성 좋은 폰트 */
-    box-sizing: border-box; /* 패딩, 보더 포함하여 너비 계산 */
+    resize: vertical;
+    font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
+    box-sizing: border-box;
 }
 
-.an03-ocr-textarea:focus {
+.an03-structured-data-form:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-.an03-edit-guide {
-    font-size: 0.9em;
-    color: #888;
-    margin-top: 10px;
-    text-align: right;
+.an03-form-field {
+    margin-bottom: 15px;
+}
+
+.an03-form-field label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+.an03-form-field input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.an03-form-field input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 /* 지도 API 구역 */
@@ -864,47 +883,47 @@
 }
 
 @media (max-width: 768px) {
-  .headerContainer {
-    padding: 0 20px;
-    /* 좌우 여백 줄이기 */
-    height: 60px;
-    /* 높이 줄이기 */
-  }
+    .headerContainer {
+        padding: 0 20px;
+        /* 좌우 여백 줄이기 */
+        height: 60px;
+        /* 높이 줄이기 */
+    }
 
-  .headerLogoText {
-    font-size: 14px;
-    /* 글자 크기 축소 */
-  }
+    .headerLogoText {
+        font-size: 14px;
+        /* 글자 크기 축소 */
+    }
 
-  .headerNav a {
-    margin: 0 8px;
-    font-size: 10px;
-  }
+    .headerNav a {
+        margin: 0 8px;
+        font-size: 10px;
+    }
 
-  .headerLogin,
-  .headerSignup {
-    font-size: 10px;
-    padding: 4px 8px;
-  }
+    .headerLogin,
+    .headerSignup {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
 
-  .headerAuth {
-    display: flex;
-    flex-direction: row;
-    gap: 6px;
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    max-width: 100%;
-  }
+    .headerAuth {
+        display: flex;
+        flex-direction: row;
+        gap: 6px;
+        align-items: center;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 100%;
+    }
 
-  .headerAuth a {
-    margin-left: 0;
-    padding: 4px 8px;
-    font-size: 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+    .headerAuth a {
+        margin-left: 0;
+        padding: 4px 8px;
+        font-size: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 /* PG3.tsx -> css */
@@ -1664,7 +1683,6 @@
     color: #ef4444;
     margin-top: 4px;
 }
-
 
 @keyframes slideIn {
     from {

@@ -12,12 +12,12 @@ import mysql.connector
 #  이름 : 유연우
 #  작성자 : 유연우
 #  수정자 :
-#  수정일 : 25.07.28
+#  수정일 : 25.08.05
 #  작성일 : 25.07.23
 #  파일명 : News_yeonhap.py
 
 # 연합뉴스 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
-# DB 저장까지는 save_to_db 함수 주석 처리 후 실행
+# DB 저장까지는 save_to_db 함수 주석 처리 후 실행 - DB 설정 되어있으면 그냥 Main.py에서 실행
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
 
@@ -39,7 +39,8 @@ def crawl_yeonhap_news():
     driver.get(list_url)
     time.sleep(5)
 
-    news_items = driver.find_elements(By.CSS_SELECTOR, "a.tit-news")
+    news_items = driver.find_elements(By.CSS_SELECTOR, "a.tit-news")[:24]
+    # print(driver.page_source[:5000])  # Debug: Check if the list HTML is loaded
     print(f"📰 수집한 기사 링크 수: {len(news_items)}")
 
     news_data = []
@@ -84,14 +85,15 @@ def crawl_yeonhap_news():
                 else ""
             )
 
-            if title and content:
+            is_ynanews = "연합뉴스" in content or "© 연합뉴스" in content
+
+            if title and content and is_ynanews:
                 news_data.append(
                     {
-                        "news_title": "연합뉴스",
+                        "article_code": "연합뉴스",
                         "title": title,
                         "content": content,
                         "date": formatted_date,
-                        "link": link,
                     }
                 )
                 print(f"✅ [{idx+1}] 저장됨: {title[:25]}...")
@@ -112,7 +114,7 @@ def crawl_yeonhap_news():
     return news_data
 
 
-def save_to_json(news_list, filename_base="News_Yeonhap"):
+def save_to_json(news_list, filename_base="news_articles"):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     directory = os.path.join(base_dir, "..", "json")
@@ -146,15 +148,15 @@ def save_to_db(news_list):
     cursor = conn.cursor()
 
     for article in news_list:
-        news_title = "연합뉴스"
+        article_code = "연합뉴스"
         title = article["title"]
         content = article["content"]
         date = article["date"]
 
-        query = "INSERT INTO yeonhap (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO news_articles (article_code, title, content, date) VALUES (%s, %s, %s, %s)"
 
         try:
-            cursor.execute(query, (news_title, title, content, date))
+            cursor.execute(query, (article_code, title, content, date))
             print(f"✅ 저장됨: {title}")
         except mysql.connector.IntegrityError:
             print(f"❌ 중복 건너뜀: {title}")

@@ -11,9 +11,15 @@ import mysql.connector
 
 #  이름 : 임해균
 #  작성자 : 임해균
-#  수정자 :
+#  수정자 : 유연우
+#  수정일 : 25.08.05
 #  작성일 : 2025-07-28
 #  파일명 : News_Chosun.py
+
+# riskview 데이터베이스에 맞게 테이블명, 컬럼명 변경
+# 연합뉴스 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
+# Main.py에서 동작할 수 있도록 설정
+
 
 def crawl_news():
     options = webdriver.ChromeOptions()
@@ -21,7 +27,9 @@ def crawl_news():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()), options=options
+    )
     url = "https://biz.chosun.com/real_estate/real_estate_general/"
     driver.get(url)
 
@@ -34,7 +42,10 @@ def crawl_news():
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(1.5)
 
-    news_cards = driver.find_elements(By.CSS_SELECTOR, "a.story-card__headline[href*='/real_estate/real_estate_general/']")
+    news_cards = driver.find_elements(
+        By.CSS_SELECTOR,
+        "a.story-card__headline[href*='/real_estate/real_estate_general/']",
+    )
     print(f"뉴스 개수: {len(news_cards)}")
 
     articles = []
@@ -44,15 +55,22 @@ def crawl_news():
         try:
             driver.get(url)
             WebDriverWait(driver, 15).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "a.story-card__headline"))
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "a.story-card__headline")
+                )
             )
             time.sleep(1.5)
 
-            news_cards = driver.find_elements(By.CSS_SELECTOR, "a.story-card__headline[href*='/real_estate/real_estate_general/']")
+            news_cards = driver.find_elements(
+                By.CSS_SELECTOR,
+                "a.story-card__headline[href*='/real_estate/real_estate_general/']",
+            )
             card = news_cards[count]
             title = card.text.strip()
             href = card.get_attribute("href")
-            full_url = href if href.startswith("http") else "https://biz.chosun.com" + href
+            full_url = (
+                href if href.startswith("http") else "https://biz.chosun.com" + href
+            )
 
             driver.get(full_url)
             time.sleep(2)
@@ -75,12 +93,14 @@ def crawl_news():
                 formatted_date = datetime.now().strftime("%Y-%m-%d")
 
             if title and content:
-                articles.append({
-                    "news_title": "조선비즈",
-                    "title": title,
-                    "content": content,
-                    "date": formatted_date
-                })
+                articles.append(
+                    {
+                        "article_code": "조선비즈",
+                        "title": title,
+                        "content": content,
+                        "date": formatted_date,
+                    }
+                )
                 print(f"✅ {title} 저장 준비 완료")
             else:
                 print(f"⏩ 스킵됨 (title 또는 content 없음): {full_url}")
@@ -99,7 +119,11 @@ def save_to_json(news_list, folder="app/json"):
     os.makedirs(folder, exist_ok=True)
 
     # News_Chosun_번호.json 파일명 규칙 적용
-    existing_files = [f for f in os.listdir(folder) if f.startswith("News_Chosun_") and f.endswith(".json")]
+    existing_files = [
+        f
+        for f in os.listdir(folder)
+        if f.startswith("News_Chosun_") and f.endswith(".json")
+    ]
     file_num = len(existing_files) + 1
     filename = f"News_Chosun_{file_num}.json"
 
@@ -111,15 +135,12 @@ def save_to_json(news_list, folder="app/json"):
 
 def save_to_db(news_list):
     conn = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="12345",
-        database="realestate_news"
+        host="localhost", user="root", password="12345", database="newsdb"
     )
     cursor = conn.cursor()
 
-    query = "INSERT INTO chosun (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
-    check_query = "SELECT COUNT(*) FROM chosun WHERE title = %s"
+    query = "INSERT INTO news_articles (article_code, title, content, date) VALUES (%s, %s, %s, %s)"
+    check_query = "SELECT COUNT(*) FROM news_articles WHERE title = %s"
     inserted_count = 0
 
     for item in news_list:
@@ -128,12 +149,15 @@ def save_to_db(news_list):
         cursor.execute(check_query, (title,))
         count = cursor.fetchone()[0]
         if count == 0:
-            cursor.execute(query, (
-                item.get("news_title", "").strip(),
-                title,
-                item.get("content", "").strip(),
-                item.get("date", "").strip()
-            ))
+            cursor.execute(
+                query,
+                (
+                    item.get("article_code", "").strip(),
+                    title,
+                    item.get("content", "").strip(),
+                    item.get("date", "").strip(),
+                ),
+            )
             inserted_count += 1
         else:
             print(f"⏩ 중복으로 건너뜀: {title}")

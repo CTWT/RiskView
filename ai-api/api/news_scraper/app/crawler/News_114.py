@@ -4,18 +4,17 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 import time, json, re, os
 from datetime import datetime
-
-# import mysql.connector
+import mysql.connector
 
 #  이름 : 유연우
 #  작성자 : 유연우
 #  수정자 :
-#  수정일 : 25.07.28
+#  수정일 : 25.08.05
 #  작성일 : 25.07.23
 #  파일명 : News_114.py
 
 # 부동산 114 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
-# DB 저장까지는 save_to_db 함수 주석 처리 후 실행
+# DB 저장까지는 save_to_db 함수 주석 처리 후 실행 - DB 설정 되어있으면 그냥 Main.py에서 실행
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
 
@@ -77,7 +76,7 @@ def crawl_news():
             if title and content:
                 news_list.append(
                     {
-                        "news_title": "부동산 114",
+                        "article_code": "부동산 114",
                         "title": title,
                         "content": content,
                         "date": formatted_date,
@@ -101,7 +100,7 @@ def crawl_news():
     return news_list
 
 
-def save_to_json(news_list, filename_base="News_114"):
+def save_to_json(news_list, filename_base="news_articles"):
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     directory = os.path.join(base_dir, "..", "json")  # crawler/ 기준으로 상위 ../json
@@ -113,7 +112,7 @@ def save_to_json(news_list, filename_base="News_114"):
     while True:
         filename = f"{filename_base}_{counter:02}.json"
         filepath = os.path.join(directory, filename)
-        if not os.path.exists(filename):
+        if not os.path.exists(filepath):
             break
         counter += 1
     try:
@@ -124,47 +123,42 @@ def save_to_json(news_list, filename_base="News_114"):
         print(f"❌ JSON 저장 중 오류 발생: {e}")
 
 
-# def save_to_db(news_list):
-#     conn = mysql.connector.connect(
-#         host="localhost", user="root", password="12345", database="newsdb"
-#     )
-#     cursor = conn.cursor()
+def save_to_db(news_list):
+    conn = mysql.connector.connect(
+        host="localhost", user="root", password="12345", database="newsdb"
+    )
+    cursor = conn.cursor()
 
-#     query = "INSERT INTO news_114 (news_title, title, content, date) VALUES (%s, %s, %s, %s)"
-#     inserted_count = 0
-#     skipped_count = 0
+    query = "INSERT INTO news_articles (article_code, title, content, date) VALUES (%s, %s, %s, %s)"
+    inserted_count = 0
+    skipped_count = 0
 
-#     for item in news_list:
-#         news_title = item.get("news_title", "").strip()
-#         title = item.get("title", "").strip()
-#         content = item.get("content", "").strip()
-#         date = item.get("date", "").strip()
+    for item in news_list:
+        article_code = item.get("article_code", "").strip()
+        title = item.get("title", "").strip()
+        content = item.get("content", "").strip()
+        date = item.get("date", "").strip()
 
-#         if news_title and title and content and date:
-#             try:
-#                 cursor.execute(query, (news_title, title, content, date))
-#                 inserted_count += 1
-#                 print(f"✅ 저장 완료: {news_title}")
-#             except mysql.connector.IntegrityError:
-#                 skipped_count += 1
-#                 print(f"⚠️ 중복 건너뜀: {news_title}")
-#             except Exception as e:
-#                 print(f"❌ 기타 오류: {e} - {news_title}")
+        if article_code and title and content and date:
+            try:
+                cursor.execute(query, (article_code, title, content, date))
+                inserted_count += 1
+                print(f"✅ 저장 완료: {title}")
+            except mysql.connector.IntegrityError:
+                skipped_count += 1
+                print(f"⚠️ 중복 건너뜀: {title}")
+            except Exception as e:
+                print(f"❌ 기타 오류: {e} - {title}")
 
-#     conn.commit()
-#     cursor.close()
-#     conn.close()
-#     print(
-#         f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨, {skipped_count}건 중복으로 건너뜀."
-#     )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    print(
+        f"✅ DB 저장 완료! 총 {inserted_count}건 입력됨, {skipped_count}건 중복으로 건너뜀."
+    )
 
 
 def News_114_Save():
     news = crawl_news()
     save_to_json(news)
-    # save_to_db(news)
-
-
-if __name__ == "__main__":
-    News_114_Save()
-    # News_Yeonhap_Save()
+    save_to_db(news)

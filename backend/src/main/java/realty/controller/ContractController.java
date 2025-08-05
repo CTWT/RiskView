@@ -13,6 +13,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -35,12 +36,22 @@ public class ContractController {
      * 계약서를 저장하는 PostMapping
      */
     @PostMapping("/contracts")
-    public ResponseEntity<String> insertData(@ModelAttribute ContractDTO.ContractInfo contractInfo,
+    public ResponseEntity<String> insertData(@RequestBody ContractDTO.ContractInfo contractInfo,
             HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        String userCode = user.getUserCode();
-        contractService.save(contractInfo, userCode);
-        return ResponseEntity.ok("Contract 저장 완료!");
+         User user = (User) session.getAttribute("user");
+    if (user == null) {
+        return ResponseEntity
+                .status(500)
+                .contentType(MediaType.TEXT_PLAIN)
+                .body("No Logined User");
+    }
+
+    String userCode = user.getUserCode();
+    contractService.save(contractInfo, userCode);
+    return ResponseEntity
+            .ok()
+            .contentType(MediaType.TEXT_PLAIN)
+            .body("Contract Save Complete!");
     }
 
     /**

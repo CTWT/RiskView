@@ -53,6 +53,9 @@ ai-api/*.log
 ai-api/__pycahche__
 ai-api/api/news_scraper/app/json/*.json
 
+ai-api/api/estate/*.json
+
+
 .vscode/settings.json
 # ocr propertis
 

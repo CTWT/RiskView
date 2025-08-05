@@ -82,12 +82,12 @@ async def run_new_chosun() :
     
 # 실거래 데이터 호출
 @app.post("/estate")
-async def run_estate(start_index : str, end_index : str, cgg_nm : str, ctrt_day: str, bldg_usg : str) :
+async def run_estate(end_index : str, cgg_nm : str, ctrt_day: str, bldg_usg : str) :
     if not event_flags["estate"] :
         raise HTTPException(status_code=403, detail="실거래 데이터 호출 실패")
     event_flags["estate"] = False
 
-    data = runEstate(start_index, end_index, cgg_nm, ctrt_day, bldg_usg)
+    data = runEstate(end_index, cgg_nm, ctrt_day, bldg_usg)
     result = {"message " : "실거래데이터 호출 성공"}
     return result
 

@@ -283,9 +283,11 @@ public class ContractDTO {
     /**
      * OCRResponse
      */
+    @Builder
     @Getter
     @Setter
     @RequiredArgsConstructor
+    @AllArgsConstructor
     @ToString
     public static class OCRResponse {
         private ContractDTO.StructuredContractDataDTO structuredContractDataDTO;

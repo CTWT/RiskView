@@ -6,6 +6,8 @@ import PG100003 from "./PG100003"; // OCR분석 후 화면
 import PG100004 from "./PG100004"; // 계약서 분석 중 로딩 화면
 import PG100005 from "./PG100005"; // 분석 결과 보고서 화면
 
+import type { OcrDataType } from "./PG100003";
+
 /**
  * @file PG100001.tsx
  * @description 계약서 분석 페이지의 총괄 컴포넌트입니다
@@ -28,7 +30,7 @@ const PG100001: React.FC = () => {
 
     // ⭐ PG100002 (OCR 스캔 완료)에서 PG100003으로 넘겨줄 데이터를 저장할 상태
     const [analysisOutputData, setAnalysisOutputData] = useState<{
-        ocrResult: string;
+        ocrData: OcrDataType;
         uploadedFilePreview: string | null;
         scannedFile: string;
     } | null>(null);
@@ -67,7 +69,7 @@ const PG100001: React.FC = () => {
                 analysisOutputData && ( // analysisOutputData가 있을 때만 렌더링
                     <PG100003
                         scannedFile={analysisOutputData.scannedFile}
-                        ocrData={analysisOutputData.ocrResult}
+                        ocrData={analysisOutputData.ocrData}
                         uploadedFilePreview={
                             analysisOutputData.uploadedFilePreview
                         }

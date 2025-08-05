@@ -39,9 +39,9 @@ import type {
 interface PG100002Props {
     onStartAnalysis: (data: {
         ocrData: {
-            documentsDTO: DocumentsDTO;
-            fileStorageMetadataDTO: FileStorageMetadataDTO;
-            structuredContractDataDTO: StructuredContractDataDTO;
+            documentsDTO: DocumentsDTO | null;
+            fileStorageMetadataDTO: FileStorageMetadataDTO | null;
+            structuredContractDataDTO: StructuredContractDataDTO | null;
             mapInfo: MapInfo | null;
         };
         uploadedFilePreview: string | null;
@@ -243,14 +243,16 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 // ⭐ 이 부분을 수정해야 합니다.
                 // 백엔드 응답이 HTML 템플릿의 데이터 구조와 동일한 객체라고 가정합니다.
                 const backendOcrResult = response.data; // ContractResponse 객체
+                const contractInfo = backendOcrResult.contractInfo ?? {
+                    documentsDTO: null,
+                    fileStorageMetadataDTO: null,
+                    structuredContractDataDTO: null,
+                };
+                const mapInfo = backendOcrResult.mapInfo ?? null;
+
                 const ocrDataPayload = {
-                    ...(backendOcrResult.contractInfo || {
-                        // contractInfo가 null일 경우, 이 3가지 DTO를 null로 초기화합니다.
-                        documentsDTO: null,
-                        fileStorageMetadataDTO: null,
-                        structuredContractDataDTO: null,
-                    }),
-                    mapInfo: backendOcrResult.mapInfo,
+                    ...contractInfo,
+                    mapInfo,
                 };
 
                 // OCR 완료 시 모달 및 상태 업데이트
@@ -271,17 +273,19 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 });
             } catch (error) {
                 // 요청 실패 시
-                setIsUploading(false);
-                setIsModalOpen(false); // 모달 닫기
-
-                console.error("파일 업로드 및 분석 실패:", error);
-                showToast(
-                    "파일 업로드 및 분석에 실패했습니다. 다시 시도해 주세요.",
-                    {
+                if (axios.isAxiosError(error) && error.response) {
+                    console.error("서버 응답:", error.response.data);
+                    showToast(
+                        `서버 오류: ${error.response.status} - ${
+                            error.response.data.message || "알 수 없는 오류"
+                        }`,
+                        { type: "error" }
+                    );
+                } else {
+                    showToast("네트워크 오류 또는 서버가 응답하지 않습니다.", {
                         type: "error",
-                        duration: 5000,
-                    }
-                );
+                    });
+                }
             }
         } else {
             showToast("분석할 계약서 파일을 먼저 선택해주세요.", {

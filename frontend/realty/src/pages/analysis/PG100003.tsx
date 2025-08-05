@@ -28,9 +28,9 @@ import type {
 
 //  1. ocrData의 타입을 별도 인터페이스로 분리
 export interface OcrDataType {
-    documentsDTO: DocumentsDTO;
-    fileStorageMetadataDTO: FileStorageMetadataDTO;
-    structuredContractDataDTO: StructuredContractDataDTO | null; // null 가능성을 추가
+    documentsDTO: DocumentsDTO | null;
+    fileStorageMetadataDTO: FileStorageMetadataDTO | null;
+    structuredContractDataDTO: StructuredContractDataDTO | null;
     mapInfo: MapInfo | null;
 }
 

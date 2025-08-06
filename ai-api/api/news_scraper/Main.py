@@ -1,6 +1,6 @@
 from app.crawler.News_Yeonhap import News_Yeonhap_Save
 from app.crawler.News_114 import News_114_Save
-from app.crawler.News_Chosun import Chosun_Save
+from app.crawler.News_Chosun import News_Chosun_Save
 
 #  이름 : 유연우
 #  작성자 : 유연우
@@ -16,4 +16,4 @@ from app.crawler.News_Chosun import Chosun_Save
 if __name__ == "__main__":
     News_114_Save()
     News_Yeonhap_Save()
-    Chosun_Save()
+    News_Chosun_Save()

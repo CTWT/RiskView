@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 
 export const useNaverMap = () => {
-    const clientId = process.env.REACT_APP_NAVER_CLIENT_ID;
+    const clientId = import.meta.env.VITE_NAVER_CLIENT_ID;
 
     // ✅ API 키가 없으면 앱이 실행되지 않도록 강제 에러 발생
     if (!clientId) {
         throw new Error(
-            "NAVER API Key가 .env에 없습니다. REACT_APP_NAVER_CLIENT_ID를 확인하세요."
+            "NAVER API Key가 .env에 없습니다. VITE_NAVER_CLIENT_ID를 확인하세요."
         );
     }
 

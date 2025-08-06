@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
 import contractFieldLabels from "../../contracts/contractFieldLabels";
+import { useNaverMap } from "../../hooks/useNaverMap";
 
 import type {
     DocumentsDTO,
@@ -27,7 +28,44 @@ import type {
  * 설명 : 계약서 분석 중 OCR 추출한 이후 사용자가 보고 AI 추출을 하기 전 검증하는 페이지 입니다
  */
 
-//  1. ocrData의 타입을 별도 인터페이스로 분리
+// window.naver 타입 선언 (내부 전용)
+declare global {
+    interface Window {
+        naver: {
+            maps: {
+                Map: new (
+                    element: string | HTMLElement,
+                    options: {
+                        center: NaverLatLng;
+                        zoom?: number;
+                        [key: string]: unknown;
+                    }
+                ) => NaverMapInstance;
+                LatLng: new (lat: number, lng: number) => NaverLatLng;
+                Circle: new (options: {
+                    map: NaverMapInstance;
+                    center: NaverLatLng;
+                    radius: number;
+                    strokeColor: string;
+                    strokeOpacity: number;
+                    strokeWeight: number;
+                    fillColor: string;
+                    fillOpacity: number;
+                }) => void;
+            };
+        };
+    }
+
+    interface NaverLatLng {
+        lat(): number;
+        lng(): number;
+    }
+
+    interface NaverMapInstance {
+        setCenter(latlng: NaverLatLng): void;
+    }
+}
+
 export interface OcrDataType {
     documentsDTO: DocumentsDTO | null;
     fileStorageMetadataDTO: FileStorageMetadataDTO | null;
@@ -35,12 +73,10 @@ export interface OcrDataType {
     mapInfo: MapInfo | null;
 }
 
-//  2. PG100001로부터 받을 props 인터페이스 정의
 interface PG100003Props {
     scannedFile: string;
     ocrData: OcrDataType;
     uploadedFilePreview: string | null;
-    //  3. onAnalysisComplete prop에서도 분리된 인터페이스 사용
     onAnalysisComplete?: (result: OcrDataType) => void;
     onBackToPreviousPhase?: () => void;
 }
@@ -53,40 +89,55 @@ const PG100003: React.FC<PG100003Props> = ({
     onBackToPreviousPhase,
 }) => {
     const navigate = useNavigate();
+    const isMapLoaded = useNaverMap();
 
-    const [currentOcrData, setCurrentOcrData] =
-        useState<typeof ocrData>(ocrData);
-    const [currentScannedFileName] = useState<string>(scannedFile);
-    const [currentUploadedFilePreview] = useState<string | null>(
-        uploadedFilePreview
-    );
+    const [currentOcrData, setCurrentOcrData] = useState<OcrDataType>(ocrData);
+    const recognizedAddress =
+        currentOcrData.structuredContractDataDTO?.location || "주소 인식 실패";
 
-    //  수정: ocrData.structuredContractDataDTO가 null일 수 있으므로 옵셔널 체이닝 사용
-    const [recognizedAddress, setRecognizedAddress] = useState<string | null>(
-        ocrData.structuredContractDataDTO?.location || null
-    );
-
-    //  수정: useEffect 내부에서도 옵셔널 체이닝 사용
     useEffect(() => {
-        setRecognizedAddress(
-            currentOcrData.structuredContractDataDTO?.location ||
-                "주소 인식 실패"
-        );
-    }, [currentOcrData]);
+        if (!isMapLoaded || !currentOcrData.mapInfo) return;
+
+        const naverMap = window.naver?.maps;
+        if (!naverMap) return;
+
+        const { x, y } = currentOcrData.mapInfo;
+        if (!x || !y) return;
+
+        const lat = parseFloat(y);
+        const lng = parseFloat(x);
+        if (isNaN(lat) || isNaN(lng)) return;
+
+        const map = new naverMap.Map("naverMap", {
+            center: new naverMap.LatLng(lat, lng),
+            zoom: 15,
+        });
+
+        new naverMap.Circle({
+            map,
+            center: new naverMap.LatLng(lat, lng),
+            radius: 1000,
+            strokeColor: "#007bff",
+            strokeOpacity: 0.6,
+            strokeWeight: 2,
+            fillColor: "#cce5ff",
+            fillOpacity: 0.3,
+        });
+    }, [isMapLoaded, currentOcrData.mapInfo]);
 
     const handleDataChange = (
         field: keyof StructuredContractDataDTO,
         value: string
     ) => {
         setCurrentOcrData((prevData) => {
-            // structuredContractDataDTO가 null이면 빈 객체를 사용하여 오류 방지
-            const prevStructuredData = prevData.structuredContractDataDTO || {};
+            const prevStructuredData =
+                prevData.structuredContractDataDTO ??
+                ({} as StructuredContractDataDTO);
 
             let newValue: string | number | null = value;
-            // deposit 필드는 숫자로 변환
+
             if (field === "deposit") {
                 newValue = value ? Number(value) : null;
-                // 숫자로 변환 실패 시 null 처리
                 if (isNaN(Number(newValue))) {
                     newValue = null;
                 }
@@ -97,7 +148,7 @@ const PG100003: React.FC<PG100003Props> = ({
                 structuredContractDataDTO: {
                     ...prevStructuredData,
                     [field]: newValue,
-                } as StructuredContractDataDTO, // 타입 단언(type assertion)으로 컴파일러 오류 해결
+                },
             };
         });
     };
@@ -114,7 +165,7 @@ const PG100003: React.FC<PG100003Props> = ({
         if (onAnalysisComplete) {
             onAnalysisComplete(currentOcrData);
         } else {
-            alert("OCR 결과 처리 (다음 단계로 이동) 로직 구현 예정");
+            alert("OCR 결과 처리 (다음 단계로 이동)");
         }
     };
 
@@ -127,29 +178,25 @@ const PG100003: React.FC<PG100003Props> = ({
             />
 
             <div className="an03-content-wrapper">
-                {/* 왼쪽: 원본 파일 미리보기 */}
                 <div className="an03-pane an03-original-file-pane">
                     <h3 className="an03-pane-title">원본 파일</h3>
-                    {currentUploadedFilePreview ? (
+                    {uploadedFilePreview ? (
                         <img
-                            src={currentUploadedFilePreview}
-                            alt="원본 파일 미리보기"
+                            src={uploadedFilePreview}
+                            alt="업로드된 이미지"
                             className="an03-uploaded-image-preview"
                         />
                     ) : (
                         <div className="an03-no-preview">
                             <span className="an03-file-icon">📄</span>
                             <p>미리보기를 지원하지 않는 파일 형식입니다.</p>
-                            {currentScannedFileName && (
-                                <p className="an03-file-name">
-                                    파일: {currentScannedFileName}
-                                </p>
-                            )}
+                            <p className="an03-file-name">
+                                파일: {scannedFile}
+                            </p>
                         </div>
                     )}
                 </div>
 
-                {/* 오른쪽: OCR 인식 텍스트 (이제는 구조화된 데이터) */}
                 <div className="an03-pane an03-ocr-text-pane">
                     <h3 className="an03-pane-title">OCR 분석 결과</h3>
                     <div className="an03-structured-data-form">
@@ -191,19 +238,27 @@ const PG100003: React.FC<PG100003Props> = ({
                 </div>
             </div>
 
-            {/* 지도 API 구역 */}
             <div className="an03-map-section">
                 <h3 className="an03-section-title">주변 시세 비교 구역</h3>
                 <p className="an03-map-description">
-                    OCR로 인식된 주소지 **
-                    {recognizedAddress || "[주소 인식 중...]"}** 의 1km 반경 내
-                    시세 비교 구역입니다. (지도 API는 추후 연동 예정입니다.)
+                    OCR로 인식된 주소지 **{recognizedAddress}** 의 1km 반경 내
+                    시세 비교 구역입니다.
                 </p>
                 <div className="an03-map-placeholder">
-                    <div className="an03-map-dummy">
-                        <p>지도 API가 표시될 공간</p>
-                        <p>1km 반경 구역이 여기에 시각화됩니다.</p>
-                    </div>
+                    {isMapLoaded ? (
+                        <div
+                            id="naverMap"
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "4px",
+                            }}
+                        />
+                    ) : (
+                        <div className="an03-map-dummy">
+                            <p>지도를 불러오는 중...</p>
+                        </div>
+                    )}
                 </div>
             </div>
 

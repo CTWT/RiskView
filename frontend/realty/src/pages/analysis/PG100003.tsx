@@ -1,6 +1,6 @@
 // src/pages/analysis/PG100003.tsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
@@ -95,18 +95,45 @@ const PG100003: React.FC<PG100003Props> = ({
     const recognizedAddress =
         currentOcrData.structuredContractDataDTO?.location || "주소 인식 실패";
 
+    const mapRef = useRef<NaverMapInstance | null>(null);
+
     useEffect(() => {
-        if (!isMapLoaded || !currentOcrData.mapInfo) return;
+        if (!isMapLoaded) {
+            console.warn("지도 API 아직 로딩 안됨");
+            return;
+        }
+
+        if (!currentOcrData.mapInfo) {
+            console.warn("mapInfo 없음");
+            return;
+        }
 
         const naverMap = window.naver?.maps;
-        if (!naverMap) return;
+        if (!naverMap) {
+            console.error("Naver 지도 객체 없음!");
+            return;
+        }
+
+        const mapContainer = document.getElementById("naverMap");
+        if (!mapContainer || mapContainer.childNodes.length > 0) {
+            console.warn("지도 이미 생성되어 있음 또는 컨테이너 없음");
+            return;
+        }
 
         const { x, y } = currentOcrData.mapInfo;
         if (!x || !y) return;
 
         const lat = parseFloat(y);
         const lng = parseFloat(x);
+
+        console.log("지도 좌표 확인", { lat, lng });
+
         if (isNaN(lat) || isNaN(lng)) return;
+
+        if (mapRef.current) {
+            mapRef.current.setCenter(new window.naver.maps.LatLng(lat, lng));
+            return;
+        }
 
         const map = new naverMap.Map("naverMap", {
             center: new naverMap.LatLng(lat, lng),

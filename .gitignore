@@ -11,6 +11,7 @@
 __pycache__/
 **/__pycache__/
 *.pdf
+*.jpg
 
 # Python virtual environments
 .venv/

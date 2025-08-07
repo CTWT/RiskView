@@ -4,8 +4,6 @@ import { useLocation } from "react-router-dom";
 import Header from "./Header";
 import "../../styles/common/common.css";
 
-import Breadcrumb from "../breadcrumb/Breadcrumb";
-
 interface LayoutProps {
     children: ReactNode;
 }
@@ -33,7 +31,6 @@ const Layout = ({ children }: LayoutProps) => {
         <div className="layout-container">
             {!shouldHideHeader() && <Header />}
             <main className={mainContentClass}>
-                <Breadcrumb />
                 {children}
             </main>
         </div>

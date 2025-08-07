@@ -3,9 +3,11 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
+import PageContainer from "../../components/layout/PageContainer";
 
 const PG500011 = () => {
     return (
+        <PageContainer showBreadcrumb={true} centerContent={true}>
         <div className="community-container">
             {/* 1. 상단 공용 헤더 */}
             <CommonContainerHeader
@@ -93,7 +95,8 @@ const PG500011 = () => {
                     </div>
                 </div>
             </div>
-        </div>
+            </div>
+        </PageContainer>
     );
 };
 export default PG500011;

@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { FiHome } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import "../../styles/common/common.css";
+import Breadcrumb from "../../components/breadcrumb/Breadcrumb";
+import PageContainer from "../../components/layout/PageContainer";
 
 /*
  * 생성자 : 이주하
@@ -73,10 +75,16 @@ const PG400001: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
       // 클릭된 요소가 뉴스 아이템 클릭 영역인지 확인
-      const isNewsItem = (target as HTMLElement).closest(".news-item-click-area");
+      const isNewsItem = (target as HTMLElement).closest(
+        ".news-item-click-area"
+      );
 
       // 상세 영역 밖을 클릭 시 닫기
-      if (detailRef.current && !detailRef.current.contains(target) && !isNewsItem) {
+      if (
+        detailRef.current &&
+        !detailRef.current.contains(target) &&
+        !isNewsItem
+      ) {
         setSelectedNews(null);
       }
     };
@@ -99,29 +107,31 @@ const PG400001: React.FC = () => {
     // 지정된 주소로 API 호출 보냄
     fetch(`/api/board/news_articles?pageNum=${pageNum}&size=6`)
       // 서버로부터 응답을 받았으면
-      .then(response => {
-        console.log('Response status:', response.status);
+      .then((response) => {
+        console.log("Response status:", response.status);
         // 응답이 성공적이지 못하면
         if (!response.ok) {
           // 에러 발생
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         // 응답의 Content-Type이 JSON인지 확인
-        const contentType = response.headers.get('content-type') || '';
+        const contentType = response.headers.get("content-type") || "";
         // 만약 JSON 형식이 아니면
-        if (!contentType.toLowerCase().includes('application/json')) {
+        if (!contentType.toLowerCase().includes("application/json")) {
           // 경고 메시지 띄움
-          console.warn('예상치 못한 Content-Type:', contentType);
+          console.warn("예상치 못한 Content-Type:", contentType);
           // JSON 파싱 시도
-          return response.json().catch(() => { throw new Error('JSON 파싱 실패') });
+          return response.json().catch(() => {
+            throw new Error("JSON 파싱 실패");
+          });
         }
         // JSON 형식이면
         return response.json();
       })
       // JSON 데이터를 받았으면
-      .then(data => {
-        console.log('API 응답 데이터:', data);
+      .then((data) => {
+        console.log("API 응답 데이터:", data);
         // 뉴스 데이터 설정
         setNewsData(data.content);
         // 페이지네이션 데이터 설정
@@ -133,17 +143,17 @@ const PG400001: React.FC = () => {
           hasPrevBlock: data.hasPrevBlock,
           hasNextBlock: data.hasNextBlock,
           prevBlockStartPage: data.prevBlockStartPage,
-          nextBlockStartPage: data.nextBlockStartPage
+          nextBlockStartPage: data.nextBlockStartPage,
         });
         // 키워드 데이터 설정
         setKeywords(mockKeywords);
         // 로딩 상태 false로 설정
         setLoading(false);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error("뉴스 데이터 로딩 오류:", error);
         // 뉴스 데이터를 빈 배열로 설정
-        setNewsData([]); 
+        setNewsData([]);
         // 로딩 상태 false로 설정
         setLoading(false);
       });
@@ -245,16 +255,26 @@ const PG400001: React.FC = () => {
     const fontSize = Math.max(12, (keyword.weight / 100) * 48);
     // 키워드 위치 배열
     const positions = [
-      { top: "20%", left: "15%" }, { top: "35%", left: "45%" },
-      { top: "15%", left: "70%" }, { top: "50%", left: "25%" },
-      { top: "40%", left: "65%" }, { top: "65%", left: "15%" },
-      { top: "70%", left: "50%" }, { top: "25%", left: "35%" },
-      { top: "55%", left: "75%" }, { top: "80%", left: "30%" },
-      { top: "30%", left: "80%" }, { top: "75%", left: "65%" },
-      { top: "45%", left: "10%" }, { top: "60%", left: "40%" },
-      { top: "85%", left: "70%" }, { top: "10%", left: "50%" },
-      { top: "90%", left: "15%" }, { top: "35%", left: "90%" },
-      { top: "65%", left: "5%" }, { top: "20%", left: "25%" },
+      { top: "20%", left: "15%" },
+      { top: "35%", left: "45%" },
+      { top: "15%", left: "70%" },
+      { top: "50%", left: "25%" },
+      { top: "40%", left: "65%" },
+      { top: "65%", left: "15%" },
+      { top: "70%", left: "50%" },
+      { top: "25%", left: "35%" },
+      { top: "55%", left: "75%" },
+      { top: "80%", left: "30%" },
+      { top: "30%", left: "80%" },
+      { top: "75%", left: "65%" },
+      { top: "45%", left: "10%" },
+      { top: "60%", left: "40%" },
+      { top: "85%", left: "70%" },
+      { top: "10%", left: "50%" },
+      { top: "90%", left: "15%" },
+      { top: "35%", left: "90%" },
+      { top: "65%", left: "5%" },
+      { top: "20%", left: "25%" },
     ];
     const position = positions[index % positions.length];
 
@@ -272,11 +292,7 @@ const PG400001: React.FC = () => {
 
   // 렌더링
   return (
-    <div className="news-page">
-      {/* 브레드크럼 네비게이션 */}
-      <nav className="breadcrumb">
-      </nav>
-
+    <PageContainer showBreadcrumb={true}>
       <div className="news-container">
         {/* 왼쪽: 뉴스 섹션 */}
         <div className="news-section">
@@ -288,7 +304,9 @@ const PG400001: React.FC = () => {
                 {tabs.map((tab) => (
                   <button
                     key={tab}
-                    className={`tab-button ${activeTab === tab ? "active" : ""}`}
+                    className={`tab-button ${
+                      activeTab === tab ? "active" : ""
+                    }`}
                     onClick={() => setActiveTab(tab)}
                   >
                     {tab}
@@ -312,7 +330,10 @@ const PG400001: React.FC = () => {
                 {newsData.map((news) => (
                   <article key={news.id} className="news-item">
                     {/* 클릭 시 상세 보기 */}
-                    <div className="news-item-click-area" onClick={() => setSelectedNews(news)}>
+                    <div
+                      className="news-item-click-area"
+                      onClick={() => setSelectedNews(news)}
+                    >
                       <div className="news-date">{news.date}</div>
                       <h3 className="news-title">{news.title}</h3>
                     </div>
@@ -324,7 +345,9 @@ const PG400001: React.FC = () => {
                   <div className="pagination-container">
                     {/* 앞 블록으로 이동 */}
                     <button
-                      className={`pagination-button nav-button ${!pagination.hasPrevBlock ? 'disabled' : ''}`}
+                      className={`pagination-button nav-button ${
+                        !pagination.hasPrevBlock ? "disabled" : ""
+                      }`}
                       onClick={goToPrevBlock}
                       disabled={!pagination.hasPrevBlock}
                       title="이전 블록"
@@ -334,7 +357,9 @@ const PG400001: React.FC = () => {
 
                     {/* 이전 페이지로 이동 */}
                     <button
-                      className={`pagination-button nav-button ${pagination.currentPage <= 1 ? 'disabled' : ''}`}
+                      className={`pagination-button nav-button ${
+                        pagination.currentPage <= 1 ? "disabled" : ""
+                      }`}
                       onClick={goToPrevPage}
                       disabled={pagination.currentPage <= 1}
                       title="이전 페이지"
@@ -346,7 +371,9 @@ const PG400001: React.FC = () => {
                     {getPageNumbers().map((page) => (
                       <button
                         key={page}
-                        className={`pagination-button ${pagination.currentPage === page ? 'active' : ''}`}
+                        className={`pagination-button ${
+                          pagination.currentPage === page ? "active" : ""
+                        }`}
                         onClick={() => goToPage(page)}
                       >
                         {page}
@@ -355,7 +382,11 @@ const PG400001: React.FC = () => {
 
                     {/* 다음 페이지로 이동 */}
                     <button
-                      className={`pagination-button nav-button ${pagination.currentPage >= pagination.totalPages ? 'disabled' : ''}`}
+                      className={`pagination-button nav-button ${
+                        pagination.currentPage >= pagination.totalPages
+                          ? "disabled"
+                          : ""
+                      }`}
                       onClick={goToNextPage}
                       disabled={pagination.currentPage >= pagination.totalPages}
                       title="다음 페이지"
@@ -365,7 +396,9 @@ const PG400001: React.FC = () => {
 
                     {/* 뒤 블록으로 이동 */}
                     <button
-                      className={`pagination-button nav-button ${!pagination.hasNextBlock ? 'disabled' : ''}`}
+                      className={`pagination-button nav-button ${
+                        !pagination.hasNextBlock ? "disabled" : ""
+                      }`}
                       onClick={goToNextBlock}
                       disabled={!pagination.hasNextBlock}
                       title="다음 블록"
@@ -409,7 +442,9 @@ const PG400001: React.FC = () => {
                           className="keyword-item"
                           // 동적 스타일 적용
                           style={getWordCloudStyle(keyword, index)}
-                          onClick={() => console.log(`키워드 클릭: ${keyword.text}`)}
+                          onClick={() =>
+                            console.log(`키워드 클릭: ${keyword.text}`)
+                          }
                           // 마우스 호버 효과
                           onMouseEnter={(e) => {
                             e.currentTarget.style.transform = "scale(1.1)";
@@ -425,7 +460,8 @@ const PG400001: React.FC = () => {
                       ))}
                     </div>
                     <p className="keyword-description">
-                      최근 1달간 수집된 부동산 뉴스 키워드에서 추출한 주요 키워드입니다.
+                      최근 1달간 수집된 부동산 뉴스 키워드에서 추출한 주요
+                      키워드입니다.
                     </p>
                   </>
                 )}
@@ -434,7 +470,7 @@ const PG400001: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 };
 

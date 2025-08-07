@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../../../../styles/common/common.css";
 import axios from "axios";
+import useToast from "../../../../hooks/useToast";
+import Toast from "../../../../components/ui/Toast";
+import PageContainer from "../../../../components/layout/PageContainer";
 
 // Login Component : 로그인 페이지
 
@@ -20,7 +23,7 @@ interface PG300002Props {
 
 /**
  * 로그인 컴포넌트
- * 사용자 이메일과 비밀번호를 입력받아 로그인 처리를 수행하고,
+ * 사용자 아이디와 비밀번호를 입력받아 로그인 처리를 수행하고,
  * 회원가입 페이지로의 전환
  * 
  * @param props - 컴포넌트 props
@@ -34,14 +37,14 @@ const PG300002: React.FC<PG300002Props> = ({ onSignUpStart }) => {
   }, []);
 
   // 상태 관리
-  // 사용자 입력 이메일
+  // 사용자 입력 아이디
   const [email, setEmail] = useState<string>("");
   // 사용자 입력 비밀번호
   const [password, setPassword] = useState<string>("");
-  // 로그인 오류 메시지
-  const [error, setError] = useState<string>("");
   // 네비게이션 
   const navigate = useNavigate();
+
+  const { toast, showToast } = useToast();
 
   /**
    *
@@ -53,8 +56,18 @@ const PG300002: React.FC<PG300002Props> = ({ onSignUpStart }) => {
     e.preventDefault();
 
     // 입력값 검사
-    if (!email || !password) {
-      setError("이메일과 비밀번호를 모두 입력해주세요.");
+    if (!email && !password) {
+      showToast("아이디와 비밀번호를 모두 입력해주세요.", { type: "error" });
+      return;
+    }
+
+    if (!email) {
+      showToast("아이디를 입력해주세요.", { type: "error" });
+      return;
+    }
+
+    if (!password) {
+      showToast("비밀번호를 입력해주세요.", { type: "error" });
       return;
     }
 
@@ -70,9 +83,9 @@ const PG300002: React.FC<PG300002Props> = ({ onSignUpStart }) => {
       }
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        setError("이메일 또는 비밀번호가 올바르지 않습니다.");
+        showToast("아이디 또는 비밀번호가 올바르지 않습니다.", { type: "error" });
       } else {
-        setError("예기치 않은 오류가 발생했습니다.");
+        showToast("예기치 않은 오류가 발생했습니다.", { type: "error" });
       }
     }
   };
@@ -84,66 +97,69 @@ const PG300002: React.FC<PG300002Props> = ({ onSignUpStart }) => {
 
   return (
     <>
-      {/* 로그인 폼 UI */}
-      <div className="authWrapper">
-        <div className="authContainer">
-          <h1 className="authTitle">로그인</h1>
+      <PageContainer showBreadcrumb={false} centerContent={true}>
+        {/* 로그인 폼 UI */}
+        <div className="authWrapper">
+          <div className="authContainer">
+            <h1 className="authTitle">로그인</h1>
 
-          <form onSubmit={handleSubmit}>
-            {error && (
-              <p style={{ color: "red", marginBottom: "12px" }}>{error}</p>
-            )}
+            <form onSubmit={handleSubmit}>
+              {/* 아이디 입력 */}
+              <input
+                className="authInput"
+                type="text"
+                placeholder="아이디"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+              {/* 비밀번호 입력 */}
+              <input
+                className="authInput"
+                type="password"
+                placeholder="비밀번호"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
 
-            {/* 이메일 입력 */}
-            <input
-              className="authInput"
-              type="email"
-              placeholder="이메일"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-            {/* 비밀번호 입력 */}
-            <input
-              className="authInput"
-              type="password"
-              placeholder="비밀번호"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            {/* 이메일/비밀번호 찾기 링크 */}
-            <div className="authFindWrapper">
-              <a href="/find-account" className="authFindLink">
-                이메일/비밀번호 찾기
-              </a>
-            </div>
-
-            {/* 로그인 버튼 */}
-            <button type="submit" className="authButton">
-              로그인
-            </button>
-
-            {/* 또는 Divider */}
-            <div className="authDividerWrapper">
-              <div className="authDivider">
-                <span className="authDividerText">또는</span>
+              {/* 이메일/비밀번호 찾기 링크 */}
+              <div className="authFindWrapper">
+                <a href="/find-account" className="authFindLink">
+                  이메일/비밀번호 찾기
+                </a>
               </div>
-            </div>
 
-            {/* 회원가입 유도 문구 */}
-            <p className="authPrompt">
-              아직 Risk-View 회원이 아니신가요?
-              <button
-                type="button"
-                onClick={handleSignUpClick}
-                className="authLink"
-              >
-                회원가입
+              {/* 로그인 버튼 */}
+              <button type="submit" className="authButton">
+                로그인
               </button>
-            </p>
-          </form>
+
+              {/* 또는 Divider */}
+              <div className="authDividerWrapper">
+                <div className="authDivider">
+                  <span className="authDividerText">또는</span>
+                </div>
+              </div>
+
+              {/* 회원가입 유도 문구 */}
+              <p className="authPrompt">
+                아직 Risk-View 회원이 아니신가요?
+                <button
+                  type="button"
+                  onClick={handleSignUpClick}
+                  className="authLink"
+                >
+                  회원가입
+                </button>
+              </p>
+            </form>
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              isVisible={toast.isVisible}
+            />
+          </div>
         </div>
-      </div>
+      </PageContainer>
     </>
   );
 };

@@ -463,9 +463,11 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
           )}
 
           {/* 확인 버튼 */}
-          <button type="submit" className="authButton">
-            확인
-          </button>
+          <div className="authButtonWrapper">
+            <button type="submit" className="authButton">
+              확인
+            </button>
+          </div>
         </div>
       </form>
 

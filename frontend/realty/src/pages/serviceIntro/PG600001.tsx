@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import "../../styles/common/common.css"; // 공통 스타일 임포트
+import PageContainer from "../../components/layout/PageContainer";
 
 /**
  * @file PG600001.tsx
@@ -128,6 +129,7 @@ const PG600001: React.FC = () => {
     };
 
     return (
+        <PageContainer showBreadcrumb={true} centerContent={true}>
         <div className="in01-container">
             {/* 상단 제목 영역 */}
             <CommonContainerHeader
@@ -160,7 +162,8 @@ const PG600001: React.FC = () => {
                     )}
                 </div>
             </div>
-        </div>
+            </div>
+            </PageContainer>
     );
 };
 

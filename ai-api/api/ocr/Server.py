@@ -10,9 +10,9 @@ from dataclasses import dataclass, asdict
 
 
 # 외부 함수 정상 import
-from ocr.function.PDFFunction import convertPDFBytesToImageBytes
-from ocr.function.OCRFunction import runOCR, ocrMapping
-from ocr.function.MapFunction import getMapInfo
+from .function.PDFFunction import convertPDFBytesToImageBytes
+from .function.OCRFunction import runOCR, ocrMapping
+from .function.MapFunction import getMapInfo
 
 
 #  수업명 : 가비아 2회차

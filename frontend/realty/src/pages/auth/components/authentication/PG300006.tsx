@@ -279,7 +279,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
               className="authInput"
             />
             {/**
-             * 아이디 중복 여부를 시각적으로 표시하는 아이콘
+             *  중복 여부를 시각적으로 표시하는 아이콘
              * - 중복 확인 완료 && 사용 가능: 초록색 (success 클래스)
              * - 중복 확인 완료 && 사용 불가: 빨간색 (error 클래스)
              */}
@@ -289,7 +289,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
           </div>
 
           {/* 비밀번호 입력 필드 */}
-          <div className="authPasswordInputWrapper">
+          <div className="authFormRow">
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -306,7 +306,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
           </div>
 
           {/* 비밀번호 확인 입력 필드 */}
-          <div className="authPasswordInputWrapper">
+          <div className="authFormRow">
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
@@ -323,7 +323,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
           </div>
 
           {/* 닉네임 입력 필드 */}
-          <div className="authPasswordInputWrapper">
+          <div className="authFormRow">
             <input
               type="text"
               value={nickname}
@@ -343,20 +343,22 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
           </div>
 
           {/* 제출 버튼 */}
-          <button
-            type="submit"
-            className="authButton"
-            disabled={
-              !!nicknameError ||
-              !nickname.trim() ||
-              !!usernameError ||
-              !username.trim() ||
-              password.length < 6 ||
-              confirmPassword !== password
-            }
-          >
-            다음
-          </button>
+          <div className="authButtonWrapper">
+            <button
+              type="submit"
+              className="authButton"
+              disabled={
+                !!nicknameError ||
+                !nickname.trim() ||
+                !!usernameError ||
+                !username.trim() ||
+                password.length < 6 ||
+                confirmPassword !== password
+              }
+            >
+              다음
+            </button>
+          </div>
 
           {/* 구분선 */}
           <div className="authDividerWrapper">

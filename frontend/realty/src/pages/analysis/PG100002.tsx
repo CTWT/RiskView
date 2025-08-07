@@ -8,6 +8,7 @@ import useToast from "../../hooks/useToast"; // useToast 훅 임포트
 import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
+import PageContainer from "../../components/layout/PageContainer";
 
 import * as pdfjs from "pdfjs-dist";
 pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.mjs";
@@ -295,6 +296,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
     }, [selectedFile, previewImage, onStartAnalysis, showToast]);
 
     return (
+        <PageContainer showBreadcrumb={true} centerContent={true}>
         <div className="an02-container">
             <CommonContainerHeader
                 subtitle="계약 분석"
@@ -351,7 +353,8 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 type={toast.type}
                 isVisible={toast.isVisible}
             />
-        </div>
+            </div>
+            </PageContainer>
     );
 };
 

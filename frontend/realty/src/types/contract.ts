@@ -1,3 +1,20 @@
+//src/types/contract.ts
+
+/**
+ * @file contract.ts
+ * @description 계약서 분석 과정에서 사용되는 주요 데이터 전송 객체(DTO)들의 타입 정의 모음입니다.
+ *              OCR 결과, 파일 메타데이터, 구조화된 계약 정보, 주소 정보 등을 포함합니다.
+ */
+
+/*
+ * 생성자 : 문원주
+ * 생성일 : 25.08.07
+ * 파일명 : contract.ts
+ * 수정자 :
+ * 수정일 :
+ * 설명 : DTO에서 받은 데이터들의 타입들의 정의 모음입니다. 미리 정의해놔서 재사용성을 높혔습니다.
+ */
+
 export interface DocumentsDTO {
     title: string | null;
     status: string | null;

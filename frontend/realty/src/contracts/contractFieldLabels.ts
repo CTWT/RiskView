@@ -2,6 +2,20 @@
 
 import type { StructuredContractDataDTO } from "../types/contract";
 
+/**
+ * @file contractFieldLabels.ts
+ * @description 계약서 구조화 데이터(StructuredContractDataDTO)의 각 필드 키를 사용자 친화적인 한글 라벨로 매핑한 객체입니다.
+ */
+
+/*
+ * 생성자 : 문원주
+ * 생성일 : 25.08.07
+ * 파일명 : contractFieldLabels.ts
+ * 수정자 :
+ * 수정일 :
+ * 설명 : StructuredContractDataDTO를 사용하기 편하게 라벨로 매핑함
+ */
+
 type ContractFieldKey = keyof StructuredContractDataDTO;
 
 const contractFieldLabels: Record<ContractFieldKey, string> = {

@@ -17,11 +17,11 @@ import { useEffect, useState } from "react";
  */
 
 export const useNaverMap = () => {
-    const apiKey = import.meta.env.VITE_NAVER_MAP_KEY;
+    const apiKey = import.meta.env.VITE_NAVER_CLIENT_ID;
 
     if (!apiKey) {
         throw new Error(
-            "NAVER API Key가 .env에 없습니다. VITE_NAVER_MAP_KEY를 확인하세요."
+            "NAVER API Key가 .env에 없습니다. VITE_NAVER_CLIENT_ID 확인하세요."
         );
     }
 

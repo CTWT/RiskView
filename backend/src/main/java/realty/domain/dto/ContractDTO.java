@@ -11,7 +11,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import realty.domain.model.Documents;
@@ -280,19 +279,6 @@ public class ContractDTO {
         }
     }
 
-    /**
-     * OCRResponse
-     */
-    @Builder
-    @Getter
-    @Setter
-    @RequiredArgsConstructor
-    @AllArgsConstructor
-    @ToString
-    public static class OCRResponse {
-        private ContractDTO.StructuredContractDataDTO structuredContractDataDTO;
-        private MapInfo mapInfo;
-    }
 
     @Builder 
     @Getter

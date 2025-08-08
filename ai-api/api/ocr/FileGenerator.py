@@ -1,6 +1,6 @@
-from function.PDFFunction import *
-from function.OCRFunction import *
-from tools.Testcase import *
+from api.ocr.function.PDFFunction import *
+from api.ocr.function.OCRFunction import *
+from api.ocr.tools.Testcase import *
 from dotenv import load_dotenv
 
 #  수업명 : 가비아 2회차
@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 
 # 테스트케이스 생성기
 
-pdf_path = './sources/Contract_form.pdf'
+pdf_path = 'api/ocr/sources/Contract_form.pdf'
 
 if isPDFValid(pdf_path):
     for contract in contracts:

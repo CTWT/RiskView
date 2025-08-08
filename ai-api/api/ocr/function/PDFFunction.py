@@ -1,6 +1,6 @@
 import fitz  # PyMuPDF
-from data.LeaseContract import LeaseContract
-from tools.StringHelper import *
+from ..data.LeaseContract import LeaseContract
+from ..tools.StringHelper import *
 from pdf2image import convert_from_path  # PDF를 이미지(JPG)로 변환하는 함수
 from pdf2image import exceptions
 from pdf2image import convert_from_bytes

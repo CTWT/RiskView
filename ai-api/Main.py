@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import Dict
 from api.ocr.Server import process_file
+from api.ocr.Server import search_address
 from api.news_scraper.app.crawler.News_114 import News_114_Save
 from api.news_scraper.app.crawler.News_Yeonhap import News_Yeonhap_Save
 from api.news_scraper.app.crawler.News_Chosun import News_Chosun_Save
@@ -20,6 +21,7 @@ app = FastAPI()
 # 이벤트 상태 저장
 event_flags : Dict[str, bool] = {
     "ocr" : False,      # ocr api 이벤트
+    "naver_map":False,  # naver_map api 이벤트
     "news_114" : False, # 뉴스 114
     "news_yeonhap" : False, # 연합뉴스
     "news_chosun" : False,  # 뉴스 조선
@@ -43,6 +45,17 @@ async def run_ocr(file : UploadFile = File(...)) :
         raise HTTPException(status_code=403, detail="ocr실행 실패")
     event_flags["ocr"] = False
     return await process_file(file)  
+
+class AddressRequest(BaseModel):
+    address: str
+
+# naver_map
+@app.post("/naver_map")
+async def search_map(req:AddressRequest) :
+    if not event_flags["naver_map"] :
+        raise HTTPException(status_code=403, detail="naver_map 실패")
+    event_flags["naver_map"] = False
+    return await search_address(req.address)  
 
 # 뉴스114 크롤링 호출
 @app.post("/news_114")

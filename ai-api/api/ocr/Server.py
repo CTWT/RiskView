@@ -6,6 +6,7 @@ import shutil
 import json
 import re
 from dataclasses import dataclass, asdict
+from fastapi.encoders import jsonable_encoder
 
 
 
@@ -55,17 +56,12 @@ async def process_file(file: UploadFile = File(...)):
     # ocr결과물 leaseContract 인스턴스에 매핑
     outputContract = ocrMapping(ocr_list)
 
+    contract_json = jsonable_encoder(outputContract)
+    return JSONResponse(content=contract_json)
+
+async def search_address(address:str) :
     # 네이버 맵 API 데이터 추출 후 mapInfo 인스턴스에 매핑
-    mapInfo = getMapInfo(outputContract.location)
+    mapInfo = getMapInfo(address)
 
-    # 인스턴스 -> 딕셔너리
-    contract_dict = asdict(outputContract) if outputContract is not None else None
-    mapinfo_dict = asdict(mapInfo) if mapInfo is not None else None
-
-    response_dict = {
-        "structuredContractDataDTO": contract_dict,
-        "mapInfo": mapinfo_dict
-    }
-
-    response_json = json.dumps(response_dict, ensure_ascii=False, default=str)
-    return JSONResponse(content=json.loads(response_json))
+    mapInfo_json = jsonable_encoder(mapInfo)
+    return JSONResponse(content=mapInfo_json)

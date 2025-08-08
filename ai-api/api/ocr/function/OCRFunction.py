@@ -56,10 +56,10 @@ def runOCR(image: bytes) -> list[str]:
     if response.status_code == 200:
         result = response.json()
         ocrList = []
-        print("\n📝 인식된 텍스트:")
+        # print("\n📝 인식된 텍스트:")
         for field in result['images'][0]['fields']:
             ocrList.append(field['inferText'])
-            print('-', field['inferText'])
+            # print('-', field['inferText'])
     else:
         return "Error : " + response.status.code + "\n" + response.text
 

@@ -9,6 +9,8 @@ from datetime import datetime
 import time, json, re, os
 import mysql.connector
 
+from dotenv import load_dotenv
+
 #  이름 : 임해균
 #  작성자 : 임해균
 #  수정자 : 유연우
@@ -20,6 +22,11 @@ import mysql.connector
 # 연합뉴스 사이트 뉴스 사이트, 뉴스 제목, 본문, 날짜 크롤링하여 JSON 파일로 변환 (json 폴더에 저장됨)
 # Main.py에서 동작할 수 있도록 설정
 
+load_dotenv()
+host = os.getenv('DB_HOST')
+user = os.getenv('DB_USER')
+password = os.getenv('PASSWORD')
+database = os.getenv('DB_NAME')
 
 def crawl_news():
     options = webdriver.ChromeOptions()
@@ -135,7 +142,7 @@ def save_to_json(news_list, folder="app/json"):
 
 def save_to_db(news_list):
     conn = mysql.connector.connect(
-        host="localhost", user="root", password="12345", database="newsdb"
+        host=host, user=user, password=password, database=database
     )
     cursor = conn.cursor()
 

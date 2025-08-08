@@ -16,8 +16,8 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 load_dotenv()
-naver_map_client_id = os.getenv('naver_map_client_id')
-naver_map_client_secret = os.getenv('naver_map_client_secret')
+naver_map_client_id = os.getenv('MAP_CLIENT_ID')
+naver_map_client_secret = os.getenv('MAP_CLIENT_SECRET')
 
 # @Param ocr스캔하여 얻은 계약서의 소재지
 # @return MapInfo 인스턴스에 담아서 리턴

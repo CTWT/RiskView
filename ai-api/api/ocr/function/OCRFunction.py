@@ -23,8 +23,8 @@ import re
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 load_dotenv()
-ocr_secret_key = os.getenv('ocr_secret_key')
-ocr_api_url = os.getenv('ocr_api_url')
+ocr_secret_key = os.getenv('OCR_SECRET_KEY')
+ocr_api_url = os.getenv('OCR_API_URL')
 
 
 # @Param imagePath JPG파일에 대해 OCR 실행

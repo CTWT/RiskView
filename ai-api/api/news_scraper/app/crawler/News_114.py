@@ -5,6 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time, json, re, os
 from datetime import datetime
 import mysql.connector
+from dotenv import load_dotenv
 
 #  이름 : 유연우
 #  작성자 : 유연우
@@ -17,6 +18,11 @@ import mysql.connector
 # DB 저장까지는 save_to_db 함수 주석 처리 후 실행 - DB 설정 되어있으면 그냥 Main.py에서 실행
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
+load_dotenv()
+host = os.getenv('DB_HOST')
+user = os.getenv('DB_USER')
+password = os.getenv('PASSWORD')
+database = os.getenv('DB_NAME')
 
 def crawl_news():
     options = webdriver.ChromeOptions()
@@ -125,7 +131,7 @@ def save_to_json(news_list, filename_base="news_articles"):
 
 def save_to_db(news_list):
     conn = mysql.connector.connect(
-        host="localhost", user="root", password="12345", database="newsdb"
+        host=host, user=user, password=password, database=database
     )
     cursor = conn.cursor()
 

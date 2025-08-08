@@ -20,7 +20,7 @@ import sys
 # OCR할 때 필요한 PDF 처리 관련 함수들을 모아 놓은 파일
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 load_dotenv()
-poppler_path = os.getenv('poppler_path')
+poppler_path = os.getenv('POPLER_PATH')
 
 #@Param pdf_path pdf    파일경로
 #@Param image_path      이미지가 생성될 위치

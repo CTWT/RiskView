@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 #  이름 : 임해균
 #  작성자 : 임해균
 #  수정자 : 유연우
-#  수정일 : 25.08.05
+#  수정일 : 25.08.08
 #  작성일 : 2025-07-28
 #  파일명 : News_Chosun.py
 
@@ -23,10 +23,11 @@ from dotenv import load_dotenv
 # Main.py에서 동작할 수 있도록 설정
 
 load_dotenv()
-host = os.getenv('DB_HOST')
-user = os.getenv('DB_USER')
-password = os.getenv('PASSWORD')
-database = os.getenv('DB_NAME')
+host = os.getenv("DB_HOST")
+user = os.getenv("DB_USER")
+password = os.getenv("PASSWORD")
+database = os.getenv("DB_NAME")
+
 
 def crawl_news():
     options = webdriver.ChromeOptions()
@@ -105,7 +106,7 @@ def crawl_news():
                         "article_code": "조선비즈",
                         "title": title,
                         "content": content,
-                        "date": formatted_date,
+                        "published_at": formatted_date,
                     }
                 )
                 print(f"✅ {title} 저장 준비 완료")
@@ -146,7 +147,7 @@ def save_to_db(news_list):
     )
     cursor = conn.cursor()
 
-    query = "INSERT INTO news_articles (article_code, title, content, date) VALUES (%s, %s, %s, %s)"
+    query = "INSERT INTO news_articles (article_code, title, content, published_at) VALUES (%s, %s, %s, %s)"
     check_query = "SELECT COUNT(*) FROM news_articles WHERE title = %s"
     inserted_count = 0
 
@@ -162,7 +163,7 @@ def save_to_db(news_list):
                     item.get("article_code", "").strip(),
                     title,
                     item.get("content", "").strip(),
-                    item.get("date", "").strip(),
+                    item.get("published_at", "").strip(),
                 ),
             )
             inserted_count += 1

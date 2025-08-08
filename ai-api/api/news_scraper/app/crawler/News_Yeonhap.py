@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 #  이름 : 유연우
 #  작성자 : 유연우
 #  수정자 :
-#  수정일 : 25.08.05
+#  수정일 : 25.08.08
 #  작성일 : 25.07.23
 #  파일명 : News_yeonhap.py
 
@@ -21,10 +21,11 @@ from dotenv import load_dotenv
 # DB에 각 컬럼 저장 (추후에 DB 하나의 테이블에 저장되도록 테이블 변경)
 
 load_dotenv()
-host = os.getenv('DB_HOST')
-user = os.getenv('DB_USER')
-password = os.getenv('PASSWORD')
-database = os.getenv('DB_NAME')
+host = os.getenv("DB_HOST")
+user = os.getenv("DB_USER")
+password = os.getenv("PASSWORD")
+database = os.getenv("DB_NAME")
+
 
 def crawl_yeonhap_news():
     options = Options()
@@ -98,7 +99,7 @@ def crawl_yeonhap_news():
                         "article_code": "연합뉴스",
                         "title": title,
                         "content": content,
-                        "date": formatted_date,
+                        "published_at": formatted_date,
                     }
                 )
                 print(f"✅ [{idx+1}] 저장됨: {title[:25]}...")
@@ -156,12 +157,12 @@ def save_to_db(news_list):
         news_title = "연합뉴스"
         title = article["title"]
         content = article["content"]
-        date = article["date"]
+        published_at = article["published_at"]
 
-        query = "INSERT INTO news_articles (article_code, title, content, date) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO news_articles (article_code, title, content, published_at) VALUES (%s, %s, %s, %s)"
 
         try:
-            cursor.execute(query, (news_title, title, content, date))
+            cursor.execute(query, (news_title, title, content, published_at))
             print(f"✅ 저장됨: {title}")
         except mysql.connector.IntegrityError:
             print(f"❌ 중복 건너뜀: {title}")

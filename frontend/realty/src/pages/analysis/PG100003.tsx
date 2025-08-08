@@ -6,6 +6,7 @@ import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
 import contractFieldLabels from "../../contracts/contractFieldLabels";
 import { useNaverMap } from "../../hooks/useNaverMap";
+import axios from "axios";
 
 import type {
     DocumentsDTO,
@@ -188,11 +189,49 @@ const PG100003: React.FC<PG100003Props> = ({
         }
     };
 
-    const handleProcessResult = () => {
-        if (onAnalysisComplete) {
-            onAnalysisComplete(currentOcrData);
-        } else {
-            alert("OCR 결과 처리 (다음 단계로 이동)");
+    // OCR 결과를 서버로 전송하는 함수
+    const handleProcessResult = async () => {
+        try {
+            // currentOcrData는 유저가 수정한 계약 정보 전체 상태
+            // 이 중에서 mapInfo는 제외하고 나머지만 payload로 따로 추출
+            const {
+                documentsDTO,
+                fileStorageMetadataDTO,
+                structuredContractDataDTO,
+            } = currentOcrData;
+
+            // 실제 서버에 보낼 데이터 객체 구성 (mapInfo는 뺌!)
+            const payload = {
+                documentsDTO,
+                fileStorageMetadataDTO,
+                structuredContractDataDTO,
+            };
+
+            // POST 요청으로 "/contracts" 주소에 데이터 전송
+            // headers에 Content-Type을 명시해서 JSON 형식임을 알림
+            const response = await axios.post("/contracts", payload, {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
+
+            // 요청이 성공하면 콘솔에 응답 로그 출력
+            console.log("전송 성공", response.data);
+
+            // 성공 메시지를 사용자에게 알림
+            alert("계약 정보가 정상적으로 전송되었습니다.");
+
+            // 외부로부터 onAnalysisComplete 함수가 전달된 경우 실행
+            // 다음 단계로 넘어가는 처리를 할 수 있게 함
+            if (onAnalysisComplete) {
+                onAnalysisComplete(currentOcrData); // 수정된 상태 전체 전달
+            }
+        } catch (error) {
+            // 요청 중 에러가 발생한 경우 콘솔에 오류 로그 출력
+            console.error("전송 실패", error);
+
+            // 사용자에게 오류 메시지 표시
+            alert("서버 전송 중 오류가 발생했습니다.");
         }
     };
 

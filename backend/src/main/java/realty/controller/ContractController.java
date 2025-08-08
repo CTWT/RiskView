@@ -4,7 +4,6 @@ import java.io.IOException;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,7 +14,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.MapInfo;
-import realty.domain.model.User;
 import realty.service.ContractService;
 import realty.service.NaverMapService;
 
@@ -41,15 +39,17 @@ public class ContractController {
     @PostMapping("/contracts")
     public ResponseEntity<String> insertData(@RequestBody ContractDTO.ContractInfo contractInfo,
             HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user == null) {
-            return ResponseEntity
-                    .status(500)
-                    .contentType(MediaType.TEXT_PLAIN)
-                    .body("No Logined User");
-        }
+        // User user = (User) session.getAttribute("user");
+        // if (user == null) {
+        //     return ResponseEntity
+        //             .status(500)
+        //             .contentType(MediaType.TEXT_PLAIN)
+        //             .body("No Logined User");
+        // }
 
-        String userCode = user.getUserCode();
+        // String userCode = user.getUserCode();
+
+        String userCode = "U10000000";
         contractService.save(contractInfo, userCode);
         return ResponseEntity
                 .ok()

@@ -13,7 +13,7 @@
 </head>
 
 <body>
-    <form th:action="@{/contracts}" th:object="${contractInfo}" method="post">
+    <form th:action="@{/test_contracts}" th:object="${contractInfo}" method="post">
         <!-- 히든 정보 -->
         <input type="hidden" th:field="*{documentsDTO.title}">
         <input type="hidden" th:field="*{documentsDTO.status}">

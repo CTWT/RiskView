@@ -2,8 +2,8 @@ package realty.controller;
 
 import java.io.IOException;
 
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,10 +12,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import realty.apicommunication.MapComponent;
+import realty.apicommunication.OcrComponent;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.MapInfo;
 import realty.service.ContractService;
-import realty.service.NaverMapService;
 
 /*
  * 수업명 : 가비아 2회차
@@ -31,7 +32,8 @@ import realty.service.NaverMapService;
 public class ContractController {
 
     private final ContractService contractService;
-    private final NaverMapService naverMapService;
+    private final MapComponent mapComponent;
+    private final OcrComponent ocrComponent;
 
     /**
      * 계약서를 저장하는 PostMapping
@@ -50,11 +52,20 @@ public class ContractController {
         // String userCode = user.getUserCode();
 
         String userCode = "U10000000";
-        contractService.save(contractInfo, userCode);
+        String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity
                 .ok()
-                .contentType(MediaType.TEXT_PLAIN)
-                .body("Contract Save Complete!");
+                .body(documentCode);
+    }
+
+    @GetMapping("/contracts")
+    public ResponseEntity<ContractDTO.StructuredContractDataDTO> getData(@RequestBody String documentCode){
+        ContractDTO.StructuredContractDataDTO structuredContractDataDTO
+        = contractService.findStructuredContractDataByDocumentcode(documentCode);
+
+        return ResponseEntity
+                .ok()
+                .body(structuredContractDataDTO);
     }
 
     /**
@@ -64,11 +75,11 @@ public class ContractController {
     public ResponseEntity<ContractDTO.ContractResponse> handleFileUpload(@RequestParam("file") MultipartFile file)
             throws IOException {
         //계약서 정보
-        ContractDTO.ContractInfo contractInfo = contractService.getContractInfo(file);
+        ContractDTO.ContractInfo contractInfo = ocrComponent.getContractInfo(file);
 
         //맵 정보
         String address = contractInfo.getStructuredContractDataDTO().getLocation();
-        MapInfo mapinfo = naverMapService.getMapInfo(address);
+        MapInfo mapinfo = mapComponent.getMapInfo(address);
 
         ContractDTO.ContractResponse contractResponse = ContractDTO.ContractResponse.builder()
                 .contractInfo(contractInfo)

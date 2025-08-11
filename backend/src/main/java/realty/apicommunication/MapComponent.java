@@ -1,27 +1,18 @@
-package realty.service;
+package realty.apicommunication;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.MapInfo;
 
-/*
- * 수업명 : 가비아 2회차
- * 이름 : 김관호
- * 작성자 : 김관호
- * 수정자 : 
- * 작성일 : 25.08.08
- * 파일명 : NaverMapService.java
- */
-
-@Service
+@Component
 @RequiredArgsConstructor
-public class NaverMapService {
+public class MapComponent {
     private final RestTemplate restTemplate;
 
     /**

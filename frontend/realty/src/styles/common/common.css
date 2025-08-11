@@ -2292,3 +2292,145 @@
     font-weight: 700;
     text-decoration: underline;
 }
+
+/* PG300008.tsx - 아이디 찾기 스타일 */
+.backToLogin {
+    color: #a290ff;
+    marginBottom: 16px;
+    cursor: pointer;
+    fontWeight: 600;
+    fontSize: 14px;
+    display: flex;
+    alignItems: center;
+    gap: 6px;
+    alignSelf: flex-start;
+    marginLeft: 0px;
+}
+
+.backToLogin:hover {
+    color: #9078ff;
+    text-decoration: underline;
+}
+
+/* 설명 텍스트 */
+.authDescription {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 30px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* 결과 메시지 컨테이너 */
+.resultMessageContainer {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.resultMessageContainer.success {
+    background-color: #f0fff4;
+    border: 1px solid #c6f6d5;
+}
+
+.resultMessageContainer.error {
+    background-color: #fff5f5;
+    border: 1px solid #fed7d7;
+}
+
+.resultMessageText {
+    margin: 0;
+    font-weight: bold;
+}
+
+.resultMessageText.success {
+    color: #38a169;
+}
+
+/* 하단 링크 섹션 */
+.authLinkSection {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 14px;
+}
+
+.authLinkText {
+    color: #666;
+}
+
+.authLinkButton {
+    background: none;
+    border: none;
+    color: #333;
+    font-weight: bold;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    margin-left: 2px;
+}
+
+.authLinkButton:hover {
+    color: #a290ff;
+}
+
+/* PG300010.tsx - 비밀번호 찾기(이메일 인증 번호 입력) 스타일 */
+/* 진행 단계 표시 컨테이너 */
+.progressContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    gap: 20px;
+}
+
+/* 완료 아이콘 */
+.progressCompleted {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #a290ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* 완료 이전 아이콘 */
+.progressBefore {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #c1c1c176;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgb(255, 255, 255);
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* 진행 단계 연결선 */
+.progressConnector {
+    width: 60px;
+    height: 2px;
+    background-color: #a290ff;
+}
+
+
+.passwordWrapper{
+    position: relative;
+}
+
+.passwordIcon{
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-60%);
+    font-size: 18px;
+    color: #999;
+    cursor: pointer;
+}

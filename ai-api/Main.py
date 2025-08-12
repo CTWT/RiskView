@@ -21,7 +21,7 @@ app = FastAPI()
 # 이벤트 상태 저장
 event_flags : Dict[str, bool] = {
     "ocr" : False,      # ocr api 이벤트
-    "naver_map":False,  # naver_map api 이벤트
+    "kakao_map":False,  # kakao_map api 이벤트
     "news_114" : False, # 뉴스 114
     "news_yeonhap" : False, # 연합뉴스
     "news_chosun" : False,  # 뉴스 조선
@@ -49,12 +49,12 @@ async def run_ocr(file : UploadFile = File(...)) :
 class AddressRequest(BaseModel):
     address: str
 
-# naver_map
-@app.post("/naver_map")
+# kakao_map
+@app.post("/kakao_map")
 async def search_map(req:AddressRequest) :
-    if not event_flags["naver_map"] :
-        raise HTTPException(status_code=403, detail="naver_map 실패")
-    event_flags["naver_map"] = False
+    if not event_flags["kakao_map"] :
+        raise HTTPException(status_code=403, detail="kakao_map 실패")
+    event_flags["kakao_map"] = False
     return await search_address(req.address)  
 
 # 뉴스114 크롤링 호출

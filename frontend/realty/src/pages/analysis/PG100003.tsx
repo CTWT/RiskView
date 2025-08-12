@@ -78,7 +78,7 @@ interface PG100003Props {
     scannedFile: string;
     ocrData: OcrDataType;
     uploadedFilePreview: string | null;
-    onAnalysisComplete?: (result: OcrDataType) => void;
+    onAnalysisComplete?: (documentCode: string) => void;
     onBackToPreviousPhase?: () => void;
 }
 
@@ -185,7 +185,7 @@ const PG100003: React.FC<PG100003Props> = ({
         if (onBackToPreviousPhase) {
             onBackToPreviousPhase();
         } else {
-            navigate("/pg100001");
+            navigate("/PG100001");
         }
     };
 
@@ -209,12 +209,19 @@ const PG100003: React.FC<PG100003Props> = ({
 
             // POST 요청으로 "/contracts" 주소에 데이터 전송
             // headers에 Content-Type을 명시해서 JSON 형식임을 알림
-            const response = await axios.post("http://localhost:8080/contracts", payload, {
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                withCredentials: true,
-            });
+            const response = await axios.post<string>(
+                "http://localhost:8080/contracts",
+                payload,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    withCredentials: true,
+                }
+            );
+
+            const documentCode = response.data;
+            sessionStorage.setItem("rv_documentCode", documentCode);
 
             // 요청이 성공하면 콘솔에 응답 로그 출력
             console.log("전송 성공", response.data);
@@ -223,10 +230,7 @@ const PG100003: React.FC<PG100003Props> = ({
             alert("계약 정보가 정상적으로 전송되었습니다.");
 
             // 외부로부터 onAnalysisComplete 함수가 전달된 경우 실행
-            // 다음 단계로 넘어가는 처리를 할 수 있게 함
-            if (onAnalysisComplete) {
-                onAnalysisComplete(currentOcrData); // 수정된 상태 전체 전달
-            }
+            onAnalysisComplete?.(documentCode);
         } catch (error) {
             // 요청 중 에러가 발생한 경우 콘솔에 오류 로그 출력
             console.error("전송 실패", error);

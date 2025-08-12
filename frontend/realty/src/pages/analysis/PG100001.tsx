@@ -35,6 +35,8 @@ const PG100001: React.FC = () => {
         scannedFile: string;
     } | null>(null);
 
+    const [documentCode, setDocumentCode] = useState<string | null>(null);
+
     // 단계 변경 함수 (하위 컴포넌트에서 호출하여 상위 상태를 변경)
     const handleNextPhase = (nextPhase: number) => {
         setAnalysisPhase(nextPhase);
@@ -73,9 +75,9 @@ const PG100001: React.FC = () => {
                         uploadedFilePreview={
                             analysisOutputData.uploadedFilePreview
                         }
-                        // PG100003에서 다음 단계(PG100004)로 넘어가고 싶을 때 호출할 함수 (예시)
-                        onAnalysisComplete={() => {
-                            // setAnalysisResult(result); // PG100003에서 텍스트 수정이 있었다면 그 결과를 저장
+                        // PG100003에서 다음 단계(PG100004)로 넘어가고 싶을 때 호출할 함수
+                        onAnalysisComplete={(code) => {
+                            setDocumentCode(code); // documentCode 저장
                             handleNextPhase(2); // 분석 완료 (PG100004) 단계로 전환
                         }}
                         onBackToPreviousPhase={handleBackToPhase0}
@@ -88,12 +90,7 @@ const PG100001: React.FC = () => {
                 />
             )}
 
-            {analysisPhase === 3 && (
-                <PG100005
-                //analysisResult={analysisResult}
-                //onCloseDetail={() => handleNextPhase(2)}
-                />
-            )}
+            {analysisPhase === 3 && <PG100005 documentCode={documentCode} />}
 
             {/* 기타 공통 UI 요소 */}
         </div>

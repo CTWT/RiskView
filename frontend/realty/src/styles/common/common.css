@@ -540,13 +540,208 @@
     box-sizing: border-box;
 }
 
+/* PG100005 - 계약서 분석결과 보고서 담당 스타일 */
+
+:root {
+    --rv05-bg: #ffffff;
+    --rv05-border: #eef2f7;
+    --rv05-text: #0f172a;
+    --rv05-subtext: #64748b;
+    --rv05-muted: #f8fafc;
+
+    --rv05-ok: #22c55e;
+    --rv05-info: #0ea5e9;
+    --rv05-note: #8b5cf6;
+
+    --rv05-warn-bg: #fff7ed;
+    --rv05-warn-border: #fde68a;
+    --rv05-warn-text: #92400e;
+
+    --rv05-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+    --rv05-radius: 14px;
+}
+
+.rv05-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+.rv05-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 16px;
+}
+
+/* 카드 */
+.rv05-card {
+    background: var(--rv05-bg);
+    border: 1px solid var(--rv05-border);
+    border-radius: var(--rv05-radius);
+    padding: 16px;
+    box-shadow: var(--rv05-shadow);
+    grid-column: span 6;
+}
+.rv05-card.rv05-wide {
+    grid-column: span 12;
+}
+.rv05-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 120px;
+}
+.rv05-error {
+    color: #b00020;
+    background: #fff5f5;
+    border-color: #ffd6d6;
+}
+
+/* 섹션 타이틀 & DL */
+.rv05-sec-title {
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    color: var(--rv05-text);
+}
+.rv05-dl {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    row-gap: 8px;
+    column-gap: 12px;
+}
+.rv05-dl dt {
+    color: #6b7280;
+}
+.rv05-dl dd {
+    color: var(--rv05-text);
+    font-weight: 600;
+}
+
+/* 칩(상단 요약) */
+.rv05-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 6px 0 16px;
+}
+.rv05-chip {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: var(--rv05-muted);
+    border: 1px solid var(--rv05-border);
+    padding: 12px 14px;
+    border-radius: 12px;
+    min-width: 260px;
+}
+.rv05-chip-title {
+    font-weight: 700;
+    color: #334155;
+}
+.rv05-chip-sub {
+    color: #475569;
+}
+.rv05-chip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+.rv05-chip-dot.ok {
+    background: var(--rv05-ok);
+}
+.rv05-chip-dot.info {
+    background: var(--rv05-info);
+}
+.rv05-chip-dot.note {
+    background: var(--rv05-note);
+}
+
+/* 경고 배너(임시 위험도) */
+.rv05-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--rv05-warn-bg);
+    border: 1px solid var(--rv05-warn-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 4px 0 18px;
+}
+.rv05-banner-title {
+    font-weight: 800;
+    color: var(--rv05-warn-text);
+}
+.rv05-banner-sub {
+    color: #b45309;
+}
+.rv05-badge {
+    padding: 6px 10px;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 12px;
+    border: 1px solid var(--rv05-warn-border);
+    color: var(--rv05-warn-text);
+    background: #f59e0b22;
+}
+
+/* 특약 */
+.rv05-special {
+    white-space: pre-wrap;
+    background: #fafafa;
+    border: 1px dashed #e5e7eb;
+    border-radius: 10px;
+    padding: 12px;
+    color: var(--rv05-text);
+}
+
+/* 주요 발견사항(나머지 필드) */
+.rv05-kvlist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+}
+.rv05-kvlist li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid #f0f2f5;
+    border-radius: 10px;
+    background: #fcfcfd;
+}
+.rv05-kvlist li span {
+    color: var(--rv05-subtext);
+}
+.rv05-kvlist li em {
+    font-style: normal;
+    color: var(--rv05-text);
+    font-weight: 700;
+}
+.rv05-dim {
+    color: #9ca3af;
+}
+
+/* 액션 버튼 영역 */
+.rv05-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
 /* PG600001 - 서비스 소개 담당 스타일*/
 
 .in01-container {
     padding: 50px 20px;
     max-width: 1200px;
     margin: 0 auto;
-    margin-top: -100px !important;;
+    margin-top: -100px !important;
 }
 
 /* 좌우 패널 컨테이너 */
@@ -1308,9 +1503,9 @@
     flex: 1;
     width: 50%;
     height: 44px;
-        /* input 높이에 맞게 조정 (보통 40~44px 정도) */
-        padding: 0 12px;
-        /* 상하 패딩은 없애고 좌우만 */
+    /* input 높이에 맞게 조정 (보통 40~44px 정도) */
+    padding: 0 12px;
+    /* 상하 패딩은 없애고 좌우만 */
     border: 1px solid #e1e5e9;
     background-color: #ffffff;
     color: #666;
@@ -1321,7 +1516,6 @@
     transition: all 0.2s ease;
     text-align: center;
 }
-
 
 .toggle-button:hover {
     border-color: #a290ff;
@@ -1758,7 +1952,6 @@
 .news-section {
     background: white;
     margin: 0 0 0 -95px;
-
 }
 
 .news-header-row {
@@ -1801,7 +1994,6 @@
 }
 
 /* 뉴스 목록 */
-
 
 .news-list {
     display: flex;
@@ -2099,7 +2291,6 @@
     text-decoration: underline;
 }
 
-
 .keyword-title {
     font-size: 20px;
     font-weight: 600;
@@ -2296,15 +2487,15 @@
 /* PG300008.tsx - 아이디 찾기 스타일 */
 .backToLogin {
     color: #a290ff;
-    marginBottom: 16px;
+    marginbottom: 16px;
     cursor: pointer;
-    fontWeight: 600;
-    fontSize: 14px;
+    fontweight: 600;
+    fontsize: 14px;
     display: flex;
-    alignItems: center;
+    alignitems: center;
     gap: 6px;
-    alignSelf: flex-start;
-    marginLeft: 0px;
+    alignself: flex-start;
+    marginleft: 0px;
 }
 
 .backToLogin:hover {
@@ -2420,12 +2611,11 @@
     background-color: #a290ff;
 }
 
-
-.passwordWrapper{
+.passwordWrapper {
     position: relative;
 }
 
-.passwordIcon{
+.passwordIcon {
     position: absolute;
     right: 14px;
     top: 50%;

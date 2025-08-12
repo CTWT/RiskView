@@ -50,11 +50,11 @@ public class TestContractController {
     public String handleFileUpload(@RequestParam("file") MultipartFile file, Model model)
             throws IOException {
         //계약서 정보
-        ContractDTO.ContractInfo contractInfo = ocrComponent.getContractInfo(file);
+        ContractDTO.ContractInfo contractInfo = ocrComponent.scanContract(file);
 
         //맵 정보
         String address = contractInfo.getStructuredContractDataDTO().getLocation();
-        MapInfo mapInfo = mapComponent.getMapInfo(address);
+        MapInfo mapInfo = mapComponent.localSearch(address);
         
         model.addAttribute("contractInfo", contractInfo);
         model.addAttribute("mapInfo", mapInfo);

@@ -1,41 +1,63 @@
 package realty.apicommunication;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.ContractDTO;
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 김관호
+ * 작성자 : 김관호
+ * 수정자 : 
+ * 작성일 : 25.08.11
+ * 파일명 : OcrComponent.java
+ */
+
+/**
+ * Ocr 호출과 관련된 컴포넌트
+ */
 
 @Component
 @RequiredArgsConstructor
-public class OcrCall {
+public class OcrComponent {
     private final RestTemplate restTemplate;
+    private final FileComponent fileComponent;
 
-    public ContractDTO.ContractInfo getContractInfo(MultipartFile file){
+    /**
+     * 파일을 분석해서 DTO로 반환해주는 함수
+     * 
+     * @param file
+     * @return ContractInfo
+     */
+    public ContractDTO.ContractInfo scanContract(MultipartFile file) {
 
-         // FastAPI 서버쪽의 ocr 트리거 활성화
+        // FastAPI 서버쪽의 ocr 트리거 활성화
         triggerFastApiOcr();
 
-        // MultipartFile -> File
-        File convertedFile = getFileFromMultipartFile(file);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = null;
 
         // FastAPI 쪽에 보낼 requestEntity 생성
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = createMultipartRequest(convertedFile);
+        try {
+            requestEntity = fileComponent.createMultipartRequest(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-        //post
+        if (requestEntity == null) {
+            System.out.println("requestEntity생성에 실패했습니다.");
+            return null;
+        }
+
+        // post
         ResponseEntity<ContractDTO.StructuredContractDataDTO> response = restTemplate.postForEntity(
                 "http://localhost:8000/ocr",
                 requestEntity,
@@ -47,47 +69,12 @@ public class OcrCall {
         // OCR 응답 데이터가 유효하다면 contractInfo, mapInfo 값 매핑
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             ContractDTO.StructuredContractDataDTO ocrResponse = response.getBody();
-            contractInfo = buildContractInfoFromOcr(file, convertedFile, ocrResponse);
+            contractInfo = buildContractInfoFromOcr(file, ocrResponse);
         }
-
 
         return contractInfo;
     }
 
-    /**
-     * 파일을 받아서 HTTPRequest에 사용할 HTTPBody로 만듦
-     */
-    public MultiValueMap<String, Object> getHttpBodyFromFile(File file) {
-        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-        body.add("file", new FileSystemResource(file));
-
-        return body;
-    }
-
-    /**
-     * MultipartFile을 받아서 File로 savedfile폴더에 저장하는 함수
-     */
-    public File getFileFromMultipartFile(MultipartFile file){
-        // 1. MultipartFile → File 변환
-        File convFile = null;
-        try{
-            convFile = new File(getStoredPath() + file.getOriginalFilename());
-            file.transferTo(convFile);
-        } catch (IOException e){
-            e.printStackTrace();
-        }
-        return convFile;
-    }
-
-    public ContractDTO.FileStorageMetadataDTO getFileMetadata(MultipartFile file) {
-        return ContractDTO.FileStorageMetadataDTO.builder()
-                                        .originalName(file.getOriginalFilename())
-                                        .storedPath(getStoredPath())
-                                        .fileSizeKb(longtoInt(file.getSize() / 1024))
-                                        .fileType(file.getContentType())
-                                        .isEncrypted(true)
-                                        .build();
-    }
 
     /**
      * FastAPI 서버 쪽의 ocr 트리거 활성화
@@ -99,19 +86,8 @@ public class OcrCall {
     }
 
     /**
-     * ocr 할 request형식 생성
-     * @param file
-     * @return HttpEntity에 ocr할 파일을 실어서 리턴
-     */
-    private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest(File file) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-        MultiValueMap<String, Object> body = getHttpBodyFromFile(file);
-        return new HttpEntity<>(body, headers);
-    }
-
-    /**
      * 디폴트 ContractInfo 생성
+     * 
      * @return default ContractInfo
      */
     private ContractDTO.ContractInfo createDefaultContractInfo() {
@@ -124,17 +100,17 @@ public class OcrCall {
 
     /**
      * 
-     * @param file 프론트로부터 받은 MultipartFile
+     * @param file          프론트로부터 받은 MultipartFile
      * @param convertedFile MultiparFile을 File로 변환한 결과물
-     * @param ocrResponse ocr하여 얻은 결과
+     * @param ocrResponse   ocr하여 얻은 결과
      * @return
      */
-    private ContractDTO.ContractInfo buildContractInfoFromOcr(MultipartFile file, File convertedFile,
+    private ContractDTO.ContractInfo buildContractInfoFromOcr(MultipartFile file,
             ContractDTO.StructuredContractDataDTO ocrResponse) {
         ContractDTO.StructuredContractDataDTO structuredData = ocrResponse;
         ContractDTO.FileStorageMetadataDTO metadata = getFileMetadata(file);
         ContractDTO.DocumentsDTO documents = ContractDTO.DocumentsDTO.builder()
-                .title(convertedFile.getName())
+                .title(file.getOriginalFilename())
                 .status("UPLOAD")
                 .isDeleted(false)
                 .build();
@@ -146,12 +122,14 @@ public class OcrCall {
                 .build();
     }
 
-    private String getStoredPath() {
-        return System.getProperty("user.dir") + "/backend/src/main/java/realty/savedfile/";
+    public ContractDTO.FileStorageMetadataDTO getFileMetadata(MultipartFile file) {
+        return ContractDTO.FileStorageMetadataDTO.builder()
+                .originalName(file.getOriginalFilename())
+                .storedPath(fileComponent.getStoredPath())
+                .fileSizeKb(fileComponent.longtoInt(file.getSize() / 1024))
+                .fileType(file.getContentType())
+                .isEncrypted(true)
+                .build();
     }
 
-    private int longtoInt(long l) {
-        Long ll = l;
-        return ll.intValue();
-    }
 }

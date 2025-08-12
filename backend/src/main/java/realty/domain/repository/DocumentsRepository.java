@@ -8,4 +8,5 @@ import realty.domain.model.Documents;
 @Repository
 public interface DocumentsRepository extends JpaRepository<Documents, Long> {
     Documents findByUserCode(String userCode);
+    Documents findByDocumentCode(String documentCode);
 }

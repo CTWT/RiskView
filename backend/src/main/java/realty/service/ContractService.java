@@ -34,16 +34,16 @@ public class ContractService {
     private final StructuredContractDataRepository contractRepository;
     private final FileStorageMetadataRepository fileStorageMetadataRepository;
 
-    public ContractDTO.StructuredContractDataDTO findStructuredContractDataByDocumentcode(String documentcode) {
-        return ContractDTO.StructuredContractDataDTO.from(contractRepository.findByDocumentcode(documentcode));
+    public StructuredContractData findStructuredContractDataByDocumentcode(String documentcode) {
+        return contractRepository.findByDocumentcode(documentcode);
     }
 
-    public ContractDTO.DocumentsDTO findDocumentByUsercode(String Usercode) {
-        return ContractDTO.DocumentsDTO.from(documentsRepository.findByUserCode(Usercode));
+    public Documents findDocumentByUsercode(String Usercode) {
+        return documentsRepository.findByUserCode(Usercode);
     }
 
-    public ContractDTO.FileStorageMetadataDTO findFileStorageMetaDataByDocumentCode(String documentcode) {
-        return ContractDTO.FileStorageMetadataDTO.from(fileStorageMetadataRepository.findByDocumentCode(documentcode));
+    public FileStorageMetadata findFileStorageMetaDataByDocumentCode(String documentcode) {
+        return fileStorageMetadataRepository.findByDocumentCode(documentcode);
     }
 
     private String documentSave(ContractDTO.DocumentsDTO documentsDTO, String userCode) {

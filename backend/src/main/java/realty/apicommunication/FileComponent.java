@@ -41,10 +41,10 @@ public class FileComponent {
 
     /**
      * 
-     * @param file      임시 파일
-     * @param fileName  설정한 파일 이름
-     * @param session   세션
-     * @return          파일경로
+     * @param file     임시 파일
+     * @param fileName 설정한 파일 이름
+     * @param session  세션
+     * @return 파일경로
      */
     public String saveFile(File file, String fileName, HttpSession session) {
         if (file == null || file.isFile() == false) {
@@ -64,7 +64,13 @@ public class FileComponent {
 
             // 3. 임시 파일 → 저장 폴더로 복사 (기존 파일 덮어쓰기 허용)
             Files.copy(file.toPath(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            
+
+            // 4. 임시 파일 삭제
+            boolean deleted = file.delete();
+            if (!deleted) {
+                System.err.println("임시 파일 삭제 실패: " + file.getAbsolutePath());
+            }
+
             return filePath.toString();
 
         } catch (IOException e) {
@@ -111,7 +117,8 @@ public class FileComponent {
     @Scheduled(fixedRate = 60_000) // 1분마다 실행
     public void cleanOldTempFiles() {
         Path tempDir = Paths.get(getTempPath());
-        if (!Files.exists(tempDir)) return;
+        if (!Files.exists(tempDir))
+            return;
 
         try {
             Files.list(tempDir).forEach(path -> {

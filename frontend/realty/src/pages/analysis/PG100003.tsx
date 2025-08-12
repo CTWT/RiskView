@@ -209,10 +209,11 @@ const PG100003: React.FC<PG100003Props> = ({
 
             // POST 요청으로 "/contracts" 주소에 데이터 전송
             // headers에 Content-Type을 명시해서 JSON 형식임을 알림
-            const response = await axios.post("/contracts", payload, {
+            const response = await axios.post("http://localhost:8080/contracts", payload, {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                withCredentials: true,
             });
 
             // 요청이 성공하면 콘솔에 응답 로그 출력

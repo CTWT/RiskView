@@ -237,6 +237,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                         headers: {
                             "Content-Type": "multipart/form-data",
                         },
+                        withCredentials: true,
                     }
                 );
 

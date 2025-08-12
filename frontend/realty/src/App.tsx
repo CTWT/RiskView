@@ -27,7 +27,7 @@ function App() {
                 {/* 계약서분석 페이지 */}
                 <Route path="/PG400001" element={<PG400001 />} />{" "}
                 {/* 부동산 뉴스 페이지 */}
-                <Route path="/PG500001" element={<PG500001 />} />{" "}
+                <Route path="/PG500001/*" element={<PG500001 />} />{" "}
                 {/* 커뮤니티 페이지 */}
                 <Route path="/PG600001" element={<PG600001 />} />{" "}
                 {/* 서비스 소개 페이지 */}

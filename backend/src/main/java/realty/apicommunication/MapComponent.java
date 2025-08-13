@@ -40,7 +40,7 @@ public class MapComponent {
         requestBody.put("address", address);
 
         ResponseEntity<MapInfo> response = restTemplate.postForEntity(
-                "http://localhost:8000/naver_map",
+                "http://localhost:8000/kakao_map",
                 requestBody,
                 MapInfo.class);
 
@@ -53,7 +53,7 @@ public class MapComponent {
      */
     private void triggerFastApiNaverMap() {
         Map<String, String> triggerBody = new HashMap<>();
-        triggerBody.put("api_name", "naver_map");
+        triggerBody.put("api_name", "kakao_map");
         restTemplate.postForEntity("http://localhost:8000/trigger", triggerBody, Void.class);
     }
 }

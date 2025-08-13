@@ -1,19 +1,12 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-import os, sys
-import shutil
-import json
-import re
-from dataclasses import dataclass, asdict
 from fastapi.encoders import jsonable_encoder
-
 
 
 # 외부 함수 정상 import
 from .function.PDFFunction import convertPDFBytesToImageBytes
 from .function.OCRFunction import runOCR, ocrMapping
-from .function.MapFunction import getMapInfo
+from .function.MapFunction import address_to_mapInfo
 
 
 #  수업명 : 가비아 2회차
@@ -61,7 +54,7 @@ async def process_file(file: UploadFile = File(...)):
 
 async def search_address(address:str) :
     # 네이버 맵 API 데이터 추출 후 mapInfo 인스턴스에 매핑
-    mapInfo = getMapInfo(address)
+    mapInfo = address_to_mapInfo(address)
 
     mapInfo_json = jsonable_encoder(mapInfo)
     return JSONResponse(content=mapInfo_json)

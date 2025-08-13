@@ -3,7 +3,6 @@ from data.MapInfo import MapInfo
 from dotenv import load_dotenv
 import sys
 import os
-import json
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -16,64 +15,48 @@ import json
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 load_dotenv()
-naver_map_client_id = os.getenv('MAP_CLIENT_ID')
-naver_map_client_secret = os.getenv('MAP_CLIENT_SECRET')
 
 # @Param ocr스캔하여 얻은 계약서의 소재지
 # @return MapInfo 인스턴스에 담아서 리턴
-def getMapInfo(address:str) -> MapInfo:
-    
-    #Rest
-    url = 'https://maps.apigw.ntruss.com/map-geocode/v2/geocode'
-    params = {'query': address}
-    headers = {
-        'X-NCP-APIGW-API-KEY-ID': naver_map_client_id,
-        'X-NCP-APIGW-API-KEY': naver_map_client_secret,
-        'Accept': 'application/json'
-    }
+def address_to_mapInfo(address: str) -> MapInfo:
+    url = "https://dapi.kakao.com/v2/local/search/address.json"
+    key = os.getenv("KAKAO_REST_API_KEY")
+    headers = {"Authorization": f"KakaoAK {key}"}
+    params = {"query": address}
 
-    response = requests.get(url, params = params, headers=headers)
-    data = response.json()
+    try:
+        res = requests.get(url, headers=headers, params=params, timeout=10)
+        # 디버깅 출력
+        print("Kakao Local status:", res.status_code)
+        if res.status_code != 200:
+            print("Kakao Local body:", res.text)
+    except Exception as e:
+        print("Kakao 요청 예외:", e)
+        return None
 
-    print(json.dumps(data, indent=2, ensure_ascii=False))
-
-    if not data.get('addresses'):
+    if res.status_code != 200:
         return None
     
-    # 데이터가 있으면 mapInfo에 담음
-    if data.get('addresses'):
+    data = res.json()
+    docs = data.get("documents", [])
+    if not docs:
+        return None
 
-        #데이터 생성
-        MapData = MapInfo()
-        address = data['addresses'][0]
-        MapData.roadAddress = address['roadAddress']
-        MapData.jibunAddress = address['jibunAddress']
-        MapData.englishAddress = address['englishAddress']
-        MapData.x = address['x']
-        MapData.y = address['y']
-        MapData.distance = address['distance']
-        
-        for element in address['addressElements']:
-            types = element['types']
-            value = element['longName']
+    mapInfo = MapInfo()
+    addr = docs[0].get("road_address")
+    if addr:
+        mapInfo.buildingName = addr.get('building_name')
+    else:
+        addr = docs[0].get("address")
+    
+    if not addr:
+        return None
+    
+    mapInfo.address = addr.get('address_name')
+    mapInfo.x = addr.get('x')
+    mapInfo.y = addr.get('y')
+    mapInfo.sido = addr.get('region_1depth_name')
+    mapInfo.sigugun = addr.get('region_2depth_name')
+    mapInfo.dongmyun = addr.get('region_3depth_name')
 
-            if 'SIDO' in types:
-                MapData.sido = value
-            elif 'SIGUGUN' in types:
-                MapData.sigugun = value
-            elif 'DONGMYUN' in types:
-                MapData.dongmyun = value
-            elif 'RI' in types:
-                MapData.ri = value
-            elif 'ROAD_NAME' in types:
-                MapData.roadName = value
-            elif 'BUILDING_NUMBER' in types:
-                MapData.buildingNumber = value
-            elif 'BUILDING_NAME' in types:
-                MapData.buildingName = value
-            elif 'LAND_NUMBER' in types:
-                MapData.landNumber = value
-            elif 'POSTAL_CODE' in types:
-                MapData.postalCode = value
-
-    return MapData
+    return mapInfo

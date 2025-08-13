@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
 import contractFieldLabels from "../../contracts/contractFieldLabels";
-import { useNaverMap } from "../../hooks/useNaverMap";
+import { useKakaoMap } from "../../hooks/useKakaoMap";
 import axios from "axios";
 
 import type {
@@ -15,71 +15,29 @@ import type {
     MapInfo,
 } from "../../types/contract";
 
-/**
- * @file PG100003.tsx
- * @description 계약서 분석의 OCR추출 이후 사용자가 검증하는 페이지 입니다
- */
-
 /*
  * 생성자 : 문원주
  * 생성일 : 25.07.30
  * 파일명 : PG100003.tsx
- * 수정자 :
- * 수정일 :
+ * 수정자 : 김관호
+ * 수정일 : 25.08.13
  * 설명 : 계약서 분석 중 OCR 추출한 이후 사용자가 보고 AI 추출을 하기 전 검증하는 페이지 입니다
  */
 
-// window.naver 타입 선언 (내부 전용)
-declare global {
-    interface Window {
-        naver: {
-            maps: {
-                Map: new (
-                    element: string | HTMLElement,
-                    options: {
-                        center: NaverLatLng;
-                        zoom?: number;
-                        [key: string]: unknown;
-                    }
-                ) => NaverMapInstance;
-                LatLng: new (lat: number, lng: number) => NaverLatLng;
-                Circle: new (options: {
-                    map: NaverMapInstance;
-                    center: NaverLatLng;
-                    radius: number;
-                    strokeColor: string;
-                    strokeOpacity: number;
-                    strokeWeight: number;
-                    fillColor: string;
-                    fillOpacity: number;
-                }) => void;
-            };
-        };
-    }
-
-    interface NaverLatLng {
-        lat(): number;
-        lng(): number;
-    }
-
-    interface NaverMapInstance {
-        setCenter(latlng: NaverLatLng): void;
-    }
-}
-
+// OCR 데이터 구조 정의
 export interface OcrDataType {
-    documentsDTO: DocumentsDTO | null;
-    fileStorageMetadataDTO: FileStorageMetadataDTO | null;
-    structuredContractDataDTO: StructuredContractDataDTO | null;
-    mapInfo: MapInfo | null;
+    documentsDTO: DocumentsDTO | null; // 문서 정보
+    fileStorageMetadataDTO: FileStorageMetadataDTO | null; // 파일 메타데이터
+    structuredContractDataDTO: StructuredContractDataDTO | null; // 구조화된 계약 데이터
+    mapInfo: MapInfo | null; // 지도 좌표 정보
 }
 
 interface PG100003Props {
-    scannedFile: string;
-    ocrData: OcrDataType;
-    uploadedFilePreview: string | null;
-    onAnalysisComplete?: (documentCode: string) => void;
-    onBackToPreviousPhase?: () => void;
+    scannedFile: string; // 업로드된 파일명
+    ocrData: OcrDataType; // OCR 분석 결과 데이터
+    uploadedFilePreview: string | null; // 파일 미리보기 이미지 URL
+    onAnalysisComplete?: (result: OcrDataType) => void; // 분석 완료 콜백
+    onBackToPreviousPhase?: () => void; // 이전 단계로 돌아가는 콜백
 }
 
 const PG100003: React.FC<PG100003Props> = ({
@@ -90,14 +48,24 @@ const PG100003: React.FC<PG100003Props> = ({
     onBackToPreviousPhase,
 }) => {
     const navigate = useNavigate();
-    const isMapLoaded = useNaverMap();
 
+    // Kakao Map API 로딩 여부
+    const isMapLoaded = useKakaoMap();
+
+    // 현재 OCR 데이터 상태
     const [currentOcrData, setCurrentOcrData] = useState<OcrDataType>(ocrData);
+
+    // 주소(위치) 인식 값
     const recognizedAddress =
         currentOcrData.structuredContractDataDTO?.location || "주소 인식 실패";
 
-    const mapRef = useRef<NaverMapInstance | null>(null);
+    // Kakao 지도 객체를 저장할 ref
+    const mapRef = useRef<kakao.maps.Map | null>(null);
 
+    /**
+     * Kakao 지도 초기화 useEffect
+     * - API 로드 완료 & mapInfo 존재 시 지도 생성
+     */
     useEffect(() => {
         if (!isMapLoaded) {
             console.warn("지도 API 아직 로딩 안됨");
@@ -109,18 +77,20 @@ const PG100003: React.FC<PG100003Props> = ({
             return;
         }
 
-        const naverMap = window.naver?.maps;
-        if (!naverMap) {
-            console.error("Naver 지도 객체 없음!");
+        const kakaoMaps = window.kakao?.maps;
+        if (!kakaoMaps) {
+            console.error("Kakao 지도 객체 없음!");
             return;
         }
 
-        const mapContainer = document.getElementById("naverMap");
+        // 지도 컨테이너 DOM 요소
+        const mapContainer = document.getElementById("kakaoMap");
         if (!mapContainer || mapContainer.childNodes.length > 0) {
             console.warn("지도 이미 생성되어 있음 또는 컨테이너 없음");
             return;
         }
 
+        // 좌표 추출 (x=경도, y=위도)
         const { x, y } = currentOcrData.mapInfo;
         if (!x || !y) return;
 
@@ -131,19 +101,22 @@ const PG100003: React.FC<PG100003Props> = ({
 
         if (isNaN(lat) || isNaN(lng)) return;
 
+        // 이미 지도 객체가 있으면 중심좌표만 업데이트
         if (mapRef.current) {
-            mapRef.current.setCenter(new window.naver.maps.LatLng(lat, lng));
+            mapRef.current.setCenter(new kakaoMaps.LatLng(lat, lng));
             return;
         }
 
-        const map = new naverMap.Map("naverMap", {
-            center: new naverMap.LatLng(lat, lng),
-            zoom: 15,
+        // 지도 생성
+        const map = new kakaoMaps.Map(mapContainer, {
+            center: new kakaoMaps.LatLng(lat, lng),
+            level: 3,
         });
 
-        new naverMap.Circle({
+        // 반경 1km 원 표시
+        new kakaoMaps.Circle({
             map,
-            center: new naverMap.LatLng(lat, lng),
+            center: new kakaoMaps.LatLng(lat, lng),
             radius: 1000,
             strokeColor: "#007bff",
             strokeOpacity: 0.6,
@@ -151,16 +124,22 @@ const PG100003: React.FC<PG100003Props> = ({
             fillColor: "#cce5ff",
             fillOpacity: 0.3,
         });
+
+        // ref에 저장
+        mapRef.current = map;
     }, [isMapLoaded, currentOcrData.mapInfo]);
 
+    /**
+     * OCR 데이터 수정 시 상태 업데이트
+     * - deposit(보증금) 필드는 숫자로 변환
+     */
     const handleDataChange = (
         field: keyof StructuredContractDataDTO,
         value: string
     ) => {
         setCurrentOcrData((prevData) => {
             const prevStructuredData =
-                prevData.structuredContractDataDTO ??
-                ({} as StructuredContractDataDTO);
+                prevData.structuredContractDataDTO ?? {} as StructuredContractDataDTO;
 
             let newValue: string | number | null = value;
 
@@ -181,35 +160,36 @@ const PG100003: React.FC<PG100003Props> = ({
         });
     };
 
+    /**
+     * 업로드 단계로 돌아가기
+     */
     const handleBackToUpload = () => {
         if (onBackToPreviousPhase) {
             onBackToPreviousPhase();
         } else {
-            navigate("/PG100001");
+            navigate("/pg100001");
         }
     };
 
-    // OCR 결과를 서버로 전송하는 함수
+    /**
+     * 분석 결과 서버 전송
+     */
     const handleProcessResult = async () => {
         try {
-            // currentOcrData는 유저가 수정한 계약 정보 전체 상태
-            // 이 중에서 mapInfo는 제외하고 나머지만 payload로 따로 추출
             const {
                 documentsDTO,
                 fileStorageMetadataDTO,
                 structuredContractDataDTO,
             } = currentOcrData;
 
-            // 실제 서버에 보낼 데이터 객체 구성 (mapInfo는 뺌!)
             const payload = {
                 documentsDTO,
                 fileStorageMetadataDTO,
                 structuredContractDataDTO,
             };
 
-            // POST 요청으로 "/contracts" 주소에 데이터 전송
-            // headers에 Content-Type을 명시해서 JSON 형식임을 알림
-            const response = await axios.post<string>(
+            // 서버 POST 요청
+            const response = await axios.post(
                 "http://localhost:8080/contracts",
                 payload,
                 {
@@ -220,35 +200,30 @@ const PG100003: React.FC<PG100003Props> = ({
                 }
             );
 
-            const documentCode = response.data;
-            sessionStorage.setItem("rv_documentCode", documentCode);
-
-            // 요청이 성공하면 콘솔에 응답 로그 출력
             console.log("전송 성공", response.data);
-
-            // 성공 메시지를 사용자에게 알림
             alert("계약 정보가 정상적으로 전송되었습니다.");
 
-            // 외부로부터 onAnalysisComplete 함수가 전달된 경우 실행
-            onAnalysisComplete?.(documentCode);
+            if (onAnalysisComplete) {
+                onAnalysisComplete(currentOcrData);
+            }
         } catch (error) {
-            // 요청 중 에러가 발생한 경우 콘솔에 오류 로그 출력
             console.error("전송 실패", error);
-
-            // 사용자에게 오류 메시지 표시
             alert("서버 전송 중 오류가 발생했습니다.");
         }
     };
 
     return (
         <div className="an03-container">
+            {/* 페이지 상단 헤더 */}
             <CommonContainerHeader
                 subtitle="계약 분석 결과"
                 title="OCR 분석 결과 확인"
                 description="업로드하신 파일의 OCR 분석 결과입니다. 인식된 텍스트를 확인하고 필요한 경우 수정해주세요."
             />
 
+            {/* 원본 파일 & OCR 결과 */}
             <div className="an03-content-wrapper">
+                {/* 왼쪽: 업로드 파일 미리보기 */}
                 <div className="an03-pane an03-original-file-pane">
                     <h3 className="an03-pane-title">원본 파일</h3>
                     {uploadedFilePreview ? (
@@ -268,6 +243,7 @@ const PG100003: React.FC<PG100003Props> = ({
                     )}
                 </div>
 
+                {/* 오른쪽: OCR 분석된 데이터 폼 */}
                 <div className="an03-pane an03-ocr-text-pane">
                     <h3 className="an03-pane-title">OCR 분석 결과</h3>
                     <div className="an03-structured-data-form">
@@ -309,6 +285,7 @@ const PG100003: React.FC<PG100003Props> = ({
                 </div>
             </div>
 
+            {/* Kakao 지도 섹션 */}
             <div className="an03-map-section">
                 <h3 className="an03-section-title">주변 시세 비교 구역</h3>
                 <p className="an03-map-description">
@@ -318,7 +295,7 @@ const PG100003: React.FC<PG100003Props> = ({
                 <div className="an03-map-placeholder">
                     {isMapLoaded ? (
                         <div
-                            id="naverMap"
+                            id="kakaoMap"
                             style={{
                                 width: "100%",
                                 height: "100%",
@@ -333,6 +310,7 @@ const PG100003: React.FC<PG100003Props> = ({
                 </div>
             </div>
 
+            {/* 하단 버튼 */}
             <div className="an03-actions">
                 <button
                     className="an02-secondary-btn"

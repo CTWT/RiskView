@@ -3,6 +3,15 @@
 import React from "react";
 import "../components.css";
 
+/*
+ * 생성자 : 문원주
+ * 생성일 : 25.08.13
+ * 파일명 : CommonContainerHeader.tsx
+ * 수정자 :
+ * 수정일 :
+ * 설명 : 공용 컨테이너에 들어갈 헤더 부분에 관한 tsx 파일입니다
+ */
+
 interface CommonContainerHeaderProps {
     subtitle: string;
     title: string;

@@ -286,6 +286,7 @@
 /* CommonContainerHeader - 공통 컨테이너 헤더 담당 스타일*/
 .common-container-header {
     margin-bottom: 40px;
+    text-align: center;
 }
 
 .common-container-header-subtitle {
@@ -297,7 +298,7 @@
 }
 
 .common-container-header-title {
-    font-size: 2.5rem;
+    font-size: 2.3rem;
     color: #333333;
     margin-bottom: 15px;
     font-weight: bold;
@@ -325,4 +326,3 @@
     align-items: stretch;
     overflow: visible;
 }
-

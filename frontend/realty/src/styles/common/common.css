@@ -138,18 +138,10 @@
 /* PG100002 계약서 분석 전 페이지 스타일*/
 
 .an02-container {
-    width: 1200px; /* 이미지의 가로 폭과 유사하게 조절 */
-    margin: 50px auto; /* 페이지 중앙 정렬 */
-    margin-top: 0px;
-    padding: 40px; /* 컨테이너 내부 여백 */
-    background-color: #ffffff; /* 순수 흰색 배경 */
-    border-radius: 8px; /* 이미지와 동일한 둥근 모서리 */
-    /* 이미지에 보이는 미묘하고 부드러운 다중 그림자 효과 */
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03),
-        /* 첫 번째 레이어: 매우 옅고 가까운 그림자 */ 0 3px 6px
-            rgba(0, 0, 0, 0.06); /* 두 번째 레이어: 조금 더 넓고 옅은 그림자 */
-    text-align: center;
-    border: 1px solid #f9f9f9; /* 거의 보이지 않는 아주아주 옅은 테두리 */
+    padding: 50px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    margin-top: -100px !important;
 }
 .an02-upload-area {
     border-radius: 8px; /* 이미지와 동일한 둥근 모서리 */
@@ -845,163 +837,166 @@
 /* PG500011 - 커뮤니티 인트로 담당 스타일*/
 /* 공통 컨테이너 */
 .community-container {
+    padding: 50px 20px;
     max-width: 1200px;
     margin: 0 auto;
-    margin-top: -100px;
-    padding: 20px;
+    margin-top: -100px !important;
 }
 
 /* ⭐ 바로가기 카드 섹션 ⭐ */
 .shortcut-cards {
     display: flex;
-    justify-content: space-between;
-    gap: 20px;
-    margin-top: 20px;
-    margin-bottom: 40px;
+    flex-wrap: wrap;
+    gap: 50px;
+    justify-content: center;
+    margin: 20px 0 28px;
 }
 
 .card-link {
     text-decoration: none;
-    color: inherit;
-    flex-grow: 1;
 }
 
 .shortcut-card {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 30px 20px;
-    background-color: #f7f8fc;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    text-align: center;
-    font-weight: bold;
-    font-size: 1.1rem;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
-}
+    gap: 12px;
+    min-width: 190px;
+    padding: 30px 22px;
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    transition: transform 0.15s ease, box-shadow 0.15s ease,
+        border-color 0.15s ease;
+    color: #0f172a;
+    font-size: 1.2rem;
+    margin-bottom: 40px;
 
+    align-items: center; /* 수평 중앙 */
+    justify-content: center; /* 수직 중앙 */
+    text-align: center; /* 텍스트 중앙 */
+}
 .shortcut-card:hover {
-    background-color: #f0f0f5;
-    transform: translateY(-2px);
+    transform: scale(1.06); /* 8% 확대 */
+    filter: drop-shadow(0 5px 15px rgba(123, 104, 238, 0.4));
 }
 
-.shortcut-card .icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: #e6e3f4; /* 아이콘 배경색 */
-    display: flex;
+/* 아이콘 (간단 배경+이모지 표시) */
+.icon {
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px;
-    /* ⭐ 아이콘 이미지는 CSS의 background-image로 처리하거나,
-       HTML에서 SVG를 직접 사용하는 것이 좋습니다.
-       아래는 placeholder 스타일입니다.
-    */
+    border-radius: 10px;
+    color: #fff;
+    font-size: 18px;
 }
 
-.icon-announcement {
-    /* 공지사항 아이콘 스타일 */
-}
-
-.icon-dictionary {
-    /* 부동산 용어 사전 아이콘 스타일 */
-}
-
-.icon-board {
-    /* 게시판 아이콘 스타일 */
-}
-
-/* ⭐ 하단 탭 네비게이션 ⭐ */
+/* 3) 탭 네비게이션 */
 .community-nav {
     display: flex;
-    border-bottom: 2px solid #e0e0e0;
-    margin-bottom: 30px;
+    justify-content: flex-start;
+    gap: 24px;
+    margin: 6px 0 14px;
+    border-bottom: 1px solid #eef2f7;
 }
 
 .nav-link {
+    position: relative;
+    padding: 10px 4px;
+    color: #6b7280;
+    font-weight: 700;
     text-decoration: none;
-    color: #666666;
-    padding: 15px 25px;
-    font-size: 1.1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: color 0.2s;
 }
-
+.nav-link:hover {
+    color: #111827;
+}
 .nav-link.active {
-    color: #7b68ee; /* 활성화된 탭 색상 */
-    font-weight: bold;
-    border-bottom: 3px solid #7b68ee; /* 활성화된 탭 밑줄 */
-    margin-bottom: -2px; /* border-bottom과의 겹침 방지 */
+    color: #111827;
+}
+.nav-link.active::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 3px;
+    background: #111827;
+    border-radius: 999px;
 }
 
-/* ⭐ 최신 공지사항 목록 (틀) ⭐ */
+/* 4) 최신 공지 리스트 */
 .community-content {
-    font-size: 1rem;
+    margin-top: 10px;
+}
+
+.latest-announcements-list {
+    border-radius: 14px;
+    overflow: hidden;
 }
 
 .latest-announcements-list .list-item {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 20px 0;
-    border-bottom: 1px solid #f0f0f0;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f2f4f7;
 }
-
 .latest-announcements-list .list-item:last-child {
-    border-bottom: none;
+    border-bottom: 0;
 }
 
-.latest-announcements-list .list-item span {
-    flex-shrink: 0;
+.list-item .icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    font-size: 16px;
 }
 
-.latest-announcements-list .list-item span:nth-child(2) {
-    flex-grow: 1; /* 제목이 공간을 채우도록 */
-    font-weight: 500;
-    font-size: 1rem;
-}
-
-.latest-announcements-list .list-item .date {
-    color: #999999;
-    font-size: 0.9rem;
+/* 제목은 기본 텍스트, 날짜/태그는 우측 정렬 */
+.list-item .date {
     margin-left: auto;
+    color: #94a3b8;
+    font-size: 0.9rem;
 }
 
-.latest-announcements-list .list-item .tag {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    color: white;
+.tag {
+    margin-left: 8px;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #e5e7eb;
 }
-
 .tag-필독 {
-    background-color: #ff6b6b; /* 이미지의 필독 태그 색상 */
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fecaca;
 }
 
-/* 리스트 아이템 내부 아이콘 스타일 */
-.latest-announcements-list .list-item .icon {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+/* 반응형 */
+@media (max-width: 768px) {
+    .shortcut-card {
+        min-width: 100%;
+    }
+    .community-nav {
+        gap: 16px;
+    }
+    .nav-link {
+        font-weight: 600;
+    }
 
-/* ⭐ 이미지에 맞춰 아이콘별 배경색 적용 (필요 시 수정) ⭐ */
-.latest-announcements-list .list-item .icon-megaphone {
-    background-color: #ffe0e0;
-}
-.latest-announcements-list .list-item .icon-update {
-    background-color: #e0f2ff;
-}
-.latest-announcements-list .list-item .icon-check {
-    background-color: #e6ffef;
+    .latest-announcements-list .list-item {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .list-item .date,
+    .list-item .tag {
+        margin-left: 0;
+    }
 }
 
 /*  ------------------------------------------------------------ */

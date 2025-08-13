@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
@@ -46,6 +46,11 @@ interface ApiResponse {
 const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
   // useToast 훅 사용
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
+  // 아이디 규칙: 영문 소문자/숫자/._- 조합 4~20자 (필요시 수정)
+  const userIdRegex = /^[a-z0-9._-]{4,20}$/;
+  // 아이디 중복 확인 중 여부 및 중단 제어
+  const [isCheckingUserId, setIsCheckingUserId] = useState(false);
+  const userIdAbortRef = useRef<AbortController | null>(null);
   // 비밀번호 관련 상태
   const [password, setPassword] = useState(""); // 사용자가 입력한 비밀번호
   const [confirmPassword, setConfirmPassword] = useState(""); // 비밀번호 확인 입력값
@@ -73,49 +78,70 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
    * 
    * @param userIdToCheck - 중복 여부를 확인할 아이디 문자열
    */
-  const handleUserIdCheck = useCallback(async (userIdToCheck: string) => {
-    if (!userIdToCheck.trim()) {
+  const handleUserIdCheck = useCallback(async (userIdToCheck: string): Promise<boolean> => {
+    const id = userIdToCheck.trim();
+
+    if (!id) {
       showToast("아이디를 입력해주세요.", { type: "error" });
       setIsUserIdValid(false);
-      return;
+      return false;
     }
 
+    // 형식 사전 검증(불필요한 API 호출 방지)
+    if (!userIdRegex.test(id)) {
+      setIsUserIdValid(false);
+      showToast("아이디는 영문 소문자, 숫자, '.', '_', '-' 포함 4~20자여야 합니다.", { type: "error" });
+      return false;
+    }
+
+    // 이전 요청이 진행 중이면 취소
+    if (userIdAbortRef.current) {
+      userIdAbortRef.current.abort();
+    }
+    const controller = new AbortController();
+    userIdAbortRef.current = controller;
+
     try {
-      // 백엔드에 사용자 ID 중복 여부를 확인하는 API 요청을 보냄
-      const response = await fetch(`/api/user/check-userid/${encodeURIComponent(userIdToCheck)}`, {
+      setIsCheckingUserId(true);
+      const response = await fetch(`/api/user/check-userid/${encodeURIComponent(id)}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        signal: controller.signal,
+        headers: { 'Accept': 'application/json' },
       });
 
-      // API 응답 데이터 가져옴
-      const data: ApiResponse = await response.json();
+      let data: ApiResponse | null = null;
+      try {
+        data = await response.json();
+      } catch {
+        data = null;
+      }
 
-      // API 응답이 성공적이면
       if (response.ok) {
-        // 사용 가능한 아이디라면
-        if (data.available) {
+        if (data && data.available) {
           setIsUserIdValid(true);
           showToast("사용 가능한 아이디입니다.", { type: "success" });
           return true;
         } else {
           setIsUserIdValid(false);
-          showToast(data.message, { type: "error" });
+          showToast((data && data.message) || "이미 사용 중인 아이디입니다.", { type: "error" });
           return false;
         }
       } else {
-        const errorMessage = data.message || "아이디 확인 중 오류가 발생했습니다.";
         setIsUserIdValid(false);
-        showToast(errorMessage, { type: "error" });
+        showToast((data && data.message) || "아이디 확인 중 오류가 발생했습니다.", { type: "error" });
         return false;
       }
-    } catch (error) {
-      const errorMessage = "아이디 확인 중 네트워크 오류가 발생했습니다.";
+    } catch (error: any) {
+      if (error?.name === 'AbortError') {
+        // 입력 도중 이전 요청이 취소된 경우
+        return false;
+      }
       setIsUserIdValid(false);
-      showToast(errorMessage, { type: "error" });
+      showToast("아이디 확인 중 네트워크 오류가 발생했습니다.", { type: "error" });
       console.error("Username check error:", error);
       return false;
+    } finally {
+      setIsCheckingUserId(false);
     }
   }, [showToast]);
 
@@ -173,8 +199,13 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
 
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
-      if (userId.trim()) {
-        handleUserIdCheck(userId);
+      const id = userId.trim();
+      if (id && userIdRegex.test(id)) {
+        handleUserIdCheck(id);
+      } else if (!id) {
+        setIsUserIdValid(null);
+      } else {
+        setIsUserIdValid(false);
       }
     }, 500);
 
@@ -246,12 +277,21 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
    * @returns boolean - 유효하면 true, 아니면 false
    */
   const validateUserId = (): boolean => {
-    if (!userId.trim()) {
+    const id = userId.trim();
+    if (!id) {
       showToast("아이디를 입력해주세요.", { type: "error" });
       return false;
     }
-    if (!isUserIdValid) {
-      showToast("사용 불가능한 아이디입니다.", { type: "error" });
+    if (!userIdRegex.test(id)) {
+      showToast("아이디 형식을 확인해주세요. (영문/숫자/._- 4~20자)", { type: "error" });
+      return false;
+    }
+    if (isCheckingUserId) {
+      showToast("아이디 중복 확인 중입니다. 잠시만 기다려주세요.", { type: "error" });
+      return false;
+    }
+    if (isUserIdValid !== true) {
+      showToast("아이디 중복 확인이 필요합니다.", { type: "error" });
       return false;
     }
     return true;
@@ -261,14 +301,23 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
    * 폼 제출 처리 핸들러
    * @param e 폼 이벤트 객체
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validPassword = validatePassword(password);
     const validNickname = validateNickname();
-    const validUserId = validateUserId();
 
-    if (validPassword && validNickname && validUserId) {
+    // 아이디 유효성/중복체크가 확실하지 않으면 서버 재확인
+    let validUserIdFinal = validateUserId();
+    if (!validUserIdFinal) {
+      // 마지막으로 규칙을 통과했다면 한 번 더 확인 시도
+      const id = userId.trim();
+      if (id && userIdRegex.test(id)) {
+        validUserIdFinal = await handleUserIdCheck(id);
+      }
+    }
+
+    if (validPassword && validNickname && validUserIdFinal) {
       // 모든 조건 통과 시 다음 페이지로 이동
       console.log("폼 제출 완료:", { email: userEmail, password, nickname, userId });
       onNext({ password, userId, nickname });
@@ -403,12 +452,13 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
               type="submit"
               className="authButton"
               disabled={
-                isNicknameValid === false ||
+                isNicknameValid !== true ||
                 !nickname.trim() ||
-                isUserIdValid === false ||
+                isUserIdValid !== true ||
                 !userId.trim() ||
                 password.length < 6 ||
-                confirmPassword !== password
+                confirmPassword !== password ||
+                isCheckingUserId
               }
             >
               다음

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiChevronLeft, FiCheck } from "react-icons/fi";
+import { FiChevronLeft } from "react-icons/fi";
 import Toast from "../../../../components/ui/Toast";
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
@@ -161,7 +161,7 @@ const PG300010: React.FC<PG300010Props> = ({
           {/* 단계 표시 아이콘 */}
           <div className="progressContainer">
             {/* 완료 아이콘 */}
-            <div className="progressCompleted"><FiCheck /></div>
+            <div className="progressCompleted">1</div>
 
             {/* 연결선 */}
             <div className="progressConnector"></div>

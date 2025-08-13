@@ -1251,12 +1251,28 @@
     line-height: 1.6;
 }
 
+/* 입력 영역 */
 .authFormRow {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    width: 330px;
+    margin: 0 auto;
     position: relative;
-    gap: 10px;
+    /* 아이콘 위치 기준 */
+}
+
+/* 모바일 대응 */
+@media (max-width: 480px) {
+    .authFormRow {
+        width: 330px;
+    }
+
+    .authFormRow .authInput {
+        padding-right: 46px;
+    }
+
+    .password-toggle-icon,
+    .input-check-icon {
+        right: 10px;
+    }
 }
 
 .authInputGroup {
@@ -1410,29 +1426,26 @@
     font-size: 14px;
 }
 
-.password-toggle-icon {
-    position: absolute;
-    right: 570px;
-    top: 50%;
-    transform: translateY(-60%);
-    font-size: 18px;
-    color: #999;
-    cursor: pointer;
-}
-
 .authSuccess {
     color: green;
     font-size: 14px;
     margin-top: 4px;
 }
 
+/* 아이콘 위치 */
+.password-toggle-icon,
 .input-check-icon {
     position: absolute;
-    right: 570px;
+    right: 12px;
+    /* 입력창 내부 여백 */
     top: 50%;
-    transform: translateY(-60%);
-    font-size: 20px;
-    color: #ccc;
+    transform: translateY(-70%);
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #939191;
 }
 
 .input-check-icon.success {

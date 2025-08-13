@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
+import axios from "axios";
 
 // Signup_VerificationCodePage: 이메일 인증번호 입력 및 확인 페이지
 
@@ -9,7 +10,7 @@ import "../../../../styles/common/common.css";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.07.28
  * 파일명 : PG300005.tsx
  */
@@ -32,8 +33,6 @@ interface PG300005Props {
 const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
   // useToast 훅 사용
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
-  // 인증 실패 메시지 상태
-  const [sendError, setSendError] = useState("");
   // 입력된 인증번호 상태
   const [verificationCode, setVerificationCode] = useState("");
 
@@ -53,24 +52,46 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
 
   /**
    * 인증번호 검증 핸들러
-   * 사용자가 입력한 인증번호 검증합
-   * 현재는 테스트용 값("123456")으로 검증,
-   * 추후 백엔드 API와 연동하여 실제 검증을 수행 예정
+   * 사용자가 입력한 인증번호 검증
    */
-  const handleVerifyCode = () => {
-    // TODO: 백엔드 API와 연동하여 실제 인증번호 검증 구현 예정
-
-    // 임시 검증 로직 (테스트용)
-    if (verificationCode !== "123456") {
-      showToast("인증번호가 일치하지 않습니다.", { type: "error" });
-    } else {
-      setSendError(""); // 에러 초기화
-      console.log("인증번호 확인 완료");
-
-      // 인증번호 확인이 완료되면 다음 페이지(PG300006)로 이동
-      // 테스트 단계에서는 인증번호 "123456"이 일치하면 인증 완료 처리함.
-      // 추후 백엔드 응답에 따라 인증 상태 판단 및 isVerified 설정 필요
+  const handleVerifyCode = async () => {
+    // 인증번호 입력 안 했으면
+    if (!verificationCode) {
+      showToast("인증번호를 입력해주세요.", { type: "error" });
+      return;
+    }
+  
+    // 이메일 토큰을 로컬스토리지에서 가져옴
+    const token = localStorage.getItem("emailToken");
+    // 토큰이 없으면
+    if (!token) {
+      showToast("인증 토큰이 없습니다.", { type: "error" });
+      return;
+    }
+  
+    try {
+      // 인증번호 검증 API 호출
+      const response = await axios.post("/api/verify-email-code", null, {
+        // 유저이메일과 인증번호를 params로 전달
+        params: { code: verificationCode, email: userEmail },
+        // 토큰을 Authorization 헤더에 담아 전달
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      // 응답에서 메시지와 jwt 토큰 추출
+      const { message, token: jwtToken } = response.data;
+      // jwt 토큰을 로컬스토리지에 저장
+      localStorage.setItem("jwtToken", jwtToken);
+      // 성공 메시지 표시
+      showToast(message || "이메일 인증 성공!", { type: "success" });
+      // 다음 단계로 이동
       onNext();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast(error.response?.data || "이메일 인증 실패", { type: "error" });
+      } else {
+        showToast("알 수 없는 오류가 발생했습니다.", { type: "error" });
+      }
     }
   };
 
@@ -104,9 +125,6 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
             </span>
           )}
         </div>
-
-        {/* 인증번호 검증 오류 메시지 */}
-        {sendError && <p className="authError">{sendError}</p>}
 
         {/* 조건부 버튼 렌더링 */}
         {isExpired ? (

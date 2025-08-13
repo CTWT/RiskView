@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
@@ -9,7 +10,7 @@ import "../../../../styles/common/common.css";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.07.28
  * 파일명 : PG300004.tsx
  */
@@ -34,8 +35,9 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
 
   // 사용자 입력 이메일 상태
   const [email, setEmail] = useState("");
-  // 이메일 유효성 검사용 에러 메시지 상태
-  const [emailError, setEmailError] = useState("");
+  // 인증메일 전송 중인지에 대한 여부
+  const [isLoading, setIsLoading] = useState(false);
+
 
   /**
    * 이메일 주소 유효성 검사 함수
@@ -50,23 +52,87 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
   };
 
   /**
+   * 이메일 중복 확인
+   * 
+   * @param email 이메일 주소
+   * @returns Promise<boolean> - 중복 여부
+   */
+  const checkEmailDuplicate = async (email: string): Promise<boolean> => {
+    try {
+      const response = await axios.get(`/api/user/check-email/${encodeURIComponent(email)}`);
+      return response.data.available; // true: 사용 가능, false: 중복
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(error.response?.data?.message || "이메일 중복 확인 중 오류가 발생했습니다.");
+      }
+      throw new Error("알 수 없는 오류가 발생했습니다.");
+    }
+  };
+
+  /**
    * 인증 메일 전송 버튼 클릭 핸들러
    * 입력된 이메일의 유효성을 검사하고, 통과하면 다음 단계로 진행
    * 실패 시 오류 메시지를 표시
    */
-  const handleSendEmail = () => {
+  const handleSendEmail = async () => {
+    // 공백과 스페이스 제거
     const cleanedEmail = email.replace(/\s+/g, "");
-    setEmail(cleanedEmail); // 이메일 상태 업데이트
-
+    // 이메일 상태 업데이트
+    setEmail(cleanedEmail);
+  
     // 이메일 입력 여부 확인
     if (!cleanedEmail) {
       showToast("이메일을 입력해주세요.", { type: "error" });
-    } else if (!validateEmail(cleanedEmail)) {
+      return;
+    }
+
+    // 이메일 유효성 검사
+    if (!validateEmail(cleanedEmail)) {
       showToast("유효한 이메일 주소를 입력해주세요.", { type: "error" });
-    } else {
-      setEmailError("");
-      // TODO: 백엔드 API를 통한 실제 인증 메일 전송 구현 예정
-      onNext(cleanedEmail); // 이메일을 부모 컴포넌트에 전달
+      return;
+    }
+
+    // 인증메일 전송 상태 업데이트
+    setIsLoading(true);
+
+    try {
+      // 이메일 중복 확인
+      const isEmailAvailable = await checkEmailDuplicate(cleanedEmail);
+      
+      if (!isEmailAvailable) {
+        showToast("이미 사용 중인 이메일 주소입니다. 다른 이메일을 입력해주세요.", { type: "error" });
+        // 인증메일 전송 상태 업데이트
+        setIsLoading(false);
+        return;
+      }
+
+      // 백엔드에 이메일 인증코드 발송 요청
+      const response = await axios.post("/api/send-verification-email-code", null, {
+        // 입력한 이메일 주소를 파라미터로 전달
+        params: { email: cleanedEmail }
+      });
+      // 성공 응답이 왔다면
+      if (response.status === 200) {
+        // 응답 메시지에서 메시지랑 토큰을 추출
+        const { message, token } = response.data;
+        // 토큰을 localStorage에 저장
+        localStorage.setItem("emailToken", token);
+        // 성공 메시지 표시
+        showToast(message || "인증 메일이 전송되었습니다!", { type: "success" });
+        // 입력한 이메일 주소를 가지고 다음 단계로 이동
+        onNext(cleanedEmail);
+      }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message || "처리 중 오류가 발생했습니다.";
+        showToast(errorMessage, { type: "error" });
+      } else {
+        const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        showToast(errorMessage, { type: "error" });
+      }
+    } finally {
+      // 인증메일 전송 상태 업데이트
+      setIsLoading(false);
     }
   };
 
@@ -88,15 +154,17 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            disabled={isLoading} // 인증메일 전송 중이면 입력 비활성화
           />
         </div>
 
-        {/* 이메일 유효성 검사 오류 메시지 표시 */}
-        {emailError && <p className="authError">{emailError}</p>}
-
         {/* 인증 메일 전송 버튼 */}
-        <button className="authButton" onClick={handleSendEmail}>
-          인증 메일 전송
+        <button 
+          className={`authButton ${isLoading ? "loading" : ""}`}
+          onClick={handleSendEmail}
+          disabled={isLoading} // 인증메일 전송 중이면 버튼 비활성화
+        >
+          {isLoading ? "인증 메일 전송 중..." : "인증 메일 전송"}
         </button>
       </div>
       {/* 토스트 컴포넌트 */}

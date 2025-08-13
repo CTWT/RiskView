@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.07.25
  * 파일명 : EmailService.java
  */
@@ -27,34 +27,25 @@ public class EmailService {
     @Autowired
     private JavaMailSender javaMailSender;
 
-    // 
+    // 발신자 이메일
     @Value("${spring.mail.username}")
     private String senderEmail;
 
     /**
-     * 이메일 인증코드 생성
-     * @return 이메일 인증코드
-     */
-    public String generateEmailCode() {
-        Random random = new Random();
-        // 6자리 인증코드
-        int code = 100000 + random.nextInt(900000);
-        // 인증코드를 문자열로 변환하여 반환
-        return String.valueOf(code);
-    }
-
-    /**
      * 이메일 인증코드 전송
      * @param email 인증코드를 보낼 이메일 주소
+     * @param request HTTP 요청
+     * @return 이메일 인증코드 발송 결과
      */
     public String sendVerificationEmailCode(String email, HttpServletRequest request) {
         // 이메일 유효성 검사
         if (email == null || email.trim().isEmpty()) {
-            return "이메일 주소가 입력되지 않았습니다.";
+            throw new IllegalArgumentException("이메일 주소가 입력되지 않았습니다.");
         }
         
         // 이메일 인증코드 생성
-        String code = generateEmailCode();
+        Random random = new Random();
+        String code = String.valueOf(100000 + random.nextInt(900000));
 
         try {
             // JavaMailSender를 통해 이메일 메시지 생성
@@ -87,7 +78,7 @@ public class EmailService {
 
         // 세션에 이메일 인증코드와 만료시간 저장
         request.getSession().setAttribute("emailVerificationCode_" + email, code);
-        request.getSession().setAttribute("emailVerification_Expiry_" + email, System.currentTimeMillis() + 1800000); // 30분
+        request.getSession().setAttribute("emailVerification_Expiry_" + email, System.currentTimeMillis() + 180000); // 3분
 
         // 성공 메시지 반환
         return email + "로 인증코드가 발송되었습니다.";
@@ -97,7 +88,7 @@ public class EmailService {
      * 이메일 인증코드 인증
      * @param email 인증코드를 보냈던 수신 대상의 이메일 주소
      * @param code 이메일 인증코드
-     * @return
+     * @return 이메일 인증 여부
      */
     public boolean verifyEmailCode(String email, String code, HttpServletRequest request) {
         // 세션에서 해당 이메일 주소로 보냈던 인증코드를 가져오기

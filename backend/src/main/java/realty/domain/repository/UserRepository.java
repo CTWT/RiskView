@@ -36,4 +36,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return
      */
     User findByUserIdAndEmail(String userId, String email);
+
+    /**
+     * 데이터베이스에서 사용자 ID 중복 여부 확인하는 메서드
+     * @param userId 사용자 ID
+     * @return 중복 여부
+     */
+    boolean existsByUserId(String userId);
+
+    /**
+     * 데이터베이스에서 이메일 중복 여부 확인하는 메서드
+     * @param email 이메일
+     * @return 중복 여부
+     */
+    boolean existsByEmail(String email);
+
+    /**
+     * 데이터베이스에서 닉네임 중복 여부 확인하는 메서드
+     * @param nickname 닉네임
+     * @return 중복 여부
+     */
+    boolean existsByUserNickname(String nickname);
 }

@@ -11,12 +11,17 @@ import realty.exception.InvalidCredentialsException;
 import realty.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
 
 
@@ -29,7 +34,7 @@ import org.springframework.ui.Model;
  * 파일명 : UserController.java
  */
 
-@Controller
+@RestController
 public class UserController {
     
     @Autowired
@@ -127,39 +132,33 @@ public class UserController {
     }
 
     /**
-     * 회원가입 화면으로 이동
-     * @param model
-     * @return register.html
-     */
-    @GetMapping("/register")
-    public String getRegister(Model model) {
-        // 회원가입 화면에 입력한 정보를 담을 UserDTO 객체를 모델에 추가
-        model.addAttribute("userDTO", new UserDTO());
-        return "user/register";
-    }
-
-    /**
      * 회원등록 처리
      * @param userDTO
      * @param model
      * @param request
-     * @return index.html
+     * @return 응답 객체
      */
-    @PostMapping("/register")
-    public String postRegister(@ModelAttribute UserDTO userDTO, Model model, HttpServletRequest request) {
+    @PostMapping("/api/user/signup")
+    public ResponseEntity<Map<String, Object>> postRegister(@RequestBody UserDTO userDTO, HttpServletRequest request) {
+        Map<String, Object> response = new HashMap<>();
         try {
-            // 유저가 입력한 정보가 담겨있는 UserDTO 객체를 사용해 회원처리 처리
+            // 유저가 입력한 정보가 담겨있는 UserDTO 객체를 사용해 회원가입 처리
             userService.registerUser(userDTO, request);
-            // 사용자 정보, 성공 여부와 메시지를 모델에 추가
-            model.addAttribute("userDTO", userDTO);
-            model.addAttribute("success", "회원가입 성공!");
-            // 회원가입 성공 후 홈 화면으로 이동
-            return "index";
+            response.put("success", true);
+            response.put("message", "회원가입 성공!");
+            return ResponseEntity.ok(response);
+        } catch (EmailNotVerifiedException e) {
+            response.put("success", false);
+            response.put("message", "회원가입 실패: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (RuntimeException e) {
+            response.put("success", false);
+            response.put("message", "회원가입 실패: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
-            // 실패 여부와 메시지를 모델에 추가
-            model.addAttribute("error", "회원가입 실패: " + e.getMessage());
-            // 회원가입 실패 시 다시 회원가입 화면으로 이동
-            return "user/register";
+            response.put("success", false);
+            response.put("message", "회원가입 실패: " + e.getMessage());
+            return ResponseEntity.badRequest().body(response);
         }
     }
 
@@ -463,5 +462,127 @@ public class UserController {
         model.addAttribute("userDTO", userDTO);
         // 비밀번호 재설정 화면으로 이동
         return "user/reset_pass";
+    }
+
+    /**
+     * 이메일 중복 확인
+     * @param email 확인할 이메일 주소
+     * @return 사용 가능 여부와 메시지
+     */
+    @GetMapping("/api/user/check-email/{email}")
+    public ResponseEntity<Map<String, Object>> checkEmail(@PathVariable String email) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 이메일 형식 검증
+            if (email == null || email.trim().isEmpty()) {
+                response.put("available", false);
+                response.put("message", "이메일을 입력해주세요.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 이메일 형식 정규식 검증
+            String emailRegex = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
+            if (!email.matches(emailRegex)) {
+                response.put("available", false);
+                response.put("message", "유효한 이메일 형식이 아닙니다.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 중복 확인
+            boolean exists = userService.isEmailDuplicated(email);
+            
+            // 중복이면
+            if (exists) {
+                response.put("available", false);
+                response.put("message", "이미 사용 중인 이메일 주소입니다.");
+            } else {
+                response.put("available", true);
+                response.put("message", "사용 가능한 이메일 주소입니다.");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("available", false);
+            response.put("message", "이메일 확인 중 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 아이디 중복 확인
+     * @param username 확인할 아이디
+     * @return 사용 가능 여부와 메시지
+     */
+    @GetMapping("/api/user/check-userid/{userId}")
+    public ResponseEntity<Map<String, Object>> checkUsername(@PathVariable String userId) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 아이디가 없거나 공백이면
+            if (userId == null || userId.trim().isEmpty()) {
+                response.put("available", false);
+                response.put("message", "아이디를 입력해주세요.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 중복 확인
+            boolean exists = userService.isUserIdDuplicated(userId);
+            
+            // 중복이면
+            if (exists) {
+                response.put("available", false);
+                response.put("message", "이미 사용 중인 아이디입니다.");
+            } else {
+                response.put("available", true);
+                response.put("message", "사용 가능한 아이디입니다.");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("available", false);
+            response.put("message", "아이디 확인 중 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    /**
+     * 닉네임 중복 확인
+     * @param nickname 확인할 닉네임
+     * @return 사용 가능 여부와 메시지
+     */
+    @GetMapping("/api/user/check-nickname/{nickname}")
+    public ResponseEntity<Map<String, Object>> checkNickname(@PathVariable String nickname) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 닉네임이 없거나 공백이면
+            if (nickname == null || nickname.trim().isEmpty()) {
+                response.put("available", false);
+                response.put("message", "닉네임을 입력해주세요.");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+            // 중복 확인
+            boolean exists = userService.isNicknameDuplicated(nickname);
+            
+            // 중복이면
+            if (exists) {
+                response.put("available", false);
+                response.put("message", "이미 사용 중인 닉네임입니다.");
+            } else {
+                response.put("available", true);
+                response.put("message", "사용 가능한 닉네임입니다.");
+            }
+            
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            response.put("available", false);
+            response.put("message", "닉네임 확인 중 오류가 발생했습니다.");
+            return ResponseEntity.status(500).body(response);
+        }
     }
 }

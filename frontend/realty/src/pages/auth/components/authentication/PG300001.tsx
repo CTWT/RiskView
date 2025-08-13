@@ -18,7 +18,7 @@ import PG300011 from "./PG300011"; // 새 비밀번호 설정
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.07.30
  * 파일명 : PG300001.tsx
  */
@@ -38,6 +38,14 @@ const PG300001: React.FC = () => {
   const [authStep, setAuthStep] = useState<number>(0); // 0: 로그인, 1~5: 회원가입 단계, -1: 아이디 찾기, -2: 비밀번호 찾기, -3: 인증번호 입력, -4: 비밀번호 재설정
   const [signupMode, setSignupMode] = useState<boolean>(false); // 회원가입 모드 여부
   const [userEmail, setUserEmail] = useState<string>(""); // 회원가입 과정에서 사용할 이메일
+  const [signupData, setSignupData] = useState({ // 회원가입 과정에서 사용할 데이터
+    userId: "",
+    password: "",
+    userNickname: "",
+    name: "",
+    email: "",
+    preferredLanguage: "",
+  });
   const [resetUserId, setResetUserId] = useState<string>(""); // 비밀번호 재설정할 사용자 ID
   const [resetUserEmail, setResetUserEmail] = useState<string>(""); // 인증번호가 전송된 이메일
   const location = useLocation();
@@ -105,6 +113,20 @@ const PG300001: React.FC = () => {
   const handleEmailSubmit = (email: string) => {
     console.log("이메일 설정:", email);
     setUserEmail(email);
+    setSignupData(prev => ({ ...prev, email }));
+    goToNextStep();
+  };
+
+  // 회원정보 입력 완료 후 다음 단계로 이동
+  const handleBasicInfoSubmit = (data: { password: string, userId: string, nickname: string }) => {
+    // 입력한 회원정보 데이터 기억
+    setSignupData(prev => ({ 
+      ...prev, 
+      password: data.password,
+      userId: data.userId,
+      userNickname: data.nickname
+    }));
+    // 다음 단계로 이동
     goToNextStep();
   };
 
@@ -180,14 +202,14 @@ const PG300001: React.FC = () => {
       {/* 회원가입 4단계 - 회원정보 입력 (비밀번호, 닉네임) */}
       {authStep === 4 && (
         <PG300006
-          onNext={goToNextStep}
+          onNext={handleBasicInfoSubmit}
           userEmail={userEmail}
           onLogin={goToLogin}
         />
       )}
 
       {/* 회원가입 5단계 - 추가정보 입력 */}
-      {authStep === 5 && <PG300007 onLogin={goToLogin} />}
+      {authStep === 5 && <PG300007 onLogin={goToLogin} signupData={signupData} />}
 
       {/* 아이디 찾기 */}
       {authStep === -1 && (

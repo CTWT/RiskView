@@ -9,7 +9,7 @@ import "../../../../styles/common/common.css";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.07.30
  * 파일명 : PG300007.tsx
  */
@@ -18,12 +18,20 @@ import "../../../../styles/common/common.css";
  * @file PG300007.tsx
  * @description 추가 개인정보 입력 페이지 (회원가입 최종 단계)
  * 사용자의 이름, 생년월일, 성별, 국적, 언어 정보를 수집하는 컴포넌트
-
+ * 
  */
 
 // Props 타입 정의
 interface PG300007Props {
   onLogin: () => void; // 로그인 페이지로 이동하는 콜백 함수
+  signupData: {
+    userId: string;
+    password: string;
+    userNickname: string;
+    name: string;
+    email: string;
+    preferredLanguage: string;
+  };
 }
 
 // 사용자 추가 정보 타입 정의
@@ -45,9 +53,9 @@ interface UserAdditionalInfo {
  * @param props.onLogin - 회원가입 완료 후 로그인 페이지로 이동하는 콜백 함수
  * @returns JSX.Element - 추가 개인정보 입력 폼 UI
  */
-const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
+const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
   // useToast 훅 사용
-  const { toast, showToast, hideToast } = useToast(); // toast 상태도 가져오기
+  const { toast, showToast } = useToast(); // toast 상태도 가져오기
 
   // 사용자 추가 정보 상태 관리
   const [userInfo, setUserInfo] = useState<UserAdditionalInfo>({
@@ -68,10 +76,10 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
 
   // 언어 옵션 배열
   const languageOptions = [
-    { value: 'korean', label: '한국어' },
-    { value: 'english', label: 'English' },
-    { value: 'chinese', label: '中文' },
-    { value: 'japanese', label: '日本語' }
+    { value: 'KO', label: '한국어' },
+    { value: 'EN', label: 'English' },
+    { value: 'ZH', label: '中文' },
+    { value: 'JP', label: '日本語' }
   ];
 
   /**
@@ -211,39 +219,43 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
     if (!validateForm()) {
       return;
     }
+    // body에 담아 보낼 최종 데이터
+    const finalSignupData = {
+      // 이전 단계에서 받은 데이터
+      userId: signupData.userId,
+      password: signupData.password,
+      userNickname: signupData.userNickname,
+      email: signupData.email,
+      // 현재 단계에서 받은 데이터
+      name: userInfo.name,
+      preferredLanguage: userInfo.language,
+      /* 추후 데이터베이스 구조 수정 후 추가될 수 있는 요소들:
+      birthYear: userInfo.birthYear,
+      birthMonth: userInfo.birthMonth,
+      birthDay: userInfo.birthDay,
+      gender: userInfo.gender,
+      nationality: userInfo.nationality,
+      */
+    };
 
     try {
-      // 입력된 정보 로깅 (개발용)
-      console.log("회원가입 완료 - 추가 정보:", {
-        name: userInfo.name,
-        birthDate: `${userInfo.birthYear}-${userInfo.birthMonth.padStart(2, '0')}-${userInfo.birthDay.padStart(2, '0')}`,
-        gender: userInfo.gender,
-        nationality: userInfo.nationality,
-        language: userInfo.language,
+      // 회원가입 API 호출
+      const response = await fetch('/api/user/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // JSON 객체를 직접 body에 담아 보냄
+        body: JSON.stringify(finalSignupData),
       });
 
-      // TODO: 백엔드 API 호출하여 추가 정보 저장
-      // const response = await fetch('/api/signup/complete', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({
-      //     name: userInfo.name,
-      //     birthYear: userInfo.birthYear,
-      //     birthMonth: userInfo.birthMonth,
-      //     birthDay: userInfo.birthDay,
-      //     gender: userInfo.gender,
-      //     nationality: userInfo.nationality,
-      //     language: userInfo.language
-      //   }),
-      // });
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Registration failed:', errorText);
+        showToast('회원가입 처리 중 오류가 발생했습니다.', { type: 'error' });
+        return;
+      }
 
-      // if (!response.ok) {
-      //   throw new Error('회원가입 처리 중 오류가 발생했습니다.');
-      // }
-
-      // 성공 토스트 메시지 표시
       showToast('회원가입이 완료되었습니다!', { 
         type: 'success', 
         duration: 2000 
@@ -251,15 +263,13 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
 
       // 로그인 페이지로 이동 (토스트 메시지 표시 후 약간의 지연)
       setTimeout(() => {
-        if (typeof onLogin === "function") {
+        if (typeof onLogin === 'function') {
           onLogin();
         }
       }, 1000);
 
     } catch (error) {
       console.error('회원가입 완료 처리 오류:', error);
-      
-      // 에러 토스트 메시지 표시
       showToast('회원가입 처리 중 오류가 발생했습니다. 다시 시도해주세요.', { 
         type: 'error', 
         duration: 4000 
@@ -430,7 +440,7 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
               aria-haspopup="listbox"
             >
               <span className="dropdown-text">
-                {userInfo.language || "언어"}
+                {languageOptions.find(option => option.value === userInfo.language)?.label || "언어"}
               </span>
               <div
                 className={`dropdown-arrow ${
@@ -447,7 +457,7 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin }) => {
                     className="dropdown-item"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleLanguageSelect(option.label);
+                      handleLanguageSelect(option.value);
                     }}
                     role="option"
                     tabIndex={0}

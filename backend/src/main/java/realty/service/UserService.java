@@ -308,4 +308,31 @@ public class UserService {
     public User findByUserIdAndEmail(String userId, String email) {
         return userRepository.findByUserIdAndEmail(userId, email);
     }
+
+    /**
+     * 사용자 ID 중복 여부 확인
+     * @param userId 사용자 ID
+     * @return 중복 여부
+     */
+    public boolean isUserIdDuplicated(String userId) {
+        return userRepository.existsByUserId(userId);
+    }
+
+    /**
+     * 이메일 중복 여부 확인
+     * @param email 이메일
+     * @return 중복 여부
+     */
+    public boolean isEmailDuplicated(String email) {
+        return userRepository.existsByEmail(email);
+    }
+
+    /**
+     * 닉네임 중복 여부 확인
+     * @param nickname 닉네임
+     * @return 중복 여부
+     */
+    public boolean isNicknameDuplicated(String nickname) {
+        return userRepository.existsByUserNickname(nickname);
+    }
 }

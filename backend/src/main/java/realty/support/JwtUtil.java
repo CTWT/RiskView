@@ -3,7 +3,7 @@ package realty.support;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Claims;
 import java.util.Date;
 import java.util.Base64;
 import javax.crypto.SecretKey;
@@ -41,16 +41,17 @@ public class JwtUtil {
     }
 
     /**
-     * 사용자 이메일을 기반으로 JWT 토큰 생성
+     * 일반 액세스 토큰 생성
      * @param email 사용자 이메일
      * @return 생성된 JWT 토큰 문자열
      */
-    public String generateToken(String email) {
+    public String generateAccessToken(String email) {
         Date now = new Date(); // 현재 시간
-        Date expiry = new Date(now.getTime() + expiration * 1000); // 만료 시간 계산
+        Date expiry = new Date(now.getTime() + expiration * 1000L); // 만료 시간 계산
 
         return Jwts.builder()
-                .setSubject(email)            // 토큰 제목(보통 사용자 식별자)
+                .setSubject(email)            // 토큰 제목
+                .claim("type", "access")    // 토큰 타입: access
                 .setIssuedAt(now)             // 토큰 발급 시간
                 .setExpiration(expiry)        // 토큰 만료 시간
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256) // 서명 알고리즘 및 키 설정
@@ -58,42 +59,48 @@ public class JwtUtil {
     }
 
     /**
-     * JWT 토큰 파서를 생성하여 반환
-     * @return JwtParser 인스턴스
+     * 이메일 인증용 토큰 생성
+     * @param email 사용자 이메일
+     * @param code 이메일 인증코드
+     * @return 생성된 JWT 토큰 문자열
      */
-    private JwtParser getParser() {
-        return Jwts.parserBuilder()
-                   .setSigningKey(getSigningKey()) // 서명 키 설정
-                   .build();
+    public String generateEmailVerificationToken(String email, String code) {
+        Date now = new Date();
+        Date expiry = new Date(now.getTime() + expiration * 1000L); // 만료 시간 계산
+    
+        return Jwts.builder()
+                .setSubject(email)                              // 토큰 제목
+                .claim("type", "email_verification") // 토큰 타입: email_verification
+                .claim("code", code)                        // 이메일 인증코드
+                .setIssuedAt(now)                                // 토큰 발급 시간
+                .setExpiration(expiry)                           // 토큰 만료 시간
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // 서명 알고리즘 및 키 설정
+                .compact();                                      // 토큰 문자열 생성
     }
 
-    /**
-     * 토큰에서 사용자 이메일(subject) 추출
-     * @param token JWT 토큰
-     * @return 이메일(subject) 값, 유효하지 않은 경우 null
-     */
-    public String getEmailFromToken(String token) {
+    // 토큰 유효성 검사
+    public boolean validateToken(String token) {
         try {
-            return getParser()
-                .parseClaimsJws(token)  // 토큰 검증 및 파싱
-                .getBody()
-                .getSubject();         // subject 필드 추출
+            Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token);
+            return true;
         } catch (Exception e) {
-            return null; // 유효하지 않거나 만료된 토큰 처리
+            return false; // 예외 발생 시 유효하지 않음
         }
     }
 
-    /**
-     * 토큰의 만료 여부 확인
-     * @param token JWT 토큰
-     * @return 만료되었으면 true, 아니면 false
-     */
-    public boolean isExpired(String token) {
-        Date expirationDate = getParser()
+    // 토큰에서 Claims 추출
+    public Claims getClaims(String token) {
+        try {
+            return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getExpiration(); // 만료 시간 추출
-
-        return expirationDate.before(new Date()); // 현재 시간보다 전이면 만료됨
+                .getBody(); // Claims 반환
+        } catch (Exception e) {
+            return null; // 예외 발생 시 null 반환
+        }
     }
 }

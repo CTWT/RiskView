@@ -95,6 +95,33 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
     }
   };
 
+  /**
+   * 이메일 인증코드 재전송
+   */
+  const resendVerificationEmail = async () => {
+    try {
+      setTimeLeft(180);  // 타이머 초기화
+      setVerificationCode("");  // 입력 초기화
+
+      // 이메일 인증코드 발송 API 호출
+      const response = await axios.post("/api/send-verification-email-code", null, {
+        // 유저이메일을 params로 전달
+        params: { email: userEmail },
+      });
+
+      const { message, token } = response.data;
+      localStorage.setItem("emailToken", token);
+      showToast(message || "인증 메일이 다시 전송되었습니다.", { type: "success" });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        showToast(error.response?.data?.message || "인증 메일 재전송 실패", { type: "error" });
+      } else {
+        showToast("인증 메일 재전송 실패", { type: "error" });
+      }
+    }
+  };
+
+
   return (
     <div className="authWrapper">
       <div className="authContainer">
@@ -131,7 +158,7 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
           // 시간 만료 시: 재전송 버튼
           <button
             className="authResendButton"
-            onClick={() => window.location.reload()}
+            onClick={resendVerificationEmail}
           >
             인증 메일 다시 보내기
           </button>

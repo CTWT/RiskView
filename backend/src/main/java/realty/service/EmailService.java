@@ -1,16 +1,18 @@
 package realty.service;
 
+import realty.support.JwtUtil;
+import io.jsonwebtoken.Claims;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.Random;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+
 
 /*
  * 수업명 : 가비아 2회차
@@ -27,6 +29,9 @@ public class EmailService {
     @Autowired
     private JavaMailSender javaMailSender;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     // 발신자 이메일
     @Value("${spring.mail.username}")
     private String senderEmail;
@@ -37,7 +42,7 @@ public class EmailService {
      * @param request HTTP 요청
      * @return 이메일 인증코드 발송 결과
      */
-    public String sendVerificationEmailCode(String email, HttpServletRequest request) {
+    public String sendVerificationEmailCode(String email) {
         // 이메일 유효성 검사
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("이메일 주소가 입력되지 않았습니다.");
@@ -76,12 +81,8 @@ public class EmailService {
 
         System.out.println(email + "로 인증코드를 발송했습니다.");
 
-        // 세션에 이메일 인증코드와 만료시간 저장
-        request.getSession().setAttribute("emailVerificationCode_" + email, code);
-        request.getSession().setAttribute("emailVerification_Expiry_" + email, System.currentTimeMillis() + 180000); // 3분
-
-        // 성공 메시지 반환
-        return email + "로 인증코드가 발송되었습니다.";
+        // 코드 반환
+        return code;
     }
 
     /**
@@ -91,30 +92,38 @@ public class EmailService {
      * @return 이메일 인증 여부
      */
     public boolean verifyEmailCode(String email, String code, HttpServletRequest request) {
-        // 세션에서 해당 이메일 주소로 보냈던 인증코드를 가져오기
-        String storedCode = (String) request.getSession().getAttribute("emailVerificationCode_" + email);
-        // 세션에서 이메일 인증코드의 제한 시간을 가져오기
-        Long expirationTime = (Long) request.getSession().getAttribute("emailVerification_Expiry_" + email);
-
-        // 제한시간이 만료되기 전이고 보냈던 인증코드가 있으면
-        // 수정: System.currentTimeMillis() < expirationTime (현재 시간이 만료 시간보다 작아야 함)
-        if (expirationTime != null && System.currentTimeMillis() < expirationTime && storedCode != null) {
-            // 이메일 인증코드가 일치하면
-            if (storedCode.equals(code)) {
-                System.out.println("이메일 인증 성공!");
-
-                // 인증 완료 표시
-                request.getSession().setAttribute("email_verified_" + email, true);
-                
-                // 인증 후 세션에서 인증코드 정보 제거
-                request.getSession().removeAttribute("emailVerificationCode_" + email);
-                request.getSession().removeAttribute("emailVerification_Expiry_" + email);
-                // 인증 성공 여부를 true로 반환
-                return true;
-            }
+        // Authorization 헤더에서 JWT 토큰을 꺼내서 복호화
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return false;
         }
-        // 인증 실패 반환
-        System.out.println("이메일 인증 실패!");
-        return false;
+        // Authorization 헤더에서 JWT 토큰 추출
+        String token = authHeader.substring(7);
+
+        // JWT 검증 후 페이로드에서 이메일, 인증코드, 만료시간 추출
+        if (!jwtUtil.validateToken(token)) {
+            return false;
+        }
+
+        // JWT 토큰에서 클레임 추출
+        Claims claims = jwtUtil.getClaims(token);
+        if (claims == null) {
+            return false;
+        }
+
+        // 토큰에서 이메일, 인증코드, 만료시간 추출
+        String tokenEmail = claims.getSubject();
+        String tokenCode = claims.get("code", String.class);
+        Date expiration = claims.getExpiration();
+
+        // 토큰에서 추출한 이메일, 인증코드, 만료시간과 비교
+        if (!email.equals(tokenEmail)) return false;
+        if (!code.equals(tokenCode)) return false;
+        if (expiration.before(new Date())) return false;
+
+        // 인증 성공 시, 세션에 이메일 인증 완료 표시 저장
+        request.getSession().setAttribute("email_verified_" + tokenEmail, true);
+
+        return true;
     }
 }

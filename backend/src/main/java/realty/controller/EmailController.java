@@ -37,12 +37,19 @@ public class EmailController {
      */
     @PostMapping("/api/send-verification-email-code")
     public ResponseEntity<?> sendVerificationEmailCode(
-            @RequestParam("email") String email, HttpServletRequest request) {
+            @RequestParam("email") String email) {
         try {
             // 이메일 인증코드 발송
-            String result = emailService.sendVerificationEmailCode(email, request);
-            // OK 응답 반환
-            return ResponseEntity.ok(result);
+            String code = emailService.sendVerificationEmailCode(email);
+
+            // 이메일 인증용 JWT 발급
+            String token = jwtUtil.generateEmailVerificationToken(email, code);
+
+            // 메시지, 토큰과 함께 OK 응답 반환
+            return ResponseEntity.ok(Map.of(
+                "message", email + "로 인증코드를 발송했습니다.",
+                "token", token
+            ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
@@ -66,14 +73,10 @@ public class EmailController {
         boolean isVerified = emailService.verifyEmailCode(email, code, request);
         // 인증 성공 시
         if (isVerified) {
-            // JWT 토큰 생성
-            String token = jwtUtil.generateToken(email);
-
-            // JSON 형식으로 응답
+            // OK 응답 객체 반환
             return ResponseEntity.ok()
                 .body(Map.of(
-                    "message", "이메일 인증 성공!",
-                    "token", token
+                    "message", "이메일 인증 성공!"
                 ));
         }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("인증번호가 올바르지 않거나 만료되었습니다.");

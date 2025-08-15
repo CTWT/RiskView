@@ -1062,12 +1062,14 @@
     text-decoration: none;
 }
 
-.headerLogin {
+.headerLogin,
+.headerLogout {
     color: black;
     font-size: 14px;
 }
 
-.headerSignup {
+.headerSignup,
+.headerMypage {
     background-color: black;
     color: white;
     font-size: 14px;

@@ -98,15 +98,15 @@ public class EmailService {
             return false;
         }
         // Authorization 헤더에서 JWT 토큰 추출
-        String token = authHeader.substring(7);
+        String emailToken = authHeader.substring(7);
 
         // JWT 검증 후 페이로드에서 이메일, 인증코드, 만료시간 추출
-        if (!jwtUtil.validateToken(token)) {
+        if (!jwtUtil.validateToken(emailToken)) {
             return false;
         }
 
         // JWT 토큰에서 클레임 추출
-        Claims claims = jwtUtil.getClaims(token);
+        Claims claims = jwtUtil.getClaims(emailToken);
         if (claims == null) {
             return false;
         }

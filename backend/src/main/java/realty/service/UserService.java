@@ -64,7 +64,21 @@ public class UserService {
         }
 
         // 모든 검증 통과 후 로그인 기록 남기기
-        String ipAddress = request.getRemoteAddr();
+        String ipAddress = request.getHeader("X-Forwarded-For");
+        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getRemoteAddr();
+        }
+
+        // IP가 여러 개인 경우 첫 번째 추출
+        if (ipAddress.contains(",")) {
+            ipAddress = ipAddress.split(",")[0].trim();
+        }
+
+        // IPv6 로컬호스트 → IPv4 로 변환
+        if ("0:0:0:0:0:0:0:1".equals(ipAddress) || "::1".equals(ipAddress)) {
+            ipAddress = "127.0.0.1";
+        }
+
         String userAgent = request.getHeader("User-Agent");
         loginHistoryService.saveLoginHistory(user, ipAddress, userAgent);
         

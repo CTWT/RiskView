@@ -1,5 +1,6 @@
 package realty.support;
 
+import realty.domain.model.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -14,7 +15,7 @@ import org.springframework.stereotype.Component;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.08.13
  * 파일명 : JwtUtil.java
  */
@@ -29,8 +30,11 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String base64Secret; // Base64로 인코딩된 비밀 키
 
-    @Value("${jwt.expiration}")
-    private int expiration; // 토큰 만료 시간 (초 단위)
+    @Value("${jwt.access-token-expiration}")
+    private int accessTokenExpiration; // 액세스 토큰 만료 시간 (초 단위)
+
+    @Value("${jwt.email-token-expiration}")
+    private int emailTokenExpiration; // 이메일 토큰 만료 시간 (초 단위)
 
     /**
      * Base64로 인코딩된 시크릿 키를 디코딩하여 HMAC-SHA 알고리즘에 맞는 SecretKey로 반환
@@ -42,20 +46,22 @@ public class JwtUtil {
 
     /**
      * 일반 액세스 토큰 생성
-     * @param email 사용자 이메일
+     * @param user 사용자 정보
      * @return 생성된 JWT 토큰 문자열
      */
-    public String generateAccessToken(String email) {
-        Date now = new Date(); // 현재 시간
-        Date expiry = new Date(now.getTime() + expiration * 1000L); // 만료 시간 계산
-
-        return Jwts.builder()
-                .setSubject(email)            // 토큰 제목
-                .claim("type", "access")    // 토큰 타입: access
-                .setIssuedAt(now)             // 토큰 발급 시간
-                .setExpiration(expiry)        // 토큰 만료 시간
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // 서명 알고리즘 및 키 설정
-                .compact();                   // 토큰 문자열 생성
+    public String generateAccessToken(User user) {
+        return Jwts.builder()              // 토큰 문자열 생성
+                .setSubject(user.getEmail())
+                .claim("userId", user.getUserId())
+                .claim("nickname", user.getUserNickname())
+                .claim("email", user.getEmail())
+                .claim("name", user.getName())
+                .claim("role", user.getRole())
+                .claim("language", user.getPreferredLanguage())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + accessTokenExpiration * 1000L))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
     }
 
     /**
@@ -66,7 +72,7 @@ public class JwtUtil {
      */
     public String generateEmailVerificationToken(String email, String code) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + expiration * 1000L); // 만료 시간 계산
+        Date expiry = new Date(now.getTime() + emailTokenExpiration * 1000L); // 만료 시간 계산
     
         return Jwts.builder()
                 .setSubject(email)                              // 토큰 제목

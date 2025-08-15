@@ -5,14 +5,15 @@ import axios from "axios";
 import useToast from "../../../../hooks/useToast";
 import Toast from "../../../../components/ui/Toast";
 import PageContainer from "../../../../components/layout/PageContainer";
-
+import { useContext } from "react";
+import { AuthContext } from "./AuthContext";
 // Login Component : 로그인 페이지
 
 /*
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.07.23
  * 파일명 : PG300002.tsx
  */
@@ -50,8 +51,8 @@ const PG300002: React.FC<PG300002Props> = ({
   /**
    * 상태 관리 영역
    */
-  // 사용자 입력 이메일 (아이디)
-  const [email, setEmail] = useState<string>("");
+  // 사용자 입력 아이디
+  const [userId, setUserId] = useState<string>("");
   // 사용자 입력 비밀번호
   const [password, setPassword] = useState<string>("");
   // react-router-dom의 네비게이션 훅으로 페이지 이동 제어
@@ -59,6 +60,8 @@ const PG300002: React.FC<PG300002Props> = ({
 
   // 커스텀 훅을 사용하여 토스트 메시지 상태 및 표시 함수 획득
   const { toast, showToast } = useToast();
+  // AuthContext에서 login 함수 불러옴: 함수 로직은 AuthProvider에서 정의됨
+  const { login } = useContext(AuthContext);
 
   /**
    * 로그인 폼 제출 이벤트 핸들러
@@ -72,14 +75,14 @@ const PG300002: React.FC<PG300002Props> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 이메일과 비밀번호가 모두 비어있으면 에러 메시지 출력 후 종료
-    if (!email && !password) {
+    // 아이디와 비밀번호가 모두 비어있으면 에러 메시지 출력 후 종료
+    if (!userId && !password) {
       showToast("아이디와 비밀번호를 모두 입력해주세요.", { type: "error" });
       return;
     }
 
-    // 이메일이 비어있으면 에러 메시지 출력 후 종료
-    if (!email) {
+    // 아이디가 비어있으면 에러 메시지 출력 후 종료
+    if (!userId) {
       showToast("아이디를 입력해주세요.", { type: "error" });
       return;
     }
@@ -92,23 +95,35 @@ const PG300002: React.FC<PG300002Props> = ({
 
     try {
       // 로그인 API 호출, 성공 시 토큰 반환 예상
-      const res = await axios.post<{ token: string }>("/api/login", {
-        email,
+      const res = await axios.post<{
+          success: boolean;
+          token?: string;
+          message?: string;
+        }>("/api/user/login", {
+        userId,
         password,
       });
       // HTTP 상태 코드 200이면 로그인 성공으로 간주하고 메인 페이지로 이동
-      if (res.status === 200) {
+      // 응답 데이터에서 성공 여부 확인
+      if (res.data.success && res.data.token) {
+        // 토큰을 로컬 스토리지에 저장
+        localStorage.setItem("token", res.data.token);
+        // 로그인 함수 호출
+        login();
         console.log("로그인 성공 - 메인 페이지로 이동");
-        navigate("/"); // 메인 페이지 경로로 이동
+        showToast("로그인 성공!", { type: "success" });
+        // 메인 페이지로 이동
+        navigate("/");
+      } else {
+        // 서버에서 보낸 구체적인 에러 메시지 사용
+        showToast(res.data.message || "로그인에 실패했습니다.", { type: "error" });
       }
     } catch (err: unknown) {
-      // axios 오류인지 확인 후 적절한 토스트 메시지 표시
       if (axios.isAxiosError(err)) {
-        showToast("아이디 또는 비밀번호가 올바르지 않습니다.", {
-          type: "error",
-        });
+        // 서버에서 보낸 에러 메시지가 있으면 사용, 없으면 기본 메시지
+        const errorMessage = err.response?.data?.message || "아이디 또는 비밀번호가 올바르지 않습니다.";
+        showToast(errorMessage, { type: "error" });
       } else {
-        // 네트워크 오류 등 예기치 못한 오류 처리
         showToast("예기치 않은 오류가 발생했습니다.", { type: "error" });
       }
     }
@@ -155,13 +170,13 @@ const PG300002: React.FC<PG300002Props> = ({
             <h1 className="authTitle">로그인</h1>
 
             <form onSubmit={handleSubmit}>
-              {/* 사용자 아이디(이메일) 입력 필드 */}
+              {/* 사용자 아이디 입력 필드 */}
               <input
                 className="authInput"
                 type="text"
                 placeholder="아이디"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
               />
               {/* 비밀번호 입력 필드 */}
               <input

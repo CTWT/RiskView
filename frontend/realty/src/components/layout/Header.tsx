@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "../../styles/common/common.css";
-
+import { useContext } from "react";
+import { AuthContext } from "../../pages/auth/components/authentication/AuthContext.ts";
+import { useNavigate } from "react-router-dom";
 // Header Component
 
 /*
@@ -19,7 +21,15 @@ import "../../styles/common/common.css";
  */
 
 const Header: React.FC = () => {
-return (
+    const { isLoggedIn, logout } = useContext(AuthContext);
+    const navigate = useNavigate();
+
+    // 로그아웃 이벤트 처리
+    const handleLogout = () => {
+        logout();
+        navigate("/");
+    };
+    return (
     <header className="headerContainer">
     <div className="headerLogo">
         <Link to="/" className="headerLogoText">
@@ -34,14 +44,30 @@ return (
         <Link to="/PG500001">커뮤니티</Link>
     </nav>
     <div className="headerAuth">
-        {/* 로그인은 명시적으로 login=true 파라미터 추가 */}
-        <Link to="/PG300001?login=true" className="headerLogin">
-        로그인
-        </Link>
-        {/* 회원가입은 signup 파라미터를 추가하여 바로 회원가입 단계로 */}
-        <Link to="/PG300001?signup=true" className="headerSignup">
-        회원가입
-        </Link>
+        {/* 로그인 여부에 따라서 메뉴를 다르게 표시 */}
+        {isLoggedIn ? (
+            // 로그인 상태일 때
+            <>
+                <Link to="/" onClick={handleLogout} className="headerLogout">
+                    로그아웃
+                </Link>
+                <Link to="/mypage" className="headerMypage">
+                    마이페이지
+                </Link>
+            </>
+        ) : (
+            // 로그아웃 상태일 때
+            <>
+                {/* 로그인은 명시적으로 login=true 파라미터 추가 */}
+                <Link to="/PG300001?login=true" className="headerLogin">
+                    로그인
+                </Link>
+                {/* 회원가입은 명시적으로 signup=true 파라미터 추가 */}
+                <Link to="/PG300001?signup=true" className="headerSignup">
+                    회원가입
+                </Link>
+            </>
+        )}
     </div>
     </header>
     );

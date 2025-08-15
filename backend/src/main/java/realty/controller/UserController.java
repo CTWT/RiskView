@@ -1,10 +1,9 @@
 package realty.controller;
 
-import realty.domain.dto.LoginHistoryDTO;
 import realty.domain.dto.UserDTO;
 import realty.domain.model.User;
-import realty.service.LoginHistoryService;
 import realty.service.UserService;
+import realty.support.JwtUtil;
 import realty.exception.AccountDeletedException;
 import realty.exception.EmailNotVerifiedException;
 import realty.exception.InvalidCredentialsException;
@@ -13,13 +12,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ui.Model;
@@ -41,27 +40,7 @@ public class UserController {
     private UserService userService;
 
     @Autowired
-    private LoginHistoryService loginHistoryService;
-    
-    /**
-     * 홈 화면으로 이동
-     * @return index.html
-     */
-    @GetMapping({"/", "/index"})
-    public String getIndex() {
-        // 홈 화면으로 이동
-        return "index";
-    }
-
-    /**
-     * 로그인 화면으로 이동
-     * @return login.html
-     */
-    @GetMapping("/login")
-    public String getLogin(Model model) {
-        model.addAttribute("userDTO", new UserDTO());
-        return "user/login";
-    }
+    private JwtUtil jwtUtil;
 
     /**
      * 로그인 처리
@@ -69,66 +48,42 @@ public class UserController {
      * @param session
      * @param request
      * @param model
-     * @return index.html
+     * @return 응답 객체
      */
-    @PostMapping("/login")
-    public String postLogin(@ModelAttribute UserDTO userDTO, HttpSession session, HttpServletRequest request, Model model) {
+    @PostMapping("/api/user/login")
+    public ResponseEntity<Map<String, Object>> postLogin(@RequestBody UserDTO userDTO, HttpSession session, HttpServletRequest request, Model model) {
+        Map<String, Object> response = new HashMap<>();
         try {
             // 로그인 처리
             User user = userService.userLogin(userDTO, request);
 
-            // 로그인 성공하면
-            session.setAttribute("user", user); // 세션에 사용자 정보 저장
-            session.setMaxInactiveInterval(60); // 1분
-            System.out.println("로그인 성공");
+            // JWT 발급
+            String accessToken = jwtUtil.generateAccessToken(user);
 
-            // 방금 데이터베이스에 저장한 로그인 기록과 이전에 데이터베이스에 저장된 로그인 기록까지 모두 가져옴
-            List<LoginHistoryDTO> loginHistoryList = loginHistoryService.findByUserCode(user.getUserCode());
-            // 로그인 이력을 세션에 저장
-            session.setAttribute("loginHistoryList", loginHistoryList);
-            // 로그인 성공 화면으로 이동
-            return "index";
-        } catch (UserNotFoundException e) {
-            // 에러 메시지를 모델에 추가
-            model.addAttribute("error", e.getMessage());
-            // 입력값 유지를 위해 UserDTO를 다시 모델에 추가
-            model.addAttribute("userDTO", userDTO);
-            // 로그인 화면으로 이동
-            return "user/login";
-        } catch (InvalidCredentialsException e) {
-            // 아이디 또는 비밀번호가 올바르지 않음
-            model.addAttribute("error", e.getMessage());
-            // 입력값 유지를 위해 UserDTO를 다시 모델에 추가
-            model.addAttribute("userDTO", userDTO);
-            // 로그인 화면으로 이동
-            return "user/login";
-        } catch (AccountDeletedException e) {
-            // 탈퇴한 사용자
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("userDTO", userDTO);
-            // 로그인 화면으로 이동
-            return "user/login";
+            // 프론트에 전달할 응답 정보 담음
+            response.put("success", true);
+            response.put("message", "로그인 성공!");
+            response.put("token", accessToken);
+            System.out.println("로그인 성공!");
+
+            // 담았던 정보들과 함께 성공 응답 반환
+            return ResponseEntity.ok(response);
+
+        } catch (UserNotFoundException | AccountDeletedException | InvalidCredentialsException e) {
+            // 프론트에 전달할 응답 정보 담음
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            System.out.println(e.getMessage());
+            // 구체적 메시지와 함께 실패 응답 반환
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         } catch (Exception e) {
-            // 서버 오류
-            model.addAttribute("error", e.getMessage());
-            model.addAttribute("userDTO", userDTO);
-            // 로그인 화면으로 이동
-            return "user/login";
+            // 프론트에 전달할 응답 정보 담음
+            response.put("success", false);
+            response.put("message", "로그인 실패: " + e.getMessage());
+            System.out.println(e.getMessage());
+            // 일반적인 오류 메시지와 함께 실패 응답 반환
+            return ResponseEntity.badRequest().body(response);
         }
-    }
-
-    /**
-     * 로그아웃 처리
-     * @param session
-     * @return index.html
-     */
-    @PostMapping("/logout")
-    public String postLogout(HttpSession session) {
-        // 세션 인증 비활성화
-        session.invalidate();
-        System.out.println("로그아웃 성공!");
-        // 로그아웃 후 홈 화면으로 이동
-        return "index";
     }
 
     /**
@@ -144,20 +99,32 @@ public class UserController {
         try {
             // 유저가 입력한 정보가 담겨있는 UserDTO 객체를 사용해 회원가입 처리
             userService.registerUser(userDTO, request);
+            // 프론트에 전달할 응답 정보 담음
             response.put("success", true);
             response.put("message", "회원가입 성공!");
+            System.out.println("회원가입 성공!");
+            // 성공 응답 반환
             return ResponseEntity.ok(response);
         } catch (EmailNotVerifiedException e) {
+            // 프론트에 전달할 응답 정보 담음
             response.put("success", false);
             response.put("message", "회원가입 실패: " + e.getMessage());
+            System.out.println("회원가입 실패: " + e.getMessage());
+            // 구체적 메시지와 함께 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         } catch (RuntimeException e) {
+            // 프론트에 전달할 응답 정보 담음
             response.put("success", false);
             response.put("message", "회원가입 실패: " + e.getMessage());
+            System.out.println("회원가입 실패: " + e.getMessage());
+            // 구체적 메시지와 함께 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         } catch (Exception e) {
+            // 프론트에 전달할 응답 정보 담음
             response.put("success", false);
             response.put("message", "회원가입 실패: " + e.getMessage());
+            System.out.println("회원가입 실패: " + e.getMessage());
+            // 구체적 메시지와 함께 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         }
     }

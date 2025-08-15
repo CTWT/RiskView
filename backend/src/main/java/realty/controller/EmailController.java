@@ -43,12 +43,12 @@ public class EmailController {
             String code = emailService.sendVerificationEmailCode(email);
 
             // 이메일 인증용 JWT 발급
-            String token = jwtUtil.generateEmailVerificationToken(email, code);
+            String emailToken = jwtUtil.generateEmailVerificationToken(email, code);
 
             // 메시지, 토큰과 함께 OK 응답 반환
             return ResponseEntity.ok(Map.of(
                 "message", email + "로 인증코드를 발송했습니다.",
-                "token", token
+                "token", emailToken
             ));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());

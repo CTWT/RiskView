@@ -109,7 +109,9 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
         params: { email: userEmail },
       });
 
+      // 응답에서 메시지와 토큰 추출
       const { message, token } = response.data;
+      // 토큰을 로컬스토리지에 저장
       localStorage.setItem("emailToken", token);
       showToast(message || "인증 메일이 다시 전송되었습니다.", { type: "success" });
     } catch (error) {

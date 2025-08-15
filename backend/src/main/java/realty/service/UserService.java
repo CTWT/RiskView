@@ -78,8 +78,9 @@ public class UserService {
         if ("0:0:0:0:0:0:0:1".equals(ipAddress) || "::1".equals(ipAddress)) {
             ipAddress = "127.0.0.1";
         }
-
+        // 유저 에이전트 정보 가져오기
         String userAgent = request.getHeader("User-Agent");
+        // 로그인 기록 남기기
         loginHistoryService.saveLoginHistory(user, ipAddress, userAgent);
         
         return user;
@@ -93,7 +94,7 @@ public class UserService {
      * @throws RuntimeException userSeq가 null일 때
      */
     @Transactional
-    public void registerUser(UserDTO userDTO, HttpServletRequest request) {
+    public void signUpUser(UserDTO userDTO, HttpServletRequest request) {
 
         /**
          * 이메일 인증 여부 확인
@@ -196,10 +197,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    /**
-     * 회원탈퇴
-     * @param userId 사용자 ID
-     */
+    /* 추후 개발 시 참고 예정
     public void deleteAccount(String userId) {
         // 사용자 ID로 데이터베이스에서 사용자 찾기
         User user = userRepository.findByUserId(userId);
@@ -214,6 +212,7 @@ public class UserService {
             System.out.println("사용자를 찾을 수 없습니다");
         }
     }
+    */
 
     /**
      * 사용자 ID 찾기

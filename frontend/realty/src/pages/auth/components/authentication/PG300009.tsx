@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronLeft } from "react-icons/fi";
+import axios, { AxiosError } from "axios";
 import Toast from "../../../../components/ui/Toast";
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
@@ -12,7 +13,7 @@ import PageContainer from "../../../../components/layout/PageContainer";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.08.08
  * 파일명 : PG300009.tsx
  */
@@ -26,8 +27,14 @@ import PageContainer from "../../../../components/layout/PageContainer";
  */
 interface PG300009Props {
   onLogin: () => void;
+  /** 아이디 찾기 페이지로 이동하는 콜백 함수 */
   onFindId?: () => void;
-  onPasswordReset?: (userId: string, email: string) => void; // 인증번호 전송 후 PG300010으로 이동
+  /** 인증번호 전송 후 PG300010으로 이동하는 콜백 함수 */
+  onPasswordReset?: (
+    userId: string, 
+    email: string, 
+    emailToken: string
+  ) => void;
 }
 
 /**
@@ -61,15 +68,6 @@ const PG300009: React.FC<PG300009Props> = ({
   /** 로딩 상태 관리 */
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-
-  // 임시 목업 데이터 (백엔드 연동 전 테스트용)
-  /** 임시 사용자 데이터 - 실제로는 백엔드에서 검증 */
-  const mockUser = {
-    userId: "princess",
-    email: "homeprotector@home.go",
-  };
-
-
   // 유효성 검사 함수들
   /**
    * 이메일 형식 유효성 검사 함수
@@ -85,15 +83,18 @@ const PG300009: React.FC<PG300009Props> = ({
    * 아이디 찾기 클릭 핸들러
    */
   const handleFindIdClick = () => {
+    // onFindId 콜백이 제공된 경우
     if (onFindId) {
+      // 아이디 찾기 페이지로 이동
       onFindId();
     } else {
+      // 콜백이 없다면 기본 이동 처리: 아이디 찾기 페이지(PG300008)로 이동
       navigate("/pg/PG300008");
     }
   };
 
   /**
-   * 인증번호 전송 처리 함수 (목업 모드)
+   * 인증번호 전송 처리 함수
    * 아이디와 이메일을 검증하고 목업 데이터와 비교하여 PG300010으로 이동
    */
   const handleSendVerificationCode = async () => {
@@ -117,78 +118,51 @@ const PG300009: React.FC<PG300009Props> = ({
     // 3단계: 로딩 시작
     setIsLoading(true);
 
-    // 4단계: 목업 데이터 검증 (네트워크 요청 없음)
-    setTimeout(() => {
-      try {
-        // 목업 데이터와 비교
-        if (
-          userId.trim() === mockUser.userId &&
-          email.trim() === mockUser.email
-        ) {
-          // 성공: 인증번호 전송 완료, PG300010으로 이동
-          showToast("인증번호가 이메일로 전송되었습니다.", { type: "success" });
-
-          // 잠시 후 PG300010으로 이동
-          setTimeout(() => {
-            if (onPasswordReset) {
-              onPasswordReset(userId, email);
-            } else {
-              navigate("/pg/PG300010", { state: { userId, email } });
-            }
-          }, 1000);
-        } else {
-          // 실패: 일치하는 계정이 없음
-          showToast("입력하신 정보와 일치하는 계정이 없습니다.", {
-            type: "error",
-          });
-        }
-      } catch (error) {
-        console.error("목업 검증 오류:", error);
-        showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
-      } finally {
-        setIsLoading(false);
-      }
-    }, 1500); // 1.5초 로딩 시뮬레이션
-
-    /* 
-    ================================
-    TODO: 실제 백엔드 연동 시 아래 주석을 해제하고 위의 목업 로직을 삭제
-    ================================
-    
+    // 4단계: 사용자 존재 여부 확인 및 인증코드 발송
     try {
-      const response = await fetch("/api/forgot_pass", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
+      // 이메일 인증코드 발송 요청
+      const codeRequestRes = await axios.post("/api/user/send-password-reset-code", null, {
+        params: { // 파라미터로 userId와 email 전달
           userId: userId.trim(),
-          email: email.trim()
-        }),
+          email: email.trim() 
+        }
       });
-
-      const data = await response.json();
       
-      if (response.ok) {
-        showToast("인증번호가 이메일로 전송되었습니다.", { type: "success" });
-        setTimeout(() => {
-          if (onPasswordReset) {
-            onPasswordReset(userId, email);
-          } else {
-            navigate("/pg/PG300010", { state: { userId, email } });
-          }
-        }, 1000);
+      if (codeRequestRes.status !== 200) {
+        showToast("이메일 인증 요청 실패", { type: "error" });
+        return;
+      }
+      // 응답 데이터에서 JWT 토큰 추출
+      const { token } = codeRequestRes.data;
+      // 토큰을 로컬스토리지에 저장
+      localStorage.setItem("emailToken", token);
+
+      showToast("인증번호가 이메일로 전송되었습니다.", { type: "success" });
+
+      // 인증번호 입력 페이지로 이동 (사용자 ID와 이메일 전달)
+      if (onPasswordReset) {
+        // 부모 컴포넌트에서 콜백이 제공된 경우 userId, email, token 정보를 가지고 인증번호 입력 페이지로 이동
+        onPasswordReset(userId.trim(), email.trim(), token);
       } else {
-        const errorMessage = data.message || "입력하신 정보와 일치하는 계정이 없습니다.";
-        showToast(errorMessage, { type: "error" });
+        // 콜백이 없다면 기본 이동 처리: 인증번호 입력 페이지(PG300010)로 이동
+        navigate("/pg/PG300010", { 
+          state: { // state로 userId, email, token 전달
+            userId: userId.trim(),
+            email: email.trim(),
+            emailToken: token
+          }
+        });
       }
     } catch (error) {
-      console.error("인증번호 전송 오류:", error);
-      showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
+      const axiosError = error as AxiosError<{ message: string }>;
+      console.error("인증번호 전송 오류:", axiosError);
+      // AxiosError로부터 응답 메시지 추출
+      const serverMessage = axiosError?.response?.data?.message || "오류가 발생했습니다. 다시 시도해주세요.";
+      showToast(serverMessage, { type: "error" });
     } finally {
+      // 로딩 종료
       setIsLoading(false);
     }
-    */
   };
 
   /**
@@ -196,7 +170,7 @@ const PG300009: React.FC<PG300009Props> = ({
    */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    handleSendVerificationCode();
+    handleSendVerificationCode(); // 인증코드 전송 핸들러 호출
   };
 
   
@@ -219,32 +193,6 @@ const PG300009: React.FC<PG300009Props> = ({
           <p className="authDescription">
             아이디와 이메일을 입력하시면 인증번호를 보내드립니다.
           </p>
-
-          {/* 임시 데모 안내 */}
-          <div
-            style={{
-              backgroundColor: "#e3f2fd",
-              border: "1px solid #90caf9",
-              borderRadius: "8px",
-              padding: "12px",
-              marginBottom: "20px",
-              fontSize: "14px",
-            }}
-          >
-            <p
-              style={{
-                margin: "0 0 8px 0",
-                fontWeight: "bold",
-                color: "#1565c0",
-              }}
-            >
-              🧪 데모 테스트 데이터
-            </p>
-            <p style={{ margin: "0", color: "#1976d2", lineHeight: "1.4" }}>
-              • 아이디: <strong>princess</strong>
-              <br />• 이메일: <strong>homeprotector@home.go</strong>
-            </p>
-          </div>
 
           <form onSubmit={handleSubmit}>
             {/* 아이디 입력 */}

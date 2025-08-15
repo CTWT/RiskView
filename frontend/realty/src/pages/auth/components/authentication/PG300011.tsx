@@ -11,7 +11,7 @@ import PageContainer from "../../../../components/layout/PageContainer";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.08.08
  * 파일명 : PG300011.tsx
  */
@@ -130,47 +130,38 @@ const PG300011: React.FC<PG300011Props> = ({ userId, onLogin }) => {
 
     setIsLoading(true);
 
-    // 목업 데이터 처리 (네트워크 요청 없음)
-    setTimeout(() => {
-      try {
-        // 성공: 비밀번호 재설정 완료
+    try {
+      // 서버에 비밀번호 재설정 요청
+      const response = await fetch("/api/user/reset-pass", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // JSON 데이터로 요청 본문 전송
+        body: JSON.stringify({ 
+          userId: userId,
+          newPassword: newPassword.trim(),
+          confirmNewPassword: confirmPassword.trim(),
+        }),
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
         showToast("비밀번호가 성공적으로 변경되었습니다.", { type: "success" });
-
-        // 1.5초 후 로그인 페이지로 이동
         setTimeout(() => {
+          // 로그인 페이지로 이동
           onLogin();
-        }, 1500);
-
-        /* TODO: 실제 백엔드 연동 시 아래 코드로 교체
-        const response = await fetch("/api/auth/reset-password", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ 
-            userId: userId,
-            newPassword: newPassword.trim()
-          }),
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-          showToast("비밀번호가 성공적으로 변경되었습니다.", { type: "success" });
-          setTimeout(() => {
-            onLogin();
-          }, 1000);
-        } else {
-          showToast(data.message || "비밀번호 재설정에 실패했습니다.", { type: "error" });
-        }
-        */
-      } catch (error) {
-        console.error("비밀번호 재설정 오류:", error);
-        showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
-      } finally {
-        setIsLoading(false);
+        }, 1000);
+      } else {
+        showToast(data.message || "비밀번호 재설정에 실패했습니다.", { type: "error" });
       }
-    }, 1000); // 1초 로딩 시뮬레이션
+    } catch (error) {
+      console.error("비밀번호 재설정 오류:", error);
+      showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /**
@@ -180,6 +171,7 @@ const PG300011: React.FC<PG300011Props> = ({ userId, onLogin }) => {
    */
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // 비밀번호 재설정 처리
     handlePasswordReset();
   };
 

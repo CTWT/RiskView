@@ -10,7 +10,7 @@ import PageContainer from "../../../../components/layout/PageContainer";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.08.08
  * 파일명 : PG300008.tsx
  */
@@ -88,8 +88,8 @@ const PG300008: React.FC<PG300008Props> = ({ onLogin, onFindPassword }) => {
     setFoundId("");
 
     try {
-      // TODO: 실제 API 호출로 교체 필요
-      const response = await fetch("/api/forgot_id", {
+      // 백엔드 API 호출하여 아이디 찾기 로직 실행
+      const response = await fetch("/api/user/forgot-id", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

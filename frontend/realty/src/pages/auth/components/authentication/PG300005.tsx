@@ -35,7 +35,8 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
   // 입력된 인증번호 상태
   const [verificationCode, setVerificationCode] = useState("");
-
+  // 로딩 상태
+  const [isLoading, setIsLoading] = useState(false);
   // 인증번호 유효 시간 (3분 = 180초)
   const [timeLeft, setTimeLeft] = useState(180);
   // 타이머 만료 여부
@@ -61,13 +62,18 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
       return;
     }
   
+    console.log("verificationCode:", verificationCode);
+    console.log("userEmail:", userEmail);
     // 이메일 토큰을 로컬스토리지에서 가져옴
     const token = localStorage.getItem("emailToken");
+    console.log("emailToken:", token);
     // 토큰이 없으면
     if (!token) {
       showToast("인증 토큰이 없습니다.", { type: "error" });
       return;
     }
+
+    setIsLoading(true);
   
     try {
       // 인증번호 검증 API 호출
@@ -92,6 +98,8 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
       } else {
         showToast("알 수 없는 오류가 발생했습니다.", { type: "error" });
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -155,24 +163,24 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
           )}
         </div>
 
-        {/* 조건부 버튼 렌더링 */}
-        {isExpired ? (
-          // 시간 만료 시: 재전송 버튼
-          <button
-            className="authResendButton"
-            onClick={resendVerificationEmail}
-          >
-            인증 메일 다시 보내기
-          </button>
-        ) : (
-          <button
-            className="authButton"
-            onClick={handleVerifyCode}
-            disabled={isExpired}
-          >
-            다음
-          </button>
-        )}
+        {/* 다음 버튼 */}
+        <button
+          className="authButton"
+          onClick={handleVerifyCode}
+          disabled={isLoading}
+        >
+          {isLoading ? "확인 중..." : "다음"}
+        </button>
+
+        {/* 인증 메일 재전송 버튼 (항상 표시, 클릭은 만료 시에만) */}
+        <button
+          type="button"
+          className="authResendButton"
+          onClick={resendVerificationEmail}
+        >
+          인증 메일 다시 보내기
+        </button>
+
       </div>
       <Toast
         message={toast.message}

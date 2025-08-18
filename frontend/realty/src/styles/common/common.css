@@ -838,7 +838,7 @@
 /* 공통 컨테이너 */
 .community-container {
     padding: 50px 20px;
-    max-width: 1200px;
+    max-width: 1440px;
     margin: 0 auto;
     margin-top: -100px !important;
 }
@@ -996,6 +996,280 @@
     .list-item .date,
     .list-item .tag {
         margin-left: 0;
+    }
+}
+
+/* PG500021 - 커뮤니티 공지사항 담당 스타일*/
+
+.co21-card {
+    background: #fff;
+    border: 1px solid #edf1f7;
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+/* 헤더 라인 */
+.co21-head {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px 120px;
+    gap: 0;
+    padding: 14px 18px;
+    background: #f9fafb;
+    border-bottom: 1px solid #eef2f7;
+    color: #6b7280;
+    font-weight: 800;
+    font-size: 14px;
+}
+
+/* 행 */
+.co21-body .co21-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 120px 120px;
+    padding: 16px 18px;
+    border-bottom: 1px solid #f3f4f6;
+    align-items: center;
+}
+.co21-body .co21-row:last-child {
+    border-bottom: 0;
+}
+.co21-body .co21-row:hover {
+    background: #fafafa;
+}
+
+/* 컬럼 공통 */
+.co21-col-type {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.co21-col-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.co21-col-author,
+.co21-col-date {
+    color: #6b7280;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* 제목 링크 */
+.co21-row-title-link {
+    color: #111827;
+    font-weight: 800;
+    text-decoration: none;
+}
+.co21-row-title-link:hover {
+    text-decoration: underline;
+}
+
+/* 메인 배지(분류) */
+.co21-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 900;
+    border: 1px solid transparent;
+}
+.co21-pill-필독 {
+    background: #fee2e2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+.co21-pill-업데이트 {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-color: #bae6fd;
+}
+.co21-pill-이벤트 {
+    background: #fef9c3;
+    color: #92400e;
+    border-color: #fde68a;
+}
+.co21-pill-안내 {
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #e2e8f0;
+}
+.co21-pill-공지 {
+    background: #ede9fe;
+    color: #6d28d9;
+    border-color: #ddd6fe;
+}
+
+/* 서브 태그(NEW, 첨부파일) */
+.co21-pill-sub {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 9999px;
+    margin-left: 6px;
+    font-size: 11px;
+    font-weight: 900;
+    border: 1px solid transparent;
+}
+.co21-pill-sub.is-new {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: #fecdd3;
+}
+.co21-pill-sub.is-file {
+    background: #fde2e4;
+    color: #b42334;
+    border-color: #fecdd3;
+}
+
+/* 반응형 */
+@media (max-width: 900px) {
+    .co21-head,
+    .co21-body .co21-row {
+        grid-template-columns: 100px 1fr 100px 100px;
+        padding: 14px 14px;
+    }
+}
+@media (max-width: 640px) {
+    .co21-head {
+        display: none;
+    }
+    .co21-body .co21-row {
+        grid-template-columns: 90px 1fr;
+        row-gap: 6px;
+    }
+    .co21-col-author,
+    .co21-col-date {
+        justify-self: end;
+        font-weight: 700;
+    }
+}
+
+/* PG500031 - 커뮤니티 사전 담당 스타일*/
+/* 페이지 폭 살짝 넓게 */
+/* 공통 폭 변수 */
+
+/* 페이지 전용 공통 폭 */
+.community-container.co31 {
+    --co31-content: 720px;
+}
+
+/* 검색/설명/칩 래퍼: 동일 폭 + 중앙 */
+.co31-search-wrap,
+.co31-term-card,
+.co31-chip-wrap {
+    max-width: var(--co31-content);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 칩: 4열 그리드 */
+.co31-chip-wrap {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    margin: 10px auto 24px;
+    width: 100%;
+}
+
+/* ───────── 검색 ───────── */
+.co31-search-wrap {
+    position: relative;
+    margin: 12px auto 18px; /* 상단 여백만 유지 */
+    width: 100%;
+}
+.co31-search-ic {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: #9aa1ab;
+}
+.co31-search-input {
+    width: 100%;
+    height: 48px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 0 16px 0 42px;
+    font-size: 15px;
+    outline: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+}
+.co31-search-input:focus {
+    border-color: #c7cbe0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+/* ───────── 설명 카드 ───────── */
+.co31-term-card {
+    background: #fff;
+    border: 1px solid #edf1f7;
+    border-radius: 16px;
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.06);
+    padding: 22px;
+    margin: 0 auto 18px;
+}
+.co31-term-title {
+    font-size: 18px;
+    font-weight: 900;
+    color: #111827;
+    margin: 0 0 10px;
+}
+.co31-term-desc {
+    color: #374151;
+    line-height: 1.7;
+    margin: 0 0 12px;
+}
+.co31-term-law {
+    color: #94a3b8;
+    font-size: 14px;
+    font-weight: 800;
+    margin: 0;
+}
+.co31-empty {
+    text-align: center;
+    color: #9aa1ab;
+    font-weight: 800;
+}
+
+/* ───────── 칩 버튼 ───────── */
+.co31-chip {
+    width: 100%;
+    min-width: 0;
+    height: 64px;
+    padding: 0 18px;
+    border-radius: 14px;
+    font-size: 1.05rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 18px rgba(123, 104, 238, 0.28);
+}
+.co31-chip:hover {
+    transform: translateY(-1px);
+}
+.co31-chip.active {
+    background-color: #6a5acd;
+    box-shadow: 0 10px 22px rgba(106, 90, 205, 0.38);
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+    .co31-chip-wrap {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+@media (max-width: 768px) {
+    .co31-chip-wrap {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

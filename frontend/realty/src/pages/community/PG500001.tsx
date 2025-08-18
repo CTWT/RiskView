@@ -29,8 +29,8 @@ const PG500001 = () => {
     return (
         <Routes>
             <Route index element={<PG500011 />} />
-            <Route path="PG500021" element={<PG500021 />} />
-            <Route path="PG500031" element={<PG500031 />} />
+            <Route path="PG500021/*" element={<PG500021 />} />
+            <Route path="PG500031/*" element={<PG500031 />} />
             <Route path="PG500041/*" element={<PG500041 />} />
         </Routes>
     );

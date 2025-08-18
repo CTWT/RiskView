@@ -97,17 +97,19 @@ const PG300002: React.FC<PG300002Props> = ({
       // 로그인 API 호출, 성공 시 토큰 반환 예상
       const res = await axios.post<{
           success: boolean;
-          token?: string;
           message?: string;
-        }>("/api/user/login", {
-        userId,
-        password,
-      });
+        }>("/api/user/login", // 요청 보낼 URL
+          { userId, password }, // 요청 보낼 데이터(Body 부분)
+          {
+            withCredentials: true, // 요청 설정: 쿠키 포함 여부
+            headers: {
+              'Content-Type': 'application/json', // JSON 데이터 형식으로 명시
+            },
+          }
+        );
       // HTTP 상태 코드 200이면 로그인 성공으로 간주하고 메인 페이지로 이동
       // 응답 데이터에서 성공 여부 확인
-      if (res.data.success && res.data.token) {
-        // 토큰을 로컬 스토리지에 저장
-        localStorage.setItem("token", res.data.token);
+      if (res.data.success) {
         // 로그인 함수 호출
         login();
         console.log("로그인 성공 - 메인 페이지로 이동");

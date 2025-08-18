@@ -64,6 +64,9 @@ const PG300010: React.FC<PG300010Props> = ({
   /** 로딩 상태 관리 */
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  /** 이메일 재전송 상태 */
+  const [isResending, setIsResending] = useState<boolean>(false);
+
   /** 인증번호 유효 시간 (3분 = 180초) */
   const [timeLeft, setTimeLeft] = useState<number>(180);
 
@@ -102,20 +105,22 @@ const PG300010: React.FC<PG300010Props> = ({
 
     // 인증번호 검증
     try {
-      // URLSearchParams를 사용하여 key=value&key=value 형식으로 데이터 직렬화
-      const formData = new URLSearchParams();
-      formData.append("email", email);
-      formData.append("code", verificationCode.trim());
-
-      // axios.post로 폼 데이터를 전송
-      const res = await axios.post("/api/verify-email-code", formData, {
-        headers: {
-          // Content-Type 헤더를 폼 데이터 형식으로 명시
-          'Content-Type': 'application/x-www-form-urlencoded',
-          // Authorization 헤더에 JWT 토큰 추가
-          'Authorization': `Bearer ${emailToken}`,
+      console.log("handleVerifyCode 시작", { verificationCode });
+      const res = await axios.post("/api/verify-email-code", 
+        {
+          email,
+          code: verificationCode.trim(),
+        },
+        {
+          withCredentials: true, // 쿠키 포함
+          headers: {
+            'Content-Type': 'application/json', // JSON 데이터 형식으로 명시
+            'Authorization': `Bearer ${emailToken}`, // JWT 토큰 추가
+          }
         }
-      });
+      );
+
+      console.log('전송 데이터:', { email, code: verificationCode.trim(), token: emailToken });
   
       // 성공: 인증번호 확인 완료, PG300011로 이동 
       if (res.status === 200) {
@@ -129,7 +134,17 @@ const PG300010: React.FC<PG300010Props> = ({
       }
     } catch (error) {
       console.error("인증번호 확인 오류:", error);
-      showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
+      if (axios.isAxiosError(error)) {
+        const status = error.response?.status;
+    
+        if (status === 400 || status === 401) {
+          showToast("인증번호가 일치하지 않습니다.", { type: "error" });
+        } else {
+          showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
+        }
+      } else {
+        showToast("알 수 없는 오류가 발생했습니다.", { type: "error" });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -139,9 +154,20 @@ const PG300010: React.FC<PG300010Props> = ({
    * 인증번호 재전송 핸들러
    */
   const handleResendCode = async () => {
-    setIsLoading(true);
+    setIsResending(true);
     try {
-      await axios.post("/api/resend-email-code", { email });
+      await axios.post("/api/send-verification-email-code",
+        {
+          email,
+        },
+        {
+          withCredentials: true, // 쿠키 포함
+          headers: {
+            'Content-Type': 'application/json', // JSON 데이터 형식으로 명시
+            'Authorization': `Bearer ${emailToken}`, // JWT 토큰 추가
+          },
+        }
+      );
   
       setVerificationCode("");
       setTimeLeft(180);
@@ -150,7 +176,7 @@ const PG300010: React.FC<PG300010Props> = ({
       console.error("재전송 실패:", error);
       showToast("인증번호 전송에 실패했습니다.", { type: "error" });
     } finally {
-      setIsLoading(false);
+      setIsResending(false);
     }
   };
 
@@ -219,17 +245,23 @@ const PG300010: React.FC<PG300010Props> = ({
               type={isExpired ? "button" : "submit"} // 버튼 타입 조건부 설정
               className={isExpired ? "authResendButton" : "authButton"} // 버튼 클래스 조건부 설정
               onClick={isExpired ? handleResendCode : undefined} // 버튼 클릭 핸들러 조건부 설정
-              disabled={isLoading || (!isExpired && isExpired)} // 버튼 비활성화 조건
+              disabled={isLoading} // 버튼 비활성화 조건
             >
               {isLoading
-                ? isExpired
-                  ? "전송 중..."
-                  : "확인 중..."
-                : isExpired
-                ? "인증번호를 받지 못하셨나요? 재발송"
+                ? "확인 중..."
                 : "확인"}
             </button>
           </form>
+
+          {/* 인증 메일 재전송 버튼 */}
+          <button
+            type="button"
+            className="authResendButton"
+            onClick={handleResendCode}
+            disabled={isResending} // 인증 메일 재전송 중이면 버튼 비활성화
+          >
+            {isResending ? "인증 메일 재전송 중..." : "인증 메일 재전송"}
+          </button>
 
           {/* 토스트 메시지 컴포넌트 */}
 

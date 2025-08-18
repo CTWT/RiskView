@@ -4,8 +4,8 @@ import realty.support.JwtUtil;
 import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.Map;
 import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -52,6 +52,12 @@ public class EmailService {
         Random random = new Random();
         String code = String.valueOf(100000 + random.nextInt(900000));
 
+        // JWT 토큰 생성
+        String token = jwtUtil.generateEmailVerificationToken(email, Map.of(
+            "code", code,
+            "email_verified", false
+        ));
+
         try {
             // JavaMailSender를 통해 이메일 메시지 생성
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
@@ -76,13 +82,13 @@ public class EmailService {
             // javaMailSender를 통해 이메일 전송
             javaMailSender.send(mimeMessage);
         } catch (MessagingException e) {
-            System.out.println("이메일 발송 실패: " + e.getMessage());
+            throw new RuntimeException("이메일 발송에 실패했습니다.", e);
         }
 
         System.out.println(email + "로 인증코드를 발송했습니다.");
 
-        // 코드 반환
-        return code;
+        // 코드가 포함된 토큰 반환
+        return token;
     }
 
     /**
@@ -91,39 +97,37 @@ public class EmailService {
      * @param code 이메일 인증코드
      * @return 이메일 인증 여부
      */
-    public boolean verifyEmailCode(String email, String code, HttpServletRequest request) {
-        // Authorization 헤더에서 JWT 토큰을 꺼내서 복호화
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return false;
-        }
-        // Authorization 헤더에서 JWT 토큰 추출
-        String emailToken = authHeader.substring(7);
+    public boolean verifyEmailCode(String email, String code, String token) {
 
-        // JWT 검증 후 페이로드에서 이메일, 인증코드, 만료시간 추출
-        if (!jwtUtil.validateToken(emailToken)) {
-            return false;
-        }
+        // 토큰 유효성 검사
+        if (!jwtUtil.validateToken(token)) return false;
 
-        // JWT 토큰에서 클레임 추출
-        Claims claims = jwtUtil.getClaims(emailToken);
-        if (claims == null) {
-            return false;
-        }
+        // 토큰에서 클레임 추출
+        Claims claims = jwtUtil.getClaims(token);
+        if (claims == null) return false;
 
-        // 토큰에서 이메일, 인증코드, 만료시간 추출
+        // 토큰에서 이메일, 인증코드, 만료일 추출
         String tokenEmail = claims.getSubject();
         String tokenCode = claims.get("code", String.class);
+        Boolean emailVerified = claims.get("email_verified", Boolean.class);
         Date expiration = claims.getExpiration();
 
-        // 토큰에서 추출한 이메일, 인증코드, 만료시간과 비교
-        if (!email.equals(tokenEmail)) return false;
-        if (!code.equals(tokenCode)) return false;
-        if (expiration.before(new Date())) return false;
-
-        // 인증 성공 시, 세션에 이메일 인증 완료 표시 저장
-        request.getSession().setAttribute("email_verified_" + tokenEmail, true);
-
-        return true;
+        // 이메일, 인증코드, 만료일 일치 여부 확인
+        return email.equals(tokenEmail)
+            && code.equals(tokenCode)
+            && (emailVerified == null || !emailVerified) // 인증 전이어야 true
+            && expiration.after(new Date());
     }
+
+    /**
+     * 이메일 인증 여부를 나타내는 토큰 생성
+     * @param email 사용자 이메일
+     * @return 생성된 JWT 토큰 문자열
+     */
+    public String createVerifiedEmailToken(String email) {
+        return jwtUtil.generateEmailVerificationToken(email, Map.of(
+            "email_verified", true
+        ));
+    }
+    
 }

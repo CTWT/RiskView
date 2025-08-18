@@ -4,12 +4,16 @@ import realty.domain.model.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
 import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.Cookie;
 import java.util.Date;
+import java.util.Map;
 import java.util.Base64;
 import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 
 /*
  * 수업명 : 가비아 2회차
@@ -70,21 +74,30 @@ public class JwtUtil {
      * @param code 이메일 인증코드
      * @return 생성된 JWT 토큰 문자열
      */
-    public String generateEmailVerificationToken(String email, String code) {
+    public String generateEmailVerificationToken(String email, Map<String, Object> claimsMap) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + emailTokenExpiration * 1000L); // 만료 시간 계산
-    
-        return Jwts.builder()
-                .setSubject(email)                              // 토큰 제목
-                .claim("type", "email_verification") // 토큰 타입: email_verification
-                .claim("code", code)                        // 이메일 인증코드
-                .setIssuedAt(now)                                // 토큰 발급 시간
-                .setExpiration(expiry)                           // 토큰 만료 시간
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256) // 서명 알고리즘 및 키 설정
-                .compact();                                      // 토큰 문자열 생성
+        Date expiry = new Date(now.getTime() + emailTokenExpiration * 1000L);
+
+        // Builder에 기본 설정
+        var builder = Jwts.builder()
+            .setSubject(email)
+            .setIssuedAt(now)
+            .setExpiration(expiry)
+            .signWith(getSigningKey(), SignatureAlgorithm.HS256);
+
+        // Map에 있는 모든 클레임을 builder에 추가
+        if (claimsMap != null) {
+            claimsMap.forEach(builder::claim);
+        }
+
+        return builder.compact();
     }
 
-    // 토큰 유효성 검사
+    /**
+     * 토큰 유효성 검사
+     * @param token JWT 토큰
+     * @return 토큰 유효성 여부
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()
@@ -97,7 +110,33 @@ public class JwtUtil {
         }
     }
 
-    // 토큰에서 Claims 추출
+    /**
+     * 쿠키에서 토큰 추출
+     * @param request HTTP 요청 정보
+     * @param tokenName 찾고자 하는 토큰 이름
+     * @return 추출된 토큰 값
+     */
+    public String extractTokenFromCookies(HttpServletRequest request, String tokenName) {
+        // 요청에 쿠키가 없으면 null 반환
+        if (request.getCookies() == null) return null;
+
+        // 모든 쿠키 순회
+        for (Cookie cookie : request.getCookies()) {
+            // 쿠키에 있는 토큰 이름이 찾고자 하는 토큰 이름과 일치하면
+            if (tokenName.equals(cookie.getName())) {
+                // 해당 쿠키 값(토큰) 반환
+                return cookie.getValue();
+            }
+        }
+        // 찾고자 하는 토큰이 없으면 null 반환
+        return null;
+    }
+
+    /**
+     * 토큰에서 Claims 추출
+     * @param token JWT 토큰
+     * @return 추출된 Claims
+     */
     public Claims getClaims(String token) {
         try {
             return Jwts.parserBuilder()

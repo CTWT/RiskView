@@ -9,11 +9,11 @@ import realty.exception.AccountDeletedException;
 import realty.exception.InvalidCredentialsException;
 import realty.exception.UserNotFoundException;
 import realty.exception.EmailNotVerifiedException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
 
 /*
  * 수업명 : 가비아 2회차
@@ -87,26 +87,14 @@ public class UserService {
     }
     
     /**
-     * 사용자 등록
+     * 회원등록 처리
      * @param userDTO UserDTO 객체
      * @param request HttpServletRequest 객체
      * @throws EmailNotVerifiedException 이메일 인증이 완료되지 않았을 때
      * @throws RuntimeException userSeq가 null일 때
      */
     @Transactional
-    public void signUpUser(UserDTO userDTO, HttpServletRequest request) {
-
-        /**
-         * 이메일 인증 여부 확인
-         * 세션에서 이메일 인증 여부 가져옴
-         * UserDTO 객체에서 사용자 이메일 가져옴
-         */
-        Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("email_verified_" + userDTO.getEmail());
-        // 이메일 인증 여부를 확인할 수 없거나 안 받았으면
-        if (isEmailVerified == null || !isEmailVerified) {
-            throw new EmailNotVerifiedException("이메일 인증이 완료되지 않았습니다.");
-        }
-
+    public void signUpUser(UserDTO userDTO) {
         // UserDTO 객체에 담겨 있는 회원가입 시 입력 정보를 User 객체에 다시 옮겨 담음
         User user = new User();
         user.setUserId(userDTO.getUserId());
@@ -255,16 +243,6 @@ public class UserService {
             throw new UserNotFoundException("입력하신 정보와 일치하는 사용자를 찾을 수 없습니다.");
         }
 
-        // EmailService의 verifyEmailCode 메서드에서 성공 시 "email_verified_" 속성을 세션에 저장
-        Boolean isEmailVerified = (Boolean) request.getSession().getAttribute("email_verified_" + userDTO.getEmail());
-
-        // 이메일 인증 여부를 확인할 수 없거나 인증을 받지 않았으면 오류 처리
-        if (isEmailVerified == null || !isEmailVerified) {
-            throw new EmailNotVerifiedException("이메일 인증을 완료해야 비밀번호를 재설정할 수 있습니다.");
-        }
-
-        // 인증 성공 후 이메일 인증 세션 플래그 제거
-        request.getSession().removeAttribute("email_verified_" + userDTO.getEmail());
         // 찾아낸 사용자 객체 반환
         return foundUser;
     }

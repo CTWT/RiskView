@@ -35,8 +35,10 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
   // 입력된 인증번호 상태
   const [verificationCode, setVerificationCode] = useState("");
-  // 로딩 상태
+  // 이메일 전송 상태
   const [isLoading, setIsLoading] = useState(false);
+  // 이메일 재전송 상태
+  const [isResending, setIsResending] = useState(false);
   // 인증번호 유효 시간 (3분 = 180초)
   const [timeLeft, setTimeLeft] = useState(180);
   // 타이머 만료 여부
@@ -61,33 +63,29 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
       showToast("인증번호를 입력해주세요.", { type: "error" });
       return;
     }
-  
-    console.log("verificationCode:", verificationCode);
-    console.log("userEmail:", userEmail);
-    // 이메일 토큰을 로컬스토리지에서 가져옴
-    const token = localStorage.getItem("emailToken");
-    console.log("emailToken:", token);
-    // 토큰이 없으면
-    if (!token) {
-      showToast("인증 토큰이 없습니다.", { type: "error" });
-      return;
-    }
 
     setIsLoading(true);
   
     try {
       // 인증번호 검증 API 호출
-      const response = await axios.post("/api/verify-email-code", null, {
-        // 유저이메일과 인증번호를 params로 전달
-        params: { code: verificationCode, email: userEmail },
-        // 토큰을 Authorization 헤더에 담아 전달
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.post(
+        "/api/verify-email-code",
+        {
+          // 유저이메일과 인증번호를 params로 전달
+          code: verificationCode,
+          email: userEmail,
+        },
+        {
+          // 쿠키 포함
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json', // JSON 데이터 형식으로 명시
+          },
+        }
+      );
   
-      // 응답에서 메시지와 jwt 토큰 추출
-      const { message, token: jwtToken } = response.data;
-      // jwt 토큰을 로컬스토리지에 저장
-      localStorage.setItem("jwtToken", jwtToken);
+      // 응답에서 메시지 추출
+      const { message } = response.data;
       // 성공 메시지 표시
       showToast(message || "이메일 인증 성공!", { type: "success" });
       // 다음 단계로 이동
@@ -106,21 +104,31 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
   /**
    * 이메일 인증코드 재전송
    */
-  const resendVerificationEmail = async () => {
+  const handleResendCode = async () => {
+    // 이메일 재전송 상태: 전송 중
+    setIsResending(true);
     try {
       setTimeLeft(180);  // 타이머 초기화
       setVerificationCode("");  // 입력 초기화
 
       // 이메일 인증코드 발송 API 호출
-      const response = await axios.post("/api/send-verification-email-code", null, {
-        // 유저이메일을 params로 전달
-        params: { email: userEmail },
-      });
+      const response = await axios.post(
+        "/api/send-verification-email-code",
+        {
+          // JSON 형식으로 유저이메일을 params로 전달
+          email: userEmail,
+        },
+        {
+          // 쿠키 포함
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json', // JSON 데이터 형식으로 명시
+          },
+        }
+      );
 
-      // 응답에서 메시지와 토큰 추출
-      const { message, token } = response.data;
-      // 토큰을 로컬스토리지에 저장
-      localStorage.setItem("emailToken", token);
+      // 응답에서 메시지 추출
+      const { message } = response.data;
       showToast(message || "인증 메일이 다시 전송되었습니다.", { type: "success" });
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -128,6 +136,9 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
       } else {
         showToast("인증 메일 재전송 실패", { type: "error" });
       }
+    } finally {
+      // 이메일 재전송 상태: 전송 중이 아님
+      setIsResending(false);
     }
   };
 
@@ -176,9 +187,10 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
         <button
           type="button"
           className="authResendButton"
-          onClick={resendVerificationEmail}
+          onClick={handleResendCode}
+          disabled={isResending} // 인증 메일 재전송 중이면 버튼 비활성화
         >
-          인증 메일 다시 보내기
+          {isResending ? "인증 메일 재전송 중..." : "인증 메일 재전송"}
         </button>
 
       </div>

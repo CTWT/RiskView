@@ -32,6 +32,9 @@ interface ApiResponse {
   message: string;
 }
 
+// 아이디 규칙: 영문 소문자/숫자/._- 조합 4~20자 (필요시 수정)
+const userIdRegex = /^[a-z0-9._-]{4,20}$/;
+
 /**
  * 회원정보 입력 컴포넌트 (비밀번호 및 닉네임 설정)
  * 사용자의 비밀번호와 닉네임을 입력받아 유효성 검사 수행,
@@ -46,8 +49,6 @@ interface ApiResponse {
 const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
   // useToast 훅 사용
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
-  // 아이디 규칙: 영문 소문자/숫자/._- 조합 4~20자 (필요시 수정)
-  const userIdRegex = /^[a-z0-9._-]{4,20}$/;
   // 아이디 중복 확인 중 여부 및 중단 제어
   const [isCheckingUserId, setIsCheckingUserId] = useState(false);
   const userIdAbortRef = useRef<AbortController | null>(null);
@@ -131,9 +132,14 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
         showToast((data && data.message) || "아이디 확인 중 오류가 발생했습니다.", { type: "error" });
         return false;
       }
-    } catch (error: any) {
-      if (error?.name === 'AbortError') {
-        // 입력 도중 이전 요청이 취소된 경우
+    } catch (error) {
+      if (
+        typeof error === 'object' && // 오류가 객체인지 확인
+        error !== null && // null이 아닌지 확인
+        'name' in error && // name 속성이 있는지 확인
+        (error as { name?: string }).name === 'AbortError' // AbortError인지 확인
+      ) {
+        // 요청 중단된 경우 조용히 무시
         return false;
       }
       setIsUserIdValid(false);

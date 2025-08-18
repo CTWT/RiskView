@@ -59,7 +59,12 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
    */
   const checkEmailDuplicate = async (email: string): Promise<boolean> => {
     try {
-      const response = await axios.get(`/api/user/check-email/${encodeURIComponent(email)}`);
+      const response = await axios.get(
+        `/api/user/check-email/${encodeURIComponent(email)}`,
+        {
+          withCredentials: true,
+        }
+      );
       return response.data.available; // true: 사용 가능, false: 중복
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -107,16 +112,23 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
       }
 
       // 백엔드에 이메일 인증코드 발송 요청
-      const response = await axios.post("/api/send-verification-email-code", null, {
-        // 입력한 이메일 주소를 파라미터로 전달
-        params: { email: cleanedEmail }
+      const response = await axios.post(
+        "/api/send-verification-email-code",
+      {
+        // JSON 형식으로 입력한 이메일 주소 전달
+        email: cleanedEmail,
+      },
+      {
+        // 쿠키 포함
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json', // JSON 데이터 형식으로 명시
+        },
       });
       // 성공 응답이 왔다면
       if (response.status === 200) {
-        // 응답 메시지에서 메시지랑 토큰을 추출
-        const { message, token } = response.data;
-        // 토큰을 localStorage에 저장
-        localStorage.setItem("emailToken", token);
+        // 응답 메시지에서 메시지 추출
+        const { message } = response.data;
         // 성공 메시지 표시
         showToast(message || "인증 메일이 전송되었습니다!", { type: "success" });
         // 입력한 이메일 주소를 가지고 다음 단계로 이동

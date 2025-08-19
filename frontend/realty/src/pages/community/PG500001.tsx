@@ -8,6 +8,7 @@ import PG500011 from "./PG500011";
 import PG500021 from "./announcements/PG500021";
 import PG500031 from "./legalDictionary/PG500031";
 import PG500041 from "./board/PG500041";
+import PG500042 from "./board/PG500042";
 
 /**
  * @file PG500001.tsx
@@ -31,7 +32,8 @@ const PG500001 = () => {
             <Route index element={<PG500011 />} />
             <Route path="PG500021/*" element={<PG500021 />} />
             <Route path="PG500031/*" element={<PG500031 />} />
-            <Route path="PG500041/*" element={<PG500041 />} />
+            <Route path="PG500041/" element={<PG500041 />} />
+            <Route path="PG500041/PG500042" element={<PG500042 />} />
         </Routes>
     );
 };

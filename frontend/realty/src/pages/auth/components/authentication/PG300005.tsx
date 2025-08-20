@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
+import { FiChevronLeft } from "react-icons/fi";
 import "../../../../styles/common/common.css";
 import axios from "axios";
 
@@ -17,6 +18,7 @@ import axios from "axios";
 
 interface PG300005Props {
   onNext: () => void;
+  onBackToEmail: () => void;
   userEmail: string; // 부모 컴포넌트에서 전달받은 이메일
 }
 
@@ -30,7 +32,7 @@ interface PG300005Props {
  * @param props.userEmail - 인증 메일이 전송된 사용자의 이메일 주소
  * @returns JSX.Element - 인증번호 입력 폼과 타이머가 포함된 UI 컴포넌트
  */
-const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
+const PG300005: React.FC<PG300005Props> = ({ onNext, onBackToEmail, userEmail }) => {
   // useToast 훅 사용
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
   // 입력된 인증번호 상태
@@ -143,9 +145,19 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
   };
 
 
+  // 뒤로가기 핸들러
+  const handleBack = () => {
+    onBackToEmail();
+  };
+
   return (
     <div className="authWrapper">
       <div className="authContainer">
+        {/* 뒤로가기 버튼 */}
+        <p onClick={handleBack} className="backTo">
+          <FiChevronLeft />
+          뒤로가기
+        </p>
         {/* 서비스 로고 및 제목 */}
         <h1 className="authlogo">Risk-View</h1>
         <p className="authSubtitle">Team. Debugging Monster</p>
@@ -162,7 +174,7 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
             placeholder="인증번호"
             value={verificationCode}
             onChange={(e) => setVerificationCode(e.target.value)}
-            disabled={isExpired} // 시간 만료 시 입력 비활성화
+            readOnly={isResending}
           />
 
           {/* 남은 시간 표시 */}
@@ -188,11 +200,13 @@ const PG300005: React.FC<PG300005Props> = ({ onNext, userEmail }) => {
           type="button"
           className="authResendButton"
           onClick={handleResendCode}
-          disabled={isResending} // 인증 메일 재전송 중이면 버튼 비활성화
+          disabled={isResending}
+          style={{ pointerEvents: isResending ? "none" : "auto" }}
         >
-          {isResending ? "인증 메일 재전송 중..." : "인증 메일 재전송"}
+          <span>
+            {isResending ? "인증 메일 재전송 중..." : "인증 메일 재전송"}
+          </span>
         </button>
-
       </div>
       <Toast
         message={toast.message}

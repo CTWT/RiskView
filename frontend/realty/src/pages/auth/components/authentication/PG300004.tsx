@@ -133,6 +133,7 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
         showToast(message || "인증 메일이 전송되었습니다!", { type: "success" });
         // 입력한 이메일 주소를 가지고 다음 단계로 이동
         onNext(cleanedEmail);
+        window.dispatchEvent(new Event("resetTimer"));
       }
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -166,7 +167,7 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
             placeholder="이메일"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading} // 인증메일 전송 중이면 입력 비활성화
+            readOnly={isLoading} // 입력은 제한하지만 클릭은 허용
           />
         </div>
 

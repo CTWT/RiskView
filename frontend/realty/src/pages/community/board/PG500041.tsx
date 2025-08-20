@@ -121,7 +121,7 @@ return (
           자료실
         </Link>
         <Link to="/community/board/support" className="tab-item">
-          지원이슈
+          지역이슈
         </Link>
       </div>
 

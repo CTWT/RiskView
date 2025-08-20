@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast"; // useToast 훅 import
+import { FiCheck, FiChevronLeft } from "react-icons/fi";
 import "../../../../styles/common/common.css";
 
 // Signup_AdditionalInfoPage: 추가 개인정보 입력 페이지
@@ -24,6 +25,7 @@ import "../../../../styles/common/common.css";
 // Props 타입 정의
 interface PG300007Props {
   onLogin: () => void; // 로그인 페이지로 이동하는 콜백 함수
+  onBackToPrev: () => void; // 이전 단계로 이동하는 콜백 함수
   signupData: {
     userId: string;
     password: string;
@@ -51,21 +53,22 @@ interface UserAdditionalInfo {
  * 
  * @param props - 컴포넌트 props
  * @param props.onLogin - 회원가입 완료 후 로그인 페이지로 이동하는 콜백 함수
+ * @param props.onBackToPrev - 이전 단계로 이동하는 콜백 함수
  * @returns JSX.Element - 추가 개인정보 입력 폼 UI
  */
-const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
+const PG300007: React.FC<PG300007Props> = ({ onLogin, onBackToPrev, signupData }) => {
   // useToast 훅 사용
   const { toast, showToast } = useToast(); // toast 상태도 가져오기
 
   // 사용자 추가 정보 상태 관리
   const [userInfo, setUserInfo] = useState<UserAdditionalInfo>({
-    name: '',
-    birthYear: '',
-    birthMonth: '',
-    birthDay: '',
-    gender: '',
-    nationality: '',
-    language: ''
+    name: "",
+    birthYear: "",
+    birthMonth: "",
+    birthDay: "",
+    gender: "",
+    nationality: "",
+    language: "",
   });
 
   // 드롭다운 상태 관리
@@ -76,10 +79,10 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
 
   // 언어 옵션 배열
   const languageOptions = [
-    { value: 'KO', label: '한국어' },
-    { value: 'EN', label: 'English' },
-    { value: 'ZH', label: '中文' },
-    { value: 'JP', label: '日本語' }
+    { value: "KO", label: "한국어" },
+    { value: "EN", label: "English" },
+    { value: "ZH", label: "中文" },
+    { value: "JP", label: "日本語" },
   ];
 
   /**
@@ -120,17 +123,20 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
    * @param field - 변경할 필드명
    * @param value - 새로운 값
    */
-  const handleInputChange = (field: keyof UserAdditionalInfo, value: string) => {
-    setUserInfo(prev => ({
+  const handleInputChange = (
+    field: keyof UserAdditionalInfo,
+    value: string
+  ) => {
+    setUserInfo((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
-    
+
     // 에러 상태에서 해당 필드 제거
     if (errors[field]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [field]: ''
+        [field]: "",
       }));
     }
   };
@@ -141,7 +147,10 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
    * @param field - 변경할 필드 ('gender' 또는 'nationality')
    * @param value - 선택된 값
    */
-  const handleToggleClick = (field: 'gender' | 'nationality', value: string) => {
+  const handleToggleClick = (
+    field: "gender" | "nationality",
+    value: string
+  ) => {
     handleInputChange(field, value);
   };
 
@@ -159,7 +168,7 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
    * @param language - 선택된 언어
    */
   const handleLanguageSelect = (language: string) => {
-    handleInputChange('language', language);
+    handleInputChange("language", language);
     setIsLanguageDropdownOpen(false);
   };
 
@@ -169,37 +178,44 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
    * @returns boolean - 유효성 검사 통과 여부
    */
   const validateForm = (): boolean => {
+    const nameRegex = /^[a-zA-Z가-힣\s'-]{2,30}$/;
     // 순서대로 검사하여 첫 번째 빈 필드에서 토스트 표시 후 종료
     if (!userInfo.name.trim()) {
       showToast("이름을 입력해주세요.", { type: "error", duration: 3000 });
       return false;
+    } else if (!nameRegex.test(userInfo.name.trim())) {
+      showToast("이름은 한글 또는 영문으로 2~30자 이내로 입력해주세요.", {
+        type: "error",
+        duration: 3000,
+      });
+      return false;
     }
-    
+
     if (!userInfo.birthYear) {
       showToast("출생년도를 선택해주세요.", { type: "error", duration: 3000 });
       return false;
     }
-    
+
     if (!userInfo.birthMonth) {
       showToast("출생월을 선택해주세요.", { type: "error", duration: 3000 });
       return false;
     }
-    
+
     if (!userInfo.birthDay) {
       showToast("출생일을 선택해주세요.", { type: "error", duration: 3000 });
       return false;
     }
-    
+
     if (!userInfo.gender) {
       showToast("성별을 선택해주세요.", { type: "error", duration: 3000 });
       return false;
     }
-    
+
     if (!userInfo.nationality) {
       showToast("국적을 선택해주세요.", { type: "error", duration: 3000 });
       return false;
     }
-    
+
     if (!userInfo.language) {
       showToast("언어를 선택해주세요.", { type: "error", duration: 3000 });
       return false;
@@ -240,10 +256,10 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
 
     try {
       // 회원가입 API 호출
-      const response = await fetch('/api/user/signup', {
-        method: 'POST',
+      const response = await fetch("/api/user/signup", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         // JSON 객체를 직접 body에 담아 보냄
         body: JSON.stringify(finalSignupData),
@@ -251,28 +267,27 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Registration failed:', errorText);
-        showToast('회원가입 처리 중 오류가 발생했습니다.', { type: 'error' });
+        console.error("Registration failed:", errorText);
+        showToast("회원가입 처리 중 오류가 발생했습니다.", { type: "error" });
         return;
       }
 
-      showToast('회원가입이 완료되었습니다!', { 
-        type: 'success', 
-        duration: 2000 
+      showToast("회원가입이 완료되었습니다!", {
+        type: "success",
+        duration: 2000,
       });
 
       // 로그인 페이지로 이동 (토스트 메시지 표시 후 약간의 지연)
       setTimeout(() => {
-        if (typeof onLogin === 'function') {
+        if (typeof onLogin === "function") {
           onLogin();
         }
       }, 1000);
-
     } catch (error) {
-      console.error('회원가입 완료 처리 오류:', error);
-      showToast('회원가입 처리 중 오류가 발생했습니다. 다시 시도해주세요.', { 
-        type: 'error', 
-        duration: 4000 
+      console.error("회원가입 완료 처리 오류:", error);
+      showToast("회원가입 처리 중 오류가 발생했습니다. 다시 시도해주세요.", {
+        type: "error",
+        duration: 4000,
       });
     }
   };
@@ -284,21 +299,45 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
    */
   const handleOutsideClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!target.closest('.dropdown-wrapper')) {
+    if (!target.closest(".dropdown-wrapper")) {
       setIsLanguageDropdownOpen(false);
     }
+  };
+
+  // 뒤로가기 핸들러
+  const handleBack = () => {
+    onBackToPrev();
   };
 
   return (
     <div className="user-info-container" onClick={handleOutsideClick}>
       {/* 로고 및 헤더 */}
       <div className="header-authContainer">
+        {/* 뒤로가기 버튼 */}
+        <p onClick={handleBack} className="backTo">
+          <FiChevronLeft />
+          뒤로가기
+        </p>
         <h1 className="authlogo">Risk-View</h1>
         <p className="authSubtitle">Team. Debugging Monster</p>
       </div>
 
       {/* 페이지 제목 */}
       <h2 className="page-authwelcome">사용자 정보 입력</h2>
+
+      {/* 단계 표시 아이콘 */}
+      <div className="progressContainer">
+        {/* 1단계 완료 아이콘 */}
+        <div className="progressCompleted">
+          <FiCheck />
+        </div>
+
+        {/* 연결선 */}
+        <div className="progressConnector"></div>
+
+        {/* 2단계 완료 아이콘 */}
+        <div className="progressCompleted">2</div>
+      </div>
 
       {/* 입력 폼 */}
       <form
@@ -440,7 +479,9 @@ const PG300007: React.FC<PG300007Props> = ({ onLogin, signupData }) => {
               aria-haspopup="listbox"
             >
               <span className="dropdown-text">
-                {languageOptions.find(option => option.value === userInfo.language)?.label || "언어"}
+                {languageOptions.find(
+                  (option) => option.value === userInfo.language
+                )?.label || "언어"}
               </span>
               <div
                 className={`dropdown-arrow ${

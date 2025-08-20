@@ -361,6 +361,18 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
         <p className="authSubtitle">Team. Debugging Monster</p>
         <p className="authwelcome">사용자 정보 입력</p>
 
+        {/* 단계 표시 아이콘 */}
+        <div className="progressContainer">
+          {/* 완료 아이콘 */}
+          <div className="progressCompleted">1</div>
+
+          {/* 연결선 */}
+          <div className="progressConnector"></div>
+
+          {/* 완료 전 아이콘 */}
+          <div className="progressBefore">2</div>
+        </div>
+
         {/* 회원정보 입력 폼 */}
         <form className="authForm" onSubmit={handleSubmit}>
           {/* 이메일 필드 (읽기 전용) */}

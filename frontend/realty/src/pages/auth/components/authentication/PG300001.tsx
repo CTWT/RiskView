@@ -201,7 +201,11 @@ const PG300001: React.FC = () => {
 
       {/* 회원가입 3단계 - 인증번호 확인 */}
       {authStep === 3 && (
-        <PG300005 onNext={goToNextStep} userEmail={userEmail} />
+        <PG300005 
+          onNext={goToNextStep} 
+          onBackToEmail={() => setAuthStep(2)} 
+          userEmail={userEmail} 
+        />
       )}
 
       {/* 회원가입 4단계 - 회원정보 입력 (비밀번호, 닉네임) */}
@@ -214,7 +218,13 @@ const PG300001: React.FC = () => {
       )}
 
       {/* 회원가입 5단계 - 추가정보 입력 */}
-      {authStep === 5 && <PG300007 onLogin={goToLogin} signupData={signupData} />}
+      {authStep === 5 && (
+        <PG300007 
+          onLogin={goToLogin} 
+          onBackToPrev={() => setAuthStep(4)} 
+          signupData={signupData} 
+        />
+      )}
 
       {/* 아이디 찾기 */}
       {authStep === -1 && (

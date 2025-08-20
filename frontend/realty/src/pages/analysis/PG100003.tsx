@@ -36,7 +36,7 @@ interface PG100003Props {
     scannedFile: string; // 업로드된 파일명
     ocrData: OcrDataType; // OCR 분석 결과 데이터
     uploadedFilePreview: string | null; // 파일 미리보기 이미지 URL
-    onAnalysisComplete?: (result: OcrDataType) => void; // 분석 완료 콜백
+    onAnalysisComplete?: (result: string) => void; // 분석 완료 콜백
     onBackToPreviousPhase?: () => void; // 이전 단계로 돌아가는 콜백
 }
 
@@ -204,8 +204,9 @@ const PG100003: React.FC<PG100003Props> = ({
             alert("계약 정보가 정상적으로 전송되었습니다.");
 
             if (onAnalysisComplete) {
-                onAnalysisComplete(currentOcrData);
+                 onAnalysisComplete(response.data); // documentCode 전달
             }
+
         } catch (error) {
             console.error("전송 실패", error);
             alert("서버 전송 중 오류가 발생했습니다.");

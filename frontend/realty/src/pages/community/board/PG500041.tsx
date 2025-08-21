@@ -1,9 +1,7 @@
-// src/pages/community/board/PG500041.tsx
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
-import CommonContainerHeader from "../../../components/ui/CommonContainerHeader";
+import ChatToggleButton from "../../../components/chat/ChatToggleButton";
 
 /**
  * @file PG500021.tsx
@@ -103,6 +101,7 @@ const [period, setPeriod] = useState<string>("전체 기간");
 const [category, setCategory] = useState<string>("제목");
 const [searchQuery, setSearchQuery] = useState<string>("");
 const [isOpen, setIsOpen] = useState(false);
+const [isChatOpen, setIsChatOpen] = useState(false);
 
 const handleSearch = () => {
     console.log("검색:", searchQuery);
@@ -202,7 +201,6 @@ return (
           </div>
         </div>
       </div>
-
       {/* 게시물 목록 */}
       <section className="board-list">
         {MOCK_POSTS.map((post) => (
@@ -255,6 +253,7 @@ return (
         ))}
       </section>
     </div>
+    <ChatToggleButton isOpen={isChatOpen} setIsOpen={setIsChatOpen} />
   </PageContainer>
 );
 };

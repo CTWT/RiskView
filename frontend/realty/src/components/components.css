@@ -311,6 +311,15 @@
     font-weight: 700;
 }
 
+
+/*
+ * 생성자 : 이주하
+ * 생성일 : 25.07.30
+ * 파일명 : components.css
+ * 수정자 :
+ * 수정일 :
+ * 설명 : 컴포넌트 css 담당 파일
+ */
 /* pageContainer - 공통 컨테이너 담당 스타일*/
 .pageContainer {
     width: 100%;
@@ -327,3 +336,64 @@
     overflow: visible;
 }
 
+/* ChatToggleButton.tsx */
+.chat-toggle-top {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2100;
+}
+
+@media (max-width: 768px) {
+    .chat-toggle-top {
+        bottom: 16px;
+        right: 16px;
+    }
+
+    .chat-toggle-button {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+    }
+}
+
+.chat-toggle-button {
+    background-color: #b2a1ff;
+    color: white;
+    font-size: 20px;
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.chat-panel {
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    width: 320px;
+    height: 400px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background-color: #b2a1ff;
+    color: white;
+    padding: 12px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    font-weight: bold;
+}
+
+.chat-body {
+    flex: 1;
+    padding: 12px;
+    overflow-y: auto;
+}

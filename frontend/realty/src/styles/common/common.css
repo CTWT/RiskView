@@ -1151,7 +1151,6 @@
 }
 
 /* PG500031 - 커뮤니티 사전 담당 스타일*/
-/* 페이지 폭 살짝 넓게 */
 /* 공통 폭 변수 */
 
 /* 페이지 전용 공통 폭 */
@@ -1270,6 +1269,243 @@
 @media (max-width: 768px) {
     .co31-chip-wrap {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* ChatWidget - 챗봇 담당 스타일*/
+
+/* ───────── 토글 버튼: 우하단 플로팅 ───────── */
+.chat-toggle-top {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 1000; /* 패널보다 1 낮게 */
+}
+.chat-toggle-button {
+    width: 56px;
+    height: 56px;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(135deg, #7b68ee, #6aa6ff);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.22);
+}
+
+/* ───────── 도킹 패널 컨테이너 + 테마 변수(스코프 한정) ───────── */
+.chatpanel {
+    /* 테마 변수: 이 블록 내부에서만 사용됨(:root X) */
+    --bg: #ffffff;
+    --border: #e7e9f2;
+    --accent: #7b68ee;
+    --shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+    --bubble-user: #e8f1ff;
+    --bubble-user-border: #cfe0ff;
+    --bubble-assistant: #ffffff;
+
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 350px;
+    height: 600px;
+    max-width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    z-index: 2200; /* 토글 버튼 위로 */
+    box-shadow: var(--shadow);
+    animation: chatpanel-in 0.18s ease-out;
+}
+
+@keyframes chatpanel-in {
+    from {
+        transform: translateY(12px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .chatpanel {
+        animation: none;
+    }
+}
+
+/* ───────── 헤더 ───────── */
+.chatpanel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+}
+.chatpanel-title {
+    font-weight: 900;
+    font-size: 15px;
+}
+.chatpanel-close {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font-size: 20px;
+    cursor: pointer;
+}
+.chatpanel-close:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+/* ───────── 본문 래퍼 ───────── */
+.chatpanel-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 8px;
+    min-height: 0;
+}
+
+/* 메시지 스크롤 영역 */
+.chatpanel-messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 2px; /* 스크롤바 여백 */
+    min-height: 0; /* flex 아이템 스크롤 이슈 방지 */
+    overflow-y: auto;
+}
+
+/* ───────── 메시지 한 줄 ───────── */
+.row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+.row.left {
+    justify-content: flex-start;
+}
+.row.right {
+    justify-content: flex-end;
+}
+
+.avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: #eef2ff;
+    border: 1px solid var(--border);
+    color: #5b6bff;
+}
+
+/* ───────── 말풍선 ───────── */
+.bubble {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.bubble.user {
+    background: var(--bubble-user);
+    border-color: var(--bubble-user-border);
+}
+.bubble.assistant {
+    background: var(--bubble-assistant);
+}
+
+/* ───────── 퀵 칩 ───────── */
+.chatpanel-quickbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 2px;
+}
+.chip {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 999px;
+    padding: 6px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 0.12s ease;
+}
+.chip:hover {
+    transform: translateY(-1px);
+}
+.chip-primary {
+    background: #ffe8f1;
+    border-color: #ffc6d9;
+}
+.chip-secondary {
+    background: #efe8ff;
+    border-color: #d8c9ff;
+}
+
+/* ───────── 입력 영역(컴포저) ───────── */
+.chatpanel-composer {
+    border-top: 1px solid var(--border);
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+}
+.chatpanel-input {
+    flex: 1;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    padding: 0 12px;
+    outline: none;
+}
+.chatpanel-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+.chatpanel-send {
+    min-width: 76px;
+    height: 38px;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-weight: 800;
+    background: var(--accent);
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(123, 104, 238, 0.35);
+}
+.chatpanel-send:hover {
+    filter: brightness(0.97);
+}
+.chatpanel-send:active {
+    transform: translateY(1px);
+}
+
+/* ───────── 반응형 ───────── */
+@media (max-width: 600px) {
+    .chatpanel {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        height: calc(100vh - 24px);
+        border-radius: 12px;
+    }
+    .chat-toggle-top {
+        right: 12px;
+        bottom: 12px;
     }
 }
 
@@ -2934,7 +3170,7 @@
 /* PG500041.tsx */
 /* 자유게시판 스타일 - 이미지와 완전히 동일하게 */
 
-.post-container{
+.post-container {
     max-width: 100%;
     width: 100%;
     padding: 0 32px;
@@ -2960,12 +3196,12 @@
 }
 
 .tab-item:hover {
-    color: #6D50FF;
+    color: #6d50ff;
 }
 
 .tab-item.active {
-    color: #6D50FF;
-    border-bottom-color: #6D50FF;
+    color: #6d50ff;
+    border-bottom-color: #6d50ff;
     font-weight: 600;
 }
 
@@ -3075,7 +3311,7 @@
 }
 
 .search-input {
-flex: 1;
+    flex: 1;
     border: none;
     font-size: 0.875rem;
     color: #374151;
@@ -3089,12 +3325,12 @@ flex: 1;
 }
 
 .search-input:focus {
-outline: none;
+    outline: none;
     box-shadow: none;
 }
 
 .search-btn {
-padding: 0.5rem 1rem;
+    padding: 0.5rem 1rem;
     background: #b2a1ff;
     color: white;
     border: none;
@@ -3108,7 +3344,7 @@ padding: 0.5rem 1rem;
 }
 
 .search-btn:hover {
-background: #6d50ff;
+    background: #6d50ff;
 }
 
 /* 게시물 목록 - 완전히 동일한 레이아웃 */
@@ -3170,17 +3406,17 @@ background: #6d50ff;
 
 .board-badge-인기 {
     background: rgba(255, 61, 61, 0.17);
-    color: #BB3D3D;
+    color: #bb3d3d;
 }
 
 .board-badge-정보 {
     background: rgba(61, 113, 255, 0.34);
-    color: #3D71FF;
+    color: #3d71ff;
 }
 
 .board-badge-질문 {
     background: rgba(10, 202, 138, 0.33);
-    color: #0ACA8A;
+    color: #0aca8a;
 }
 
 .board-item-title {
@@ -3297,7 +3533,7 @@ background: #6d50ff;
 }
 
 .like-btn.liked {
-    color: #7A5AF8;
+    color: #7a5af8;
 }
 
 .post-stats {
@@ -3322,7 +3558,7 @@ background: #6d50ff;
 
 .emotion-divider {
     border: none;
-    border-bottom: 0.5px solid #6D50FF;
+    border-bottom: 0.5px solid #6d50ff;
     margin: 12px 0;
 }
 
@@ -3377,7 +3613,7 @@ background: #6d50ff;
 .score-fill {
     height: 6px;
     border-radius: 4px;
-    background-color: #7A5AF8;
+    background-color: #7a5af8;
 }
 
 .score-fill.positive {
@@ -3455,7 +3691,7 @@ background: #6d50ff;
 .comment-submit-btn {
     align-self: flex-end;
     padding: 10px 20px;
-    background-color: #A290FF;
+    background-color: #a290ff;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -3524,7 +3760,7 @@ background: #6d50ff;
 
 .sentiment-bar-fill {
     height: 100%;
-    background-color: #6D50FF;
+    background-color: #6d50ff;
     border-radius: 5px;
 }
 
@@ -3532,4 +3768,3 @@ background: #6d50ff;
     font-size: 13px;
     color: #5f4dee;
 }
-

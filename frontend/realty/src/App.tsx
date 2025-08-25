@@ -7,12 +7,19 @@ import PG300001 from "./pages/auth/components/authentication/PG300001";
 import PG400001 from "./pages/news/PG400001";
 import PG500001 from "./pages/community/PG500001";
 import PG600001 from "./pages/serviceIntro/PG600001";
+
+import { ChatProvider } from "./components/chat/ChatProvider";
+import ChatWidget from "./components/chat/ChatWidget";
+import ChatToggleButtonConnected from "./components/chat/ChatToggleButtonConnected";
+
 import "./App.css";
 
 function App() {
     // prettier-ignore
     return (
     <AuthProvider>
+      <ChatProvider>
+
       <BrowserRouter>
         <Routes>
           {/* 인증 페이지는 Layout 없이 독립적으로 렌더링 */}
@@ -23,6 +30,8 @@ function App() {
             path="/*"
             element={
               <Layout>
+                <ChatToggleButtonConnected />
+
                 <Routes>
                   <Route path="/" element={<PG200001 />} /> {/* 메인페이지 */}
                   <Route path="/PG100001" element={<PG100001 />} />{" "}
@@ -36,9 +45,11 @@ function App() {
                 </Routes>
               </Layout>
             }
-          />
+            />
         </Routes>
       </BrowserRouter>
+       <ChatWidget />
+      </ChatProvider>
     </AuthProvider>
   );
 }

@@ -14,6 +14,15 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 김관호
+ * 작성자 : 김관호
+ * 수정자 : 
+ * 작성일 : 25.08.25
+ * 파일명 : LawKeyword.java
+ */
+
 @Entity
 @Table(name = "law_keywords")
 @Getter

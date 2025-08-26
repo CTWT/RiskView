@@ -1,8 +1,5 @@
 package realty.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +11,20 @@ import realty.domain.model.LawKeyword;
 import realty.domain.model.LawReference;
 import realty.domain.repository.LawKeywordRepository;
 import realty.domain.repository.LawReferenceRepository;
+
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 김관호
+ * 작성자 : 김관호
+ * 수정자 : 
+ * 작성일 : 25.08.25
+ * 파일명 : LawKeywordService.java
+ */
+
+/**
+ * 법용어키워드 서비스
+ */
+
 @Service
 @RequiredArgsConstructor
 public class LawKeywordService {

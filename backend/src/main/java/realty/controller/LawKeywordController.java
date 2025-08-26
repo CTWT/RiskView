@@ -12,12 +12,28 @@ import lombok.RequiredArgsConstructor;
 import realty.domain.dto.LawKeywordDTO;
 import realty.service.LawKeywordService;
 
+/*
+ * 수업명 : 가비아 2회차
+ * 이름 : 김관호
+ * 작성자 : 김관호
+ * 수정자 : 
+ * 작성일 : 25.08.25
+ * 파일명 : LawKeywordController.java
+ */
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/lawKeyword")
 public class LawKeywordController {
     private final LawKeywordService lawKeywordService;
-
+    
+    /**
+     * 
+     * @param page 현재 페이지
+     * @param size 표시할 용어 개수
+     * @param category 용어 카테고리
+     * @return
+     */
     @GetMapping("/keywords")
     public Page<LawKeywordDTO> getKeywords(
             @RequestParam int page,

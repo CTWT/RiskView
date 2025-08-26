@@ -154,57 +154,67 @@ const PG500031: React.FC = () => {
             ))}
         </div>
 
-          <div className="pagination-container">
-            {/* 첫 페이지 */}
-            <button
-                className="pagination-button"
-                disabled={page === 0}
-                onClick={() => setPage(0)}
-            >
-                &laquo;
-            </button>
+        <div className="pagination-container">
+          {/* 첫 페이지 */}
+          <button
+            className="pagination-button"
+            disabled={page === 0}
+            onClick={() => setPage(0)}
+          >
+            &laquo;
+          </button>
 
-            {/* 이전 페이지 */}
-            <button
-                className="pagination-button"
-                disabled={page === 0}
-                onClick={() => setPage(page - 1)}
-            >
-                &lt;
-            </button>
+          {/* 이전 페이지 */}
+          <button
+            className="pagination-button"
+            disabled={page === 0}
+            onClick={() => setPage(page - 1)}
+          >
+            &lt;
+          </button>
 
-            {/* 숫자 페이지 버튼 */}
-            {Array.from({ length: totalPages }, (_, idx) => {
-                // 한 번에 5~7개 정도만 표시하고 싶으면 start/end 계산 가능
-                return (
+          {/* 숫자 페이지 버튼 (5개 단위로 묶음) */}
+          {(() => {
+            const groupSize = 5; // 한 번에 보여줄 페이지 수
+            const currentGroup = Math.floor(page / groupSize);
+            const start = currentGroup * groupSize;
+            const end = Math.min(start + groupSize, totalPages);
+
+            return Array.from({ length: end - start }, (_, idx) => {
+              const pageIndex = start + idx;
+              return (
                 <button
-                    key={idx}
-                    className={`pagination-button ${page === idx ? "active" : ""}`}
-                    onClick={() => setPage(idx)}
+                  key={pageIndex}
+                  className={`pagination-button ${
+                    page === pageIndex ? "active" : ""
+                  }`}
+                  onClick={() => setPage(pageIndex)}
                 >
-                    {idx + 1}
+                  {pageIndex + 1}
                 </button>
-                );
-            })}
+              );
+            });
+          })()}
 
-            {/* 다음 페이지 */}
-            <button
-                className="pagination-button"
-                disabled={page === totalPages - 1}
-                onClick={() => setPage(page + 1)}
-            >
-                &gt;
-            </button>
+          {/* 다음 페이지 */}
+          <button
+            className="pagination-button"
+            disabled={page === totalPages - 1}
+            onClick={() => setPage(page + 1)}
+          >
+            &gt;
+          </button>
 
-            {/* 마지막 페이지 */}
-            <button
-                className="pagination-button"
-                disabled={page === totalPages - 1}
-                onClick={() => setPage(totalPages - 1)}
-            >
-                &raquo;
-            </button>
-            </div>
+          {/* 마지막 페이지 */}
+          <button
+            className="pagination-button"
+            disabled={page === totalPages - 1}
+            onClick={() => setPage(totalPages - 1)}
+          >
+            &raquo;
+          </button>
+        </div>
+
         </div>
       </div>
     </PageContainer>

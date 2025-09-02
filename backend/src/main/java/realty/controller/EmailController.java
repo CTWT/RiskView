@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api")
 public class EmailController {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmailController.class);
 
     @Autowired
     private EmailService emailService;
@@ -52,10 +56,12 @@ public class EmailController {
 
         // 페이로드에서 이메일 추출
         String email = payload.get("email");
+        logger.info("API 요청 수신: 이메일 인증코드 발송. 수신자 이메일: {}", email);
 
         try {
             // 이메일 인증코드 발송
             String emailToken = emailService.sendVerificationEmailCode(email);
+            logger.debug("EmailService로부터 이메일 토큰 수신 완료.");
 
             // HttpOnly 쿠키로 저장
             Cookie cookie = new Cookie("emailToken", emailToken);
@@ -68,13 +74,16 @@ public class EmailController {
             response.addCookie(cookie);
 
             // 메시지와 함께 OK 응답 반환
+            logger.info("이메일 인증코드 발송 성공. 수신자: {}", email);
             return ResponseEntity.ok(Map.of(
                 "message", email + "로 인증코드를 발송했습니다."
             ));
         } catch (IllegalArgumentException e) {
+            logger.warn("잘못된 요청으로 인증코드 발송 실패. 수신자: {}, 원인: {}", email, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+            logger.error("서버 내부 오류로 인증코드 발송 실패. 수신자: {}", email, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이메일 발송 중 오류가 발생했습니다.");
         }
     }
 
@@ -93,18 +102,22 @@ public class EmailController {
         // 페이로드에서 이메일, 인증코드 추출
         String email = payload.get("email");
         String code = payload.get("code");
+        logger.info("API 요청 수신: 이메일 인증코드 확인. 이메일: {}", email);
 
         // 쿠키에서 토큰 추출
         String token = jwtUtil.extractTokenFromCookies(request, "emailToken");
 
         // 토큰이 없으면
         if (token == null) {
+            logger.debug("쿠키에 emailToken이 없어 헤더에서 Bearer 토큰 추출 시도.");
             // 헤더에서 토큰 추출
             String authHeader = request.getHeader("Authorization");
             // 토큰이 있으면
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 token = authHeader.substring(7); // 토큰 부분만 추출
+                logger.debug("헤더에서 Bearer 토큰 추출 성공.");
             } else {
+                logger.warn("인증 토큰을 찾을 수 없음 (쿠키 및 헤더). 이메일: {}", email);
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("인증 토큰이 없습니다.");
             }
         }
@@ -113,6 +126,7 @@ public class EmailController {
         boolean isVerified = emailService.verifyEmailCode(email, code, token);
         // 인증 성공 시
         if (isVerified) {
+            logger.info("이메일 인증 성공. 이메일: {}", email);
             // 인증된 이메일 토큰 생성
             String verifiedToken = emailService.createVerifiedEmailToken(email);
             // HttpOnly 쿠키로 저장
@@ -123,10 +137,12 @@ public class EmailController {
             verifiedCookie.setMaxAge(emailTokenExpiration);
             // 응답에 쿠키 추가
             response.addCookie(verifiedCookie);
+            logger.debug("인증 완료된 emailToken을 쿠키에 저장.");
             // 메시지와 함께 성공 응답
             return ResponseEntity.ok().body(Map.of("message", "이메일 인증 성공!"));
         }
         // 인증 실패 시
+        logger.warn("이메일 인증 실패. 이메일: {}", email);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("인증번호가 올바르지 않거나 만료되었습니다.");
     }
 }

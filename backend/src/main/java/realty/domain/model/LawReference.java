@@ -30,6 +30,9 @@ public class LawReference {
     @Column(name = "law_reference_url", columnDefinition = "TEXT")
     private String lawReferenceUrl; // 관련법조항 URL
 
+    @Column(name = "created_by", length = 20,  columnDefinition= "recode constructor")
+    private String createdBy; // 레코드 생성자
+
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt; // 생성일시
 

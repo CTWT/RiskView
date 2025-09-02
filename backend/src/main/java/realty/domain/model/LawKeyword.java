@@ -48,6 +48,9 @@ public class LawKeyword {
     @Column(name = "law_reference_id", length = 50)
     private String lawReferenceId; // 관련법조항 고유번호
 
+    @Column(name = "created_by", length = 20,  columnDefinition= "recode constructor")
+    private String createdBy; // 레코드 생성자
+
     @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt; // 생성일시
 

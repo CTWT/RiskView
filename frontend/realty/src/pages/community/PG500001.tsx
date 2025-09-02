@@ -1,7 +1,7 @@
 // src/pages/community/PG500001.tsx
 
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // 모든 페이지 컴포넌트들을 직접 임포트
 import PG500011 from "./PG500011";
@@ -9,6 +9,7 @@ import PG500021 from "./announcements/PG500021";
 import PG500031 from "./legalDictionary/PG500031";
 import PG500041 from "./board/PG500041";
 import PG500042 from "./board/PG500042";
+import PG500043 from "./board/PG500043";
 
 /**
  * @file PG500001.tsx
@@ -26,15 +27,37 @@ import PG500042 from "./board/PG500042";
  * 여기서 라우트 한것들을 기준으로 각 페이지들의 이동이 가능하게 합니다.
  */
 
+const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const location = useLocation();
+  const isAuthed = Boolean(
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("idToken") ||
+    localStorage.getItem("user")
+  );
+
+  if (!isAuthed) {
+    return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
+  }
+  return children;
+};
+
 const PG500001 = () => {
     return (
-        <Routes>
-            <Route index element={<PG500011 />} />
-            <Route path="PG500021/*" element={<PG500021 />} />
-            <Route path="PG500031/*" element={<PG500031 />} />
-            <Route path="PG500041/" element={<PG500041 />} />
-            <Route path="PG500041/PG500042" element={<PG500042 />} />
-        </Routes>
+      <Routes>
+        <Route index element={<PG500011 />} />
+        <Route path="PG500021/*" element={<PG500021 />} />
+        <Route path="PG500031/*" element={<PG500031 />} />
+        <Route path="PG500041/" element={<PG500041 />} />
+        <Route path="PG500041/PG500042/:id" element={<PG500042 />} />
+        <Route
+          path="PG500041/PG500043"
+          element={
+            <RequireAuth>
+              <PG500043 />
+            </RequireAuth>
+          }
+        />
+      </Routes>
     );
 };
 export default PG500001;

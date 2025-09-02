@@ -1,7 +1,5 @@
 package realty.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +30,7 @@ public class LawKeywordController {
      * @param page 현재 페이지
      * @param size 표시할 용어 개수
      * @param category 용어 카테고리
-     * @return
+     * @return 
      */
     @GetMapping("/keywords")
     public Page<LawKeywordDTO> getKeywords(

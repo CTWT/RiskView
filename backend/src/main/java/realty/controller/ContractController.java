@@ -3,7 +3,10 @@ package realty.controller;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import realty.apicommunication.FileComponent;
@@ -19,7 +23,11 @@ import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.MapInfo;
+import realty.domain.model.User;
 import realty.service.ContractService;
+import realty.service.UserService;
+import realty.support.JwtUtil;
+import io.jsonwebtoken.Claims;
 
 /*
  * 수업명 : 가비아 2회차
@@ -38,23 +46,23 @@ public class ContractController {
     private final MapComponent mapComponent;
     private final OcrComponent ocrComponent;
     private final FileComponent fileComponent;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
 
     /**
      * 계약서를 저장하는 PostMapping
      */
     @PostMapping("/contracts")
     public ResponseEntity<String> insertData(@RequestBody ContractDTO.ContractInfo contractInfo,
-            HttpSession session) {
-        // User user = (User) session.getAttribute("user");
-        // if (user == null) {
-        // return ResponseEntity
-        // .status(500)
-        // .body("No Logined User");
-        // }
+            HttpSession session, HttpServletRequest request) {
 
-        // String userCode = user.getUserCode();
+        User user = getCurrentUser(request);
+        if(user == null) {
+           return ResponseEntity.internalServerError()
+           .body("유저 정보를 확인할 수 없습니다");
+        }
+        String userCode = user.getUserCode();
         
-
         String fileName = contractInfo.getFileStorageMetadataDTO().getOriginalName();
         
         //세션에 저장된 임시 파일경로를 가져와서 불러옴
@@ -65,7 +73,6 @@ public class ContractController {
         // 불러온 임시파일 저장
         fileComponent.saveFile(file, fileName, session);
 
-        String userCode = "U10000000";
         String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity
                 .ok()
@@ -128,5 +135,34 @@ public class ContractController {
                 .mapInfo(mapinfo)
                 .build();
         return ResponseEntity.ok(contractResponse);
+    }
+
+    private User getCurrentUser(HttpServletRequest request){
+         Map<String, Object> response = new HashMap<>();
+        // 쿠키에서 accessToken 추출
+        String accessToken = jwtUtil.extractTokenFromCookies(request, "accessToken");
+
+        // accessToken이 없으면
+        if (accessToken == null || accessToken.isEmpty()) {
+            // 응답에 실패 정보 담음
+            return null;
+        }
+
+        // accessToken에서 Claims 추출
+        Claims claims = jwtUtil.getClaims(accessToken);
+        // Claims가 유효하지 않으면
+        if (claims == null) {
+            return null;
+        }
+
+        // Claims에서 userId 추출
+        String userId = claims.get("userId", String.class);
+        if (userId == null) {
+            return null;
+        }
+
+        // 유저 정보 조회
+        User user = userService.findByUserId(userId);
+        return user;
     }
 }

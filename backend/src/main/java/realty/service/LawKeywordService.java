@@ -31,6 +31,11 @@ public class LawKeywordService {
     private final LawKeywordRepository lawKeywordRepository;
     private final LawReferenceRepository lawReferenceRepository;
 
+    /**
+     * @param page
+     * @param size
+     * @return 모든 용어에 대한 페이지
+     */
     public Page<LawKeywordDTO> getKeywords(int page, int size){
         Pageable pageable = PageRequest.of(page,size);
         Page<LawKeyword> lawKeywords = lawKeywordRepository.findAll(pageable);
@@ -38,6 +43,12 @@ public class LawKeywordService {
         return LawKeywordDTOsFromKeywords(lawKeywords);
     }
 
+    /**
+     * @param page
+     * @param size
+     * @param category
+     * @return 카테고리에 해당하는 용어들에 대한 페이지
+     */
     public Page<LawKeywordDTO> getKeywordsByCategory(int page, int size, String category){
         Pageable pageable = PageRequest.of(page,size);
         Page<LawKeyword> lawKeywordsByCategory = lawKeywordRepository.findAllByLawKeywordCategory(category, pageable);

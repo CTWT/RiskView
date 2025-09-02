@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import ChatToggleButton from "../../../components/chat/ChatToggleButton";
@@ -266,6 +266,76 @@ const PG500041: React.FC = () => {
   const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
   const endIndex = startIndex + POSTS_PER_PAGE;
   const currentPosts = filteredPosts.slice(startIndex, endIndex);
+
+  // --- 실시간 통계 동기화: 상세에서 보고/좋아요/댓글 후 목록에도 최신 수치 반영 ---
+  const refreshingRef = useRef(false);
+  const lastFetchedIdsRef = useRef<string[]>([]);
+
+  // 개별 포스트 통계 조회 후 posts 상태에 병합 업데이트
+  const refreshStats = async (ids: string[]) => {
+    if (!ids.length || refreshingRef.current) return;
+    refreshingRef.current = true;
+    try {
+      const tasks = ids.map(async (id) => {
+        try {
+          const res = await fetch(`/api/posts/${id}`);
+          if (!res.ok) throw new Error(String(res.status));
+          const data = await res.json();
+          return {
+            id: String(data.id ?? id),
+            views: Number(data.views ?? 0),
+            likes: Number(data.likes ?? 0),
+            comments: Array.isArray(data.comments) ? data.comments.length : Number(data.comments ?? 0),
+          };
+        } catch (_) {
+          return null;
+        }
+      });
+
+      const results = await Promise.allSettled(tasks);
+      const updates = results
+        .map((r) => (r.status === 'fulfilled' ? r.value : null))
+        .filter(Boolean) as { id: string; views: number; likes: number; comments: number }[];
+
+      if (updates.length) {
+        setPosts((prev) =>
+          prev.map((p) => {
+            const u = updates.find((x) => x.id === p.id);
+            return u ? { ...p, views: u.views, likes: u.likes, comments: u.comments } : p;
+          })
+        );
+      }
+    } finally {
+      refreshingRef.current = false;
+    }
+  };
+
+  // 현재 페이지의 게시글들에 대해 진입/탭 이동 시 최신 통계로 동기화
+  useEffect(() => {
+    const ids = currentPosts.map((p) => p.id);
+    // 같은 세트에 대해 과도한 호출 방지
+    if (JSON.stringify(ids) !== JSON.stringify(lastFetchedIdsRef.current)) {
+      lastFetchedIdsRef.current = ids;
+      refreshStats(ids);
+    }
+
+  }, [currentBoard, currentPage, filteredPosts.length]);
+
+  // 브라우저 포커스/가시성 변경 시에도 재동기화 
+  useEffect(() => {
+    const onFocus = () => refreshStats(currentPosts.map((p) => p.id));
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') onFocus();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+
+  }, [currentBoard, currentPage, filteredPosts.length]);
+
   // 검색 핸들러
   const handleSearch = () => {
     console.log("검색:", searchQuery);

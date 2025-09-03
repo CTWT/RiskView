@@ -77,4 +77,8 @@ public class User {
     @Column(name = "is_deleted")
     @Builder.Default
     private int isDeleted = 0;
+
+    public User(Long userSeq) {
+        this.userSeq = userSeq;
+    }
 }

@@ -1,10 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import useToast from "../../../hooks/useToast";
-
-// TODO: 실제 로그인 연동시 교체
-const MOCK_USER = { id: "user-123", name: "I'm broke" };
 
 /**
  * @file PG500042.tsx
@@ -16,8 +13,9 @@ const MOCK_USER = { id: "user-123", name: "I'm broke" };
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.08.19
+ * 수정일 : 25.09.03
  * 파일명 : PG500042.tsx
  */
 
@@ -25,12 +23,14 @@ const MOCK_USER = { id: "user-123", name: "I'm broke" };
 // - 게시글 id, 제목, 작성자, 날짜, 내용, 조회수, 좋아요, 댓글 목록 등 포함
 // - likedByMe: 현재 사용자가 좋아요를 눌렀는지 여부 (백엔드 연동 시 사용)
 interface PostDetail {
-  id: string;
+  id: number;
+  board: 'free' | 'support';
   title: string;
   author: string;
   authorId?: string; // 추가
   date: string;
   content: string;
+  tags: string[];
   views: number;
   likes: number;
   likedByMe?: boolean; // 내가 좋아요 눌렀는지 (백엔드 연동 시)
@@ -39,43 +39,20 @@ interface PostDetail {
 
 // PostDetail에 추가적인 플래그(__fromWrite)를 포함한 확장 인터페이스
 // - __fromWrite: 글 작성 후 이동 시 임시 상태임을 표시
-interface PostDetailWithFlags extends PostDetail {
+export interface PostDetailWithFlags extends PostDetail {
   __fromWrite?: boolean;
+  isEdit?: boolean;
 }
 
 // 댓글 정보를 나타내는 인터페이스
 // - id, 작성자, 작성자 id, 날짜, 내용 포함
 interface Comment {
-  id: string;
+  id: number;
   author: string;
   authorId?: string; // 추가
   date: string;
   content: string;
 }
-
-// 목업(임시) 게시글 데이터
-// - 실제 서버 연동 전 테스트 및 UI 개발용
-// - 댓글 3개, 작성자와 작성자 id, 좋아요 등 샘플 데이터 포함
-const MOCK_POST: PostDetail = {
-  id: "post-1",
-  title: "전세 계약 시 주의사항 공유",
-  author: "김부동산",
-  authorId: "user-999", // 작성자 id (작성자가 아님을 가정)
-  date: "2025.08.15",
-  content: `안녕하세요. 최근 전세 계약을 진행하면서 겪은 경험을 공유하고자 합니다.
-
-특히 등기부등본 확인이 정말 중요하다는 것을 느꼈습니다. 처음에는 단순히 소유권만 확인하면 되는 줄 알았는데, 근저당권 설정 현황과 선순위 채권 등을 꼼꼼히 살펴봐야 한다는 것을 알게 되었습니다.
-
-RiskView 서비스를 이용해서 계약서를 분석해봤는데, 정말 도움이 많이 되었습니다. 특히 특약 조항에서 놓칠 뻔한 위험 요소들을 AI가 찾아주더라고요.`,
-  views: 1247,
-  likes: 23,
-  likedByMe: false,
-  comments: [
-    { id: "comment-1", author: "부동산전문가", authorId: "user-222", date: "2025.08.15", content: "좋은 정보 감사합니다! 저도 비슷한 경험이 있어서 공감이 많이 되네요." },
-    { id: "comment-2", author: "신입부동산", authorId: "user-333", date: "2025.08.16", content: "RisView 서비스 정말 유용하더라고요. 저도 한 번 사용해봐야겠습니다!" },
-    { id: "comment-3", author: "계약고수", authorId: "user-444", date: "2025.08.16", content: "등기부등본 확인은 정말 중요하죠. 특히 선순위 근저당권은 꼭 체크해야 합니다!" },
-  ],
-};
 
 /**
  * localStorage에서 현재 사용자 정보를 읽어 반환
@@ -86,13 +63,16 @@ const getCurrentUser = () => {
   try {
     const raw = localStorage.getItem('user');
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch (error) {
+    console.error("사용자 정보를 가져오는 데 실패했습니다.", error);
+  }
   return null;
 };
 
 // 게시글 상세 화면 컴포넌트
 // - 게시글 불러오기, 수정/삭제, 좋아요, 댓글 CRUD 지원
 const PG500042: React.FC = () => {
+  console.log('[PG500042] 컴포넌트 렌더링됨');
   const { id } = useParams<{ id: string }>();
   // 댓글 입력창 상태
   const [newComment, setNewComment] = useState<string>("");
@@ -102,13 +82,13 @@ const PG500042: React.FC = () => {
   const [isCommentSubmitting, setIsCommentSubmitting] =
     useState<boolean>(false);
   // 댓글 수정 중인 댓글 id
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   // 댓글 수정 입력값
   const [editingContent, setEditingContent] = useState<string>("");
   // 댓글 수정 저장 중 여부
   const [isCommentUpdating, setIsCommentUpdating] = useState<boolean>(false);
   // 삭제 중인 댓글 id
-  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(
+  const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
     null
   );
 
@@ -134,62 +114,68 @@ const PG500042: React.FC = () => {
 
   // 게시글 제목을 브레드크럼(상단 경로)으로 동기화
   // - 게시글 로딩 후 제목이 바뀌면 react-router state로 전달
+  const prevTitleRef = useRef<string | undefined>(post?.title);
+
   useEffect(() => {
-    if (post?.title) {
+    console.log('[PG500042] 제목 변경 시 브레드크럼 동기화');
+    if (post?.title && post.title !== prevTitleRef.current) {
+      prevTitleRef.current = post.title;
       navigate(location.pathname + location.search, {
         replace: true,
         state: { ...(location.state || {}), title: post.title },
       });
     }
-  }, [post?.title]);
+  }, [post?.title, location.pathname, location.search, location.state, location.state?.title, navigate, prevTitleRef]);
 
   /**
    * 현재 라우트/쿼리/상태에서 게시글 ID를 추출
    * 우선순위: params → ?id= → location.state.id
    * @returns {string|null} 추출된 게시글 ID, 없으면 null
    */
-  const getPostId = (): string | null => {
+  const getPostId = useCallback((): number | null => {
     const fromParams = id || null;
-    if (fromParams) return fromParams;
+    if (fromParams) return parseInt(fromParams, 10);
     const search = new URLSearchParams(location.search);
     const fromQuery = search.get("id");
-    if (fromQuery) return fromQuery;
-    const st: any = location.state;
-    if (st?.id) return st.id as string;
+    if (fromQuery) return parseInt(fromQuery, 10);
+    const st: Partial<PostDetailWithFlags> = location.state || {};
+    if (st?.id) return Number(st.id);
     return null;
-  };
+  }, [id, location.search, location.state]);
 
   /**
    * 서버 응답(JSON)을 화면 모델(PostDetailWithFlags)로 표준화
    * - 서버 필드명이 상이할 수 있어 여러 키 fallback 처리
    * - 누락값 기본값 세팅으로 렌더 오류 예방
    * - 댓글 배열도 표준화
-   * @param {any} data 서버에서 내려온 원본 응답 객체
+   * @param {ApiPost} data 서버에서 내려온 원본 응답 객체
    * @returns {PostDetailWithFlags} 화면에서 사용 가능한 표준 모델
    */
-  const normalize = (data: any): PostDetailWithFlags => {
+  const normalize = useCallback((data: any): PostDetailWithFlags => {
     return {
-      id: String(data.id ?? ""),
+      id: Number(data.id ?? 0),
+      board: data.board ?? 'free',
       title: String(data.title ?? ""),
-      author: String(data.author ?? data.authorName ?? "익명"),
-      authorId: String(data.authorId ?? data.userId ?? data.ownerId ?? ""), // 추가
-      date: String(data.date ?? data.createdAt ?? ""),
-      content: String(data.content ?? data.contentHtml ?? ""),
+      author: String(data.author ?? "익명"),
+      authorId: String(data.authorId ?? ""), // 추가
+      date: String(data.date ?? ""),
+      content: String(data.content ?? ""),
+      tags: Array.isArray(data.tags) ? data.tags : [],
       views: Number(data.views ?? 0),
       likes: Number(data.likes ?? 0),
       likedByMe: Boolean(data.likedByMe ?? false),
       comments: Array.isArray(data.comments)
         ? data.comments.map((c: any) => ({
-            id: String(c.id ?? ""),
-            author: String(c.author ?? c.authorName ?? MOCK_USER.name),
-            authorId: String(c.authorId ?? c.userId ?? c.ownerId ?? ""), // 추가
-            date: String(c.date ?? c.createdAt ?? ""),
-            content: String(c.content ?? c.contentText ?? ""),
+            id: Number(c.id ?? 0),
+            author: String(c.author ?? "익명"),
+            authorId: String(c.authorId ?? ""), // 추가
+            date: String(c.date ?? ""),
+            content: String(c.content ?? ""),
           }))
         : [],
-      __fromWrite: Boolean((location.state as any)?.__fromWrite ?? false),
+      __fromWrite: Boolean((location.state as PostDetailWithFlags)?.__fromWrite ?? false),
     };
-  };
+  }, [location.state]);
 
   /**
    * 문자열을 YYYY.MM.DD 형식으로 변환
@@ -226,16 +212,16 @@ const PG500042: React.FC = () => {
   // - currentUserId: 현재 사용자 id
   // - canEditPost: 게시글 수정/삭제 권한 여부(작성자 본인)
   const currentUser = getCurrentUser();
-  const currentUserId: string =
-    currentUser?.id || localStorage.getItem("userId") || MOCK_USER.id;
+  const currentUserId: string = currentUser?.id || localStorage.getItem("userId") || "";
   const canEditPost = Boolean(
     isAuthed() && post && post.authorId && currentUserId === post.authorId
   );
 
   // 초기 데이터 주입: 글 작성 후(작성페이지에서) state로 넘어온 경우 우선 반영
   React.useEffect(() => {
-    const st: PostDetailWithFlags | undefined = location.state as any;
-    if (st && st.__fromWrite) {
+    const st: PostDetailWithFlags | undefined = location.state as PostDetailWithFlags;
+    console.log('[PG500042] location.state에서 게시글 데이터 확인:', st);
+    if (st && st.__fromWrite && st.id) {
       setPost(st);
     }
   }, [location.state]);
@@ -246,12 +232,11 @@ const PG500042: React.FC = () => {
   React.useEffect(() => {
     // 1) 현재 라우터/쿼리/상태에서 게시글 ID를 결정
     const id = getPostId();
+    console.log(`[PG500042] 게시글 ID ${id} 조회 시도`);
 
-    // 2) ID가 전혀 없으면 서버를 호출해도 의미가 없으므로
-    //    목업 데이터로 화면을 즉시 구성 (버튼/댓글 등 UI 동작 확인용)
     if (!id) {
-      setPost(MOCK_POST as PostDetailWithFlags); // ← 임시 데이터 주입
-      return; // 더 이상 진행하지 않음
+      setError("게시글 ID를 찾을 수 없습니다.");
+      return;
     }
 
     // 3) 로딩 시작: 스피너/버튼 비활성화 등을 위한 플래그
@@ -270,42 +255,41 @@ const PG500042: React.FC = () => {
         return res.json(); // 정상 응답(JSON) 파싱
       })
       // 6) 성공 시: 서버 응답을 화면 표준 모델로 정규화해서 상태에 반영
-      .then((data) => setPost(normalize(data)))
-      // 7) 실패 시: 콘솔 경고 + 사용자용 에러 메시지 설정 + 목업으로 폴백
-      .catch((err) => {
-        console.warn("[PG500042] fetch failed, falling back to MOCK:", err);
-        setError(err.message || "게시글을 불러오지 못했습니다.");
-        // 이전에 이미 게시글 상태가 있다면 유지, 없으면 목업으로 대체
-        setPost((prev) => prev ?? (MOCK_POST as PostDetailWithFlags));
+      .then((data) => {
+        console.log('[PG500042] 게시글 데이터 로딩 성공:', data);
+        setPost(normalize(data));
+      })
+      // 7) 실패 시: 콘솔 경고 + 사용자용 에러 메시지 설정
+      .catch((error) => {
+        console.error("[PG500042] 게시글 조회 실패:", error);
+        setError(error.message || "게시글을 불러오지 못했습니다.");
       })
       // 8) 성공/실패와 관계없이 로딩 종료
       .finally(() => setIsLoading(false));
     
     // 9) 의존성: URL 파라미터 id 또는 쿼리스트링이 바뀔 때마다 재요청
-  }, [id, location.search]);
+  }, [id, location.search, location.state, getPostId, normalize]);
 
   // 좋아요 수 계산 (서버 값 사용)
   const likeCount = Number(post?.likes ?? 0);
   // 서버 likedByMe 동기화 (post 변경 시)
   React.useEffect(() => {
     if (post) setIsLiked(Boolean(post.likedByMe));
-  }, [post?.id, post?.likedByMe]);
+  }, [post, post?.id, post?.likedByMe, setIsLiked]);
 
   // 조회수 증가 요청 (마운트 시 1회만)
   const viewedOnceRef = React.useRef(false);
   React.useEffect(() => {
     const pid = getPostId();
     if (!pid) return;
+    console.log(`[PG500042] 게시글 ID ${pid} 조회수 증가 시도`);
     if (viewedOnceRef.current) return;
     viewedOnceRef.current = true;
     fetch(`/api/posts/${pid}/views`, { method: "POST" }).catch(() => {});
-  }, [post?.id]);
+  }, [getPostId]);
 
-  /**
-   * 댓글을 로컬 상태에 추가
-   * @param {string} content 댓글 내용 (plain text)
-   * @returns {void}
-   */
+
+  /*
   const addLocalComment = (content: string) => {
     // 1) 현재 시각을 표시용 문자열로 구성 (YYYY.MM.DD HH:mm)
     const now = new Date();
@@ -316,11 +300,12 @@ const PG500042: React.FC = () => {
     const mm = String(now.getMinutes()).padStart(2, "0");
 
     // 2) 서버 미연동 시 표시할 작성자 이름(임시)
-    const authorName = MOCK_USER.name;
+    const authorName = currentUser?.name || "나";
 
     // 3) 클라이언트에서 임시로 생성한 댓글 객체
     const newC: Comment = {
-      id: crypto.randomUUID(),           // 로컬 고유 ID (서버 저장 전)
+      id: Date.now(), // 로컬 임시 ID
+      authorId: currentUserId,
       author: authorName,                // 작성자명
       date: `${y}.${m}.${d} ${hh}:${mm}`,// 표시용 날짜
       content,                           // 댓글 본문
@@ -334,18 +319,21 @@ const PG500042: React.FC = () => {
       }
       // prev가 null이면 임시 게시글을 만들어서 댓글을 붙임 (백엔드 미연결 대비)
       return {
-        id: "temp",
+        id: 0,
+        board: 'free',
         title: "",
-        author: MOCK_USER.name,
+        author: currentUser?.name || "나",
         date: new Date().toISOString(),
         content: "",
         views: 0,
+        tags: [],
         likes: 0,
         comments: [newC],
         __fromWrite: true,
       } as PostDetailWithFlags;
     });
   };
+  */
 
   /**
    * 로컬 상태의 댓글 내용을 수정
@@ -353,7 +341,7 @@ const PG500042: React.FC = () => {
    * @param {string} content 새 댓글 내용
    * @returns {void}
    */
-  const updateLocalComment = (commentId: string, content: string) => {
+  const updateLocalComment = (commentId: number, content: string) => {
     // 댓글 배열에서 대상 ID를 찾아 내용만 교체
     setPost((prev) => {
       if (!prev) return prev; // 게시글 없음 → 그대로 반환
@@ -371,7 +359,7 @@ const PG500042: React.FC = () => {
    * @param {string} commentId 삭제할 댓글 ID
    * @returns {void}
    */
-  const removeLocalComment = (commentId: string) => {
+  const removeLocalComment = (commentId: number) => {
     // 댓글 배열에서 대상 ID를 제거
     setPost((prev) => {
       if (!prev) return prev; // 게시글 없음 → 그대로 반환
@@ -388,7 +376,8 @@ const PG500042: React.FC = () => {
    * @param {string} current 현재 댓글 내용
    * @returns {void}
    */
-  const startEditComment = (commentId: string, current: string) => {
+  const startEditComment = (commentId: number, current: string) => {
+    console.log(`[PG500042] 댓글 수정 시작, ID: ${commentId}`);
     setEditingCommentId(commentId);
     setEditingContent(current);
   };
@@ -398,6 +387,7 @@ const PG500042: React.FC = () => {
    * @returns {void}
    */
   const cancelEditComment = () => {
+    console.log('[PG500042] 댓글 수정 취소됨');
     setEditingCommentId(null);
     setEditingContent("");
   };
@@ -408,8 +398,9 @@ const PG500042: React.FC = () => {
    * @param {string} commentId 수정 대상 댓글 ID
    * @returns {Promise<void>}
    */
-  const submitEditComment = async (commentId: string) => {
+  const submitEditComment = async (commentId: number) => {
     // 1) 현재 게시글 ID 확인
+    console.log(`[PG500042] 댓글 수정 제출, ID: ${commentId}`);
     const id = getPostId();
     // 2) 입력값 트림 및 공백 방지
     const content = editingContent.trim();
@@ -423,30 +414,22 @@ const PG500042: React.FC = () => {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            content,
-            authorId: MOCK_USER.id,
-            author: MOCK_USER.name,
+            content
           }),
         });
         if (!res.ok) {
-          // 4-1) 서버 실패: 로컬 상태만 업데이트하여 UI는 일관되게 유지
-          updateLocalComment(commentId, content);
-        } else {
-          // 4-2) 서버 성공: 응답에 content가 있으면 사용, 없으면 입력값 사용
-          const data = await res.json().catch(() => null);
-          const newContent =
-            data && (data.content || data.contentText)
-              ? String(data.content || data.contentText)
-              : content;
-          updateLocalComment(commentId, newContent);
+          const errorText = await res.text();
+          throw new Error(errorText || `HTTP error! status: ${res.status}`);
         }
-      } else {
-        // 5) 게시글 ID가 없으면 로컬 업데이트만 수행
+        // 성공 시 로컬 상태 업데이트
         updateLocalComment(commentId, content);
+        showToast("댓글이 수정되었습니다.", { type: "success" });
       }
-    } catch (e) {
-      // 6) 네트워크 예외: 로컬 업데이트로 보정
-      updateLocalComment(commentId, content);
+      // 게시글 ID가 없으면 아무것도 하지 않음 (이론상 발생 불가)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "댓글 수정에 실패했습니다.";
+      showToast(message, { type: "error" });
+      console.error("댓글 수정 실패:", error);
     } finally {
       // 7) 저장 종료 + 수정모드 해제
       setIsCommentUpdating(false);
@@ -461,40 +444,32 @@ const PG500042: React.FC = () => {
    * @param {string} commentId 삭제 대상 댓글 ID
    * @returns {Promise<void>}
    */
-  const deleteComment = async (commentId: string) => {
+  const deleteComment = async (commentId: number) => {
     // 1) 현재 게시글 ID 확인
+    console.log(`[PG500042] 댓글 삭제 시도, ID: ${commentId}`);
     const id = getPostId();
-    setDeletingCommentId(commentId); // 버튼 스피너/비활성화를 위한 상태
+    if (!id) return;
+
+    setDeletingCommentId(commentId);
     try {
-      if (id) {
-        // 2) 서버 삭제 요청
-        const res = await fetch(`/api/posts/${id}/comments/${commentId}`, {
-          method: "DELETE",
-        });
-        if (!res.ok) {
-          // 서버 실패 시 아무 것도 하지 않음(사용자에게 토스트 안내 가능)
-          return;
-        }
+      // 2) 서버 삭제 요청
+      const res = await fetch(`/api/posts/${id}/comments/${commentId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText || `HTTP error! status: ${res.status}`);
       }
-      // 3) 로컬 목록에서도 제거
+      // 3) 성공 시 로컬 목록에서도 제거
       removeLocalComment(commentId);
-    } catch (e) {
-      // 네트워크 오류 등: 필요 시 토스트 안내
+      showToast("댓글이 삭제되었습니다.", { type: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "댓글 삭제에 실패했습니다.";
+      showToast(message, { type: "error" });
+      console.error("댓글 삭제 실패:", error);
     } finally {
       setDeletingCommentId(null); // 버튼 상태 원복
     }
-  };
-
-  /**
-   * 게시글 수정 모드로 진입
-   * 현재 게시글의 제목/내용을 편집 버퍼에 채워 넣음
-   * @returns {void}
-   */
-  const startPostEdit = () => {
-    if (!post) return;
-    setPostEditTitle(post.title || "");
-    setPostEditContent(post.content || "");
-    setIsPostEditing(true);
   };
 
   /**
@@ -502,6 +477,7 @@ const PG500042: React.FC = () => {
    * @returns {void}
    */
   const cancelPostEdit = () => {
+    console.log('[PG500042] 게시글 수정 취소됨');
     setIsPostEditing(false);
     setPostEditTitle("");
     setPostEditContent("");
@@ -513,6 +489,7 @@ const PG500042: React.FC = () => {
    * @returns {Promise<void>}
    */
   const submitPostEdit = async () => {
+    console.log('[PG500042] 게시글 수정 제출');
     if (!post) return; // 게시글이 없으면 무시
     const id = getPostId();
 
@@ -520,7 +497,7 @@ const PG500042: React.FC = () => {
     const payload = {
       title: postEditTitle.trim(),
       content: postEditContent,
-      author: post.author || MOCK_USER.name,
+      tags: post.tags || [],
     };
     if (!payload.title) return; // 빈 제목 방지
 
@@ -534,42 +511,19 @@ const PG500042: React.FC = () => {
           body: JSON.stringify(payload),
         });
         if (!res.ok) {
-          // 3-1) 서버 실패: 로컬 상태만 업데이트하여 UI 유지
-          setPost((prev) =>
-            prev
-              ? { ...prev, title: payload.title, content: payload.content }
-              : prev
-          );
-        } else {
-          // 3-2) 서버 성공: 응답 필드 우선 사용(없으면 요청값 사용)
-          const data = await res.json().catch(() => null);
-          const updatedTitle = data?.title ?? payload.title;
-          const updatedContent =
-            data?.content ?? data?.contentHtml ?? payload.content;
-          setPost((prev) =>
-            prev
-              ? { ...prev, title: updatedTitle, content: updatedContent }
-              : prev
-          );
+          const errorText = await res.text();
+          throw new Error(errorText || `HTTP error! status: ${res.status}`);
         }
-      } else {
-        // 4) ID가 없으면 로컬 상태만 업데이트
-        setPost((prev) =>
-          prev
-            ? { ...prev, title: payload.title, content: payload.content }
-            : prev
-        );
+        const updatedPost = await res.json();
+        console.log('[PG500042] 게시글 수정 성공, 새 데이터:', updatedPost);
+        setPost(normalize(updatedPost));
+        showToast("게시글이 수정되었습니다.", { type: "success" });
+        setIsPostEditing(false);
       }
-      // 5) 성공/실패와 관계없이 수정 모드 종료
-      setIsPostEditing(false);
-    } catch (e) {
-      // 6) 네트워크 예외: 로컬 상태 업데이트 후 수정 모드 종료
-      setPost((prev) =>
-        prev
-          ? { ...prev, title: payload.title, content: payload.content }
-          : prev
-      );
-      setIsPostEditing(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "게시글 수정에 실패했습니다.";
+      showToast(message, { type: "error" });
+      console.error("게시글 수정 실패:", error);
     } finally {
       setIsPostUpdating(false); // 저장 중 상태 해제
     }
@@ -582,12 +536,13 @@ const PG500042: React.FC = () => {
    * @returns {Promise<void>}
    */
   const deletePostNow = async () => {
+    console.log('[PG500042] 게시글 삭제 시도');
     const id = getPostId();
     if (!id) return; // ID 없으면 무시
 
     // 1) 인증 검사: 비로그인 시 로그인 페이지로 이동
     if (!isAuthed()) {
-      showToast("로그인이 필요합니다.", { type: "warning" });
+      showToast("로그인이 필요합니다.", { type: "error" });
       navigate("/login", { state: { from: location.pathname + location.search } });
       return;
     }
@@ -600,13 +555,17 @@ const PG500042: React.FC = () => {
       // 3) 서버 삭제 요청
       const res = await fetch(`/api/posts/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        // 실패: 상태만 원복하고 종료 (토스트 안내 가능)
-        setIsPostDeleting(false);
-        return;
+        const errorText = await res.text();
+        throw new Error(errorText || `HTTP error! status: ${res.status}`);
       }
       // 4) 성공: 목록으로 이동
-      window.location.href = "/PG500001/PG500041";
-    } catch (e) {
+      console.log(`[PG500042] 게시글 ID ${id} 삭제 성공. 목록으로 이동합니다.`);
+      showToast("게시글이 삭제되었습니다.", { type: "success" });
+      navigate(`/PG500001/PG500041?board=${post?.board || 'free'}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "게시글 삭제에 실패했습니다.";
+      showToast(message, { type: "error" });
+      console.error("게시글 삭제 실패:", error);
       // 네트워크 예외: 상태 원복
       setIsPostDeleting(false);
     }
@@ -619,11 +578,12 @@ const PG500042: React.FC = () => {
    * @returns {void}
    */
   const goToEditPage = () => {
+    console.log('[PG500042] 수정 페이지로 이동');
     if (!post) return; // 게시글이 없으면 무시
 
     // 1) 인증 검사: 비로그인 시 로그인 페이지로 이동
     if (!isAuthed()) {
-      showToast("로그인이 필요합니다.", { type: "warning" });
+      showToast("로그인이 필요합니다.", { type: "error" });
       navigate("/login", { state: { from: location.pathname + location.search } });
       return;
     }
@@ -641,9 +601,10 @@ const PG500042: React.FC = () => {
    * @returns {Promise<void>}
    */
   const handleLike = async () => {
+    console.log('[PG500042] 좋아요 버튼 클릭됨');
     // 1) 인증 검사: 비로그인 시 로그인 페이지로 이동
     if (!isAuthed()) {
-      showToast("로그인이 필요합니다.", { type: "warning" });
+      showToast("로그인이 필요합니다.", { type: "error" });
       navigate("/login", { state: { from: location.pathname + location.search } });
       return;
     }
@@ -652,6 +613,7 @@ const PG500042: React.FC = () => {
     const pid = post.id;
     const prevLiked = isLiked; // 이전 좋아요 상태 저장(롤백용)
 
+    console.log(`[PG500042] 게시글 ID ${pid} 좋아요 토글. 이전 상태: ${prevLiked}`);
     // 2) 낙관적 토글: 즉시 UI 반영 (느린 네트워크 대비 체감 개선)
     setIsLiked(!prevLiked);
     setPost((prev) =>
@@ -667,10 +629,11 @@ const PG500042: React.FC = () => {
     try {
       // 3) 서버에 토글 요청 (좋아요 추가: POST / 취소: DELETE)
       const method = prevLiked ? "DELETE" : "POST";
-      const res = await fetch(`/api/posts/${pid}/likes`, { method });
+      const res = await fetch(`/api/posts/${pid}/likes`, { method, headers: { 'Content-Type': 'application/json' } });
       if (res.ok) {
         // 4) 성공: 서버 응답값으로 동기화 (정확한 카운트/상태 적용)
         const data = await res.json().catch(() => null);
+        console.log('[PG500042] 좋아요 토글 성공. 서버 응답:', data);
         setIsLiked(Boolean(data?.likedByMe ?? !prevLiked));
         setPost((prev) =>
           prev
@@ -682,6 +645,9 @@ const PG500042: React.FC = () => {
             : prev
         );
       } else {
+        const errorText = await res.text();
+        throw new Error(errorText || `HTTP error! status: ${res.status}`);
+        /* This part is now unreachable due to the throw, but kept for logic reference
         // 5) 실패: 낙관적 업데이트 롤백
         setIsLiked(prevLiked);
         setPost((prev) =>
@@ -696,8 +662,12 @@ const PG500042: React.FC = () => {
               }
             : prev
         );
+        */
       }
-    } catch (e) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "좋아요 처리에 실패했습니다.";
+      showToast(message, { type: "error" });
+      console.error("좋아요 토글 실패:", error);
       // 6) 네트워크 예외: 롤백
       setIsLiked(prevLiked);
       setPost((prev) =>
@@ -722,9 +692,10 @@ const PG500042: React.FC = () => {
    * @returns {Promise<void>}
    */
   const handleCommentSubmit = async () => {
+    console.log('[PG500042] 새 댓글 제출');
     // 1) 인증 검사: 비로그인 시 로그인 페이지로 이동
     if (!isAuthed()) {
-      showToast("댓글 작성은 로그인 후 이용 가능합니다.", { type: "warning" });
+      showToast("댓글 작성은 로그인 후 이용 가능합니다.", { type: "error" });
       navigate("/login", { state: { from: location.pathname + location.search } });
       return;
     }
@@ -742,53 +713,32 @@ const PG500042: React.FC = () => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            authorId: currentUserId,
-            author: currentUser?.name || MOCK_USER.name,
             content,
           }),
         });
         if (!res.ok) {
-          // 4-1) 서버 실패: 로컬만 추가
-          addLocalComment(content);
-        } else {
-          // 4-2) 서버 성공: 응답값으로 노멀라이즈하여 추가
-          const data = await res.json();
-          const normalized = {
-            id: String(data.id ?? crypto.randomUUID()),
-            author: String(data.author ?? data.authorName ?? MOCK_USER.name),
-            authorId: String(
-              data.authorId ?? data.userId ?? data.ownerId ?? currentUserId
-            ),
-            date: String(data.date ?? data.createdAt ?? ""),
-            content: String(data.content ?? data.contentText ?? content),
-          } as Comment;
-          setPost((prev) => {
-            if (prev) return { ...prev, comments: [...prev.comments, normalized] };
-            // prev가 없으면 임시 게시글 생성 후 추가
-            return {
-              id: "temp",
-              title: "",
-              author: MOCK_USER.name,
-              authorId: MOCK_USER.id,
-              date: new Date().toISOString(),
-              content: "",
-              views: 0,
-              likes: 0,
-              comments: [normalized as Comment],
-              __fromWrite: true,
-            } as PostDetailWithFlags;
-          });
+          const errorText = await res.text();
+          throw new Error(errorText || `HTTP error! status: ${res.status}`);
         }
-      } else {
-        // 5) ID가 없으면 로컬만 추가
-        addLocalComment(content);
+        // 4) 서버 성공: 응답값으로 상태 업데이트
+        const newCommentData = await res.json();
+        console.log('[PG500042] 댓글 제출 성공. 새 댓글 데이터:', newCommentData);
+        setPost((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            comments: [...prev.comments, newCommentData],
+          };
+        });
+        showToast("댓글이 작성되었습니다.", { type: "success" });
       }
+
       // 6) 입력창 초기화
       setNewComment("");
-    } catch (e) {
-      // 7) 네트워크 예외: 로컬만 추가 후 초기화
-      addLocalComment(content);
-      setNewComment("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "댓글 작성에 실패했습니다.";
+      showToast(message, { type: "error" });
+      console.error("댓글 작성 실패:", error);
     } finally {
       setIsCommentSubmitting(false); // 작성 중 상태 해제
     }
@@ -798,6 +748,7 @@ const PG500042: React.FC = () => {
     // PageContainer: 상단 브레드크럼/중앙정렬 레이아웃 컴포넌트
     <PageContainer showBreadcrumb={true} centerContent={true}>
       <div className="post-detail">
+        {error && <div className="post-error">오류: {error}</div>}
         {/* 게시글 로딩 중 표시 */}
         {isLoading && <div className="post-loading">게시글을 불러오는 중…</div>}
         {/* 게시물 상세 헤더/제목/수정삭제 버튼 */}
@@ -877,7 +828,7 @@ const PG500042: React.FC = () => {
               <input
                 className="form-input title-input"
                 value={postEditTitle}
-                onChange={(e) => setPostEditTitle(e.target.value)}
+                onChange={(error) => setPostEditTitle(error.target.value)}
                 placeholder="제목을 입력하세요"
               />
             </div>
@@ -887,7 +838,7 @@ const PG500042: React.FC = () => {
                 className="form-textarea content-textarea"
                 rows={12}
                 value={postEditContent}
-                onChange={(e) => setPostEditContent(e.target.value)}
+                onChange={(error) => setPostEditContent(error.target.value)}
                 placeholder="내용을 입력하세요"
               />
             </div>
@@ -1010,7 +961,7 @@ const PG500042: React.FC = () => {
                         className="comment-edit-input"
                         rows={3}
                         value={editingContent}
-                        onChange={(e) => setEditingContent(e.target.value)}
+                        onChange={(error) => setEditingContent(error.target.value)}
                         disabled={isCommentUpdating}
                       />
                       <div className="comment-edit-actions">
@@ -1034,8 +985,8 @@ const PG500042: React.FC = () => {
                     // 댓글 내용 + 수정/삭제 버튼 (작성자 본인만 노출)
                     <div className="comment-content-row">
                       <div className="comment-content">{comment.content}</div>
-                      {isAuthed() &&
-                        currentUserId === (comment.authorId || "") && (
+                      {(canEditPost || (isAuthed() &&
+                        currentUserId === (comment.authorId || ""))) && (
                           <div className="comment-actions">
                             <button
                               className="comment-edit-btn"
@@ -1066,10 +1017,10 @@ const PG500042: React.FC = () => {
           <div className="comment-form">
             <textarea
               value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              onKeyDown={(e) => {
-                if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-                  e.preventDefault();
+              onChange={(error) => setNewComment(error.target.value)}
+              onKeyDown={(error) => {
+                if ((error.ctrlKey || error.metaKey) && error.key === "Enter") {
+                  error.preventDefault();
                   if (!isCommentSubmitting && newComment.trim()) {
                     handleCommentSubmit();
                   }
@@ -1092,7 +1043,7 @@ const PG500042: React.FC = () => {
 
         {/* 하단 네비게이션 (목록으로 돌아가기) */}
         <div className="post-navigation">
-          <Link to="/PG500001/PG500041" className="nav-btn back-btn">
+          <Link to={`/PG500001/PG500041?board=${post?.board || 'free'}`} className="nav-btn back-btn">
             ← 목록으로 돌아가기
           </Link>
         </div>

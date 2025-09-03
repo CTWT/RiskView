@@ -6,6 +6,7 @@ import PG100001 from "./pages/analysis/PG100001";
 import PG300001 from "./pages/auth/components/authentication/PG300001";
 import PG400001 from "./pages/news/PG400001";
 import PG500001 from "./pages/community/PG500001";
+import PG500043 from "./pages/community/board/PG500043";
 import PG600001 from "./pages/serviceIntro/PG600001";
 
 import { ChatProvider } from "./components/chat/ChatProvider";
@@ -40,6 +41,7 @@ function App() {
                   {/* 부동산 뉴스 페이지 */}
                   <Route path="/PG500001/*" element={<PG500001 />} />{" "}
                   {/* 커뮤니티 페이지 */}
+                  <Route path="/PG500043" element={<PG500043 />} />{" "}
                   <Route path="/PG600001" element={<PG600001 />} />{" "}
                   {/* 서비스 소개 페이지 */}
                 </Routes>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import ChatToggleButton from "../../../components/chat/ChatToggleButton";
 
@@ -13,8 +13,8 @@ import ChatToggleButton from "../../../components/chat/ChatToggleButton";
  * 생성자 : 문원주
  * 생성일 : 25.08.13
  * 파일명 : PG500041.tsx
- * 수정자 : 이주하
- * 수정일 : 25.08.19
+ * 수정자 : 박윤성
+ * 수정일 : 25.09.03
  * 설명 : 게시판을 보여주는 페이지 입니다. db연동이 되지 않아 하드코딩으로 페이지 구현을 하였습니다.
  */
 
@@ -22,8 +22,8 @@ type PostType = "인기" | "정보" | "질문" | "";
 type BoardKey = 'free' | 'support';
 
 interface PostItem {
-  board: BoardKey; // 게시판 구분(자유/지역이슈)
   id: string;
+  board: BoardKey; // 게시판 구분(자유/지역이슈)
   type?: PostType;
   title: string;
   content: string;
@@ -36,142 +36,11 @@ interface PostItem {
   createdAt: Date;
 }
 
-interface NewPost {
-  title: string;
-  content: string;
-  tags: string;
-}
-
-const MOCK_POSTS: PostItem[] = [
-  {
-    id: "post-1",
-    board: 'free',
-    type: "인기",
-    title: "전세 계약 시 주의사항 공유",
-    content:
-      "최근 전세 계약하면서 겪은 경험을 공유하고자 합니다. RiskView 사용 후기도 포함!",
-    author: "김부동산",
-    date: "2025.08.15",
-    views: 1247,
-    likes: 23,
-    comments: 45,
-    createdAt: new Date("2025-08-15"),
-  },
-  {
-    id: "post-2",
-    board: 'free',
-    type: "정보",
-    title: "강남구 아파트 시세 정보",
-    content: "강남구 대치동 아파트 최근 거래 정보입니다. 1월 실거래가 업데이트",
-    author: "부동산왕",
-    date: "2025.08.15",
-    views: 892,
-    likes: 15,
-    comments: 32,
-    createdAt: new Date("2025-08-15"),
-  },
-  {
-    id: "post-3",
-    board: 'free',
-    type: "질문",
-    title: "신축 아파트 분양권 양도 문의",
-    content:
-      "분당 신축 아파트 분양권 양도 시 주의사항이 궁금합니다. 세금 관련해서도 조언 부탁드려요.",
-    author: "분양초보",
-    date: "2025.08.02",
-    views: 634,
-    likes: 8,
-    comments: 12,
-    createdAt: new Date("2025-08-02"),
-  },
-  {
-    id: "post-4",
-    board: 'free',
-    type: "",
-    title: "전세사기 당할 뻔한 경험담",
-    content:
-      "다행히 RiskView로 미리 위험해서 피할 수 있었어요. 모든 분들이 꼭 확인하세요!",
-    author: "안전제일",
-    date: "2025.07.22",
-    views: 2156,
-    likes: 67,
-    comments: 99,
-    createdAt: new Date("2025-07-22"),
-  },
-  {
-    id: "post-5",
-    board: 'free',
-    type: "",
-    title: "외국인 부동산 투자 후기",
-    content:
-      "일본인인데 한국 부동산 투자했어요. RiskView 영어 서비스가 정말 도움됐습니다.",
-    author: "TokyoInvestor",
-    date: "2025.07.12",
-    views: 1423,
-    likes: 34,
-    comments: 84,
-    createdAt: new Date("2025-07-12"),
-  },
-  // 더 많은 데이터를 위한 추가 포스트들
-  {
-    id: "post-6",
-    board: 'free',
-    type: "정보",
-    title: "2025년 전세대출 금리 변화 분석",
-    content: "올해 전세대출 금리가 많이 올랐네요. 각 은행별 비교 정보입니다.",
-    author: "금융분석가",
-    date: "2025.07.10",
-    views: 987,
-    likes: 19,
-    comments: 28,
-    createdAt: new Date("2025-07-10"),
-  },
-  {
-    id: "post-7",
-    board: 'free',
-    type: "질문",
-    title: "중도금 대출 승인 거부 시 대처법?",
-    content: "분양받은 아파트 중도금 대출이 거부됐어요. 어떻게 해야 할까요?",
-    author: "급한사람",
-    date: "2025.07.08",
-    views: 543,
-    likes: 12,
-    comments: 34,
-    createdAt: new Date("2025-07-08"),
-  },
-  {
-    id: "support-1",
-    board: "support",
-    type: "정보",
-    title: "강동구 상수도 공사 안내",
-    content: "9/1~9/3 일부 구간 단수 예정입니다.",
-    author: "강동구청",
-    date: "2025.08.18",
-    views: 210,
-    likes: 3,
-    comments: 2,
-    createdAt: new Date("2025-08-18"),
-  },
-  {
-    id: "support-2",
-    board: "support",
-    type: "질문",
-    title: "송파구 매립지 악취 민원 공유",
-    content: "최근 밤마다 냄새가 심한데 같은 분 계신가요?",
-    author: "잠실주민",
-    date: "2025.08.17",
-    views: 389,
-    likes: 6,
-    comments: 11,
-    createdAt: new Date("2025-08-17"),
-  }
-];
-
 const POSTS_PER_PAGE = 5;
 
 const PG500041: React.FC = () => {
+  console.log('[PG500041] 컴포넌트 렌더링됨');
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const currentBoard: BoardKey = (searchParams.get('board') as BoardKey) || 'free';
 
   // 기본 상태
@@ -182,91 +51,63 @@ const PG500041: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // 페이지네이션 상태
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // 글쓰기 모달 상태
-  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
-  const [newPost, setNewPost] = useState<NewPost>({
-    title: "",
-    content: "",
-    tags: "",
-  });
-
   // 게시글 데이터 상태
-  const [posts, setPosts] = useState<PostItem[]>(MOCK_POSTS);
-  const [filteredPosts, setFilteredPosts] = useState<PostItem[]>(MOCK_POSTS.filter(p => p.board === currentBoard));
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [totalPages, setTotalPages] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // 검색 및 필터링 로직
   useEffect(() => {
-    let result = posts.filter(p => p.board === currentBoard);
+    console.log('[PG500041] 다음 파라미터로 게시글 목록을 가져옵니다:', { currentPage, searchQuery, category, period, sortBy, currentBoard });
+    const fetchPosts = async () => {
+      setIsLoading(true);
+      setError(null);
 
-    // 검색 필터링
-    if (searchQuery.trim()) {
-      result = result.filter((post) => {
-        switch (category) {
-          case "제목":
-            return post.title.toLowerCase().includes(searchQuery.toLowerCase());
-          case "내용":
-            return post.content
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-          case "작성자":
-            return post.author
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase());
-          default:
-            return (
-              post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-              post.content.toLowerCase().includes(searchQuery.toLowerCase())
-            );
-        }
-      });
-    }
-
-    // 기간 필터링
-    if (period !== "전체 기간") {
-      const now = new Date();
-      const filterDate = new Date();
-
-      switch (period) {
-        case "1주일":
-          filterDate.setDate(now.getDate() - 7);
-          break;
-        case "1개월":
-          filterDate.setMonth(now.getMonth() - 1);
-          break;
-        case "3개월":
-          filterDate.setMonth(now.getMonth() - 3);
-          break;
+      const params = new URLSearchParams();
+      params.append("board", currentBoard);
+      if (searchQuery.trim()) {
+        const categoryMap: { [key: string]: string } = {
+          "제목": "title", 
+          "내용": "content", 
+          "작성자": "author",
+        };
+        params.append("searchCategory", categoryMap[category] || "title");
+        params.append("searchQuery", searchQuery.trim());
       }
+      if (period !== "전체 기간") {
+        params.append("period", period);
+      }
+      params.append("sortBy", sortBy);
+      params.append("page", String(currentPage - 1)); // Spring은 0부터 시작
+      params.append("size", String(POSTS_PER_PAGE));
 
-      result = result.filter((post) => post.createdAt >= filterDate);
-    }
+      try {
+        const res = await fetch(`/api/posts?${params.toString()}`);
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(errorText || "게시글을 불러오는데 실패했습니다.");
+        }
 
-    // 정렬
-    switch (sortBy) {
-      case "최신순":
-        result.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        break;
-      case "인기순":
-        result.sort((a, b) => b.likes - a.likes);
-        break;
-      case "조회순":
-        result.sort((a, b) => b.views - a.views);
-        break;
-    }
+        const data = await res.json();
+        setPosts(data.content);
+        console.log('[PG500041] 게시글 목록 로딩 성공:', data.content);
+        setTotalPages(data.totalPages);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+        setError(errorMessage);
+        setPosts([]);
+        setTotalPages(0);
+        console.error("게시글 로딩 실패:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    setFilteredPosts(result);
-    setCurrentPage(1); // 필터링 시 첫 페이지로 이동
-  }, [posts, searchQuery, category, period, sortBy, currentBoard]);
-
-  // 페이지네이션 계산
-  const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-  const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
-  const endIndex = startIndex + POSTS_PER_PAGE;
-  const currentPosts = filteredPosts.slice(startIndex, endIndex);
-
+    fetchPosts();
+  }, [currentPage, searchQuery, category, period, sortBy, currentBoard]);
+  
   // --- 실시간 통계 동기화: 상세에서 보고/좋아요/댓글 후 목록에도 최신 수치 반영 ---
   const refreshingRef = useRef(false);
   const lastFetchedIdsRef = useRef<string[]>([]);
@@ -274,6 +115,7 @@ const PG500041: React.FC = () => {
   // 개별 포스트 통계 조회 후 posts 상태에 병합 업데이트
   const refreshStats = async (ids: string[]) => {
     if (!ids.length || refreshingRef.current) return;
+    console.log('[PG500041] 다음 ID의 게시글 통계를 새로고침합니다:', ids);
     refreshingRef.current = true;
     try {
       const tasks = ids.map(async (id) => {
@@ -287,7 +129,8 @@ const PG500041: React.FC = () => {
             likes: Number(data.likes ?? 0),
             comments: Array.isArray(data.comments) ? data.comments.length : Number(data.comments ?? 0),
           };
-        } catch (_) {
+        } catch (error) {
+          console.error(`[PG500041] 게시글 ${id} 통계 새로고침 실패:`, error);
           return null;
         }
       });
@@ -298,6 +141,7 @@ const PG500041: React.FC = () => {
         .filter(Boolean) as { id: string; views: number; likes: number; comments: number }[];
 
       if (updates.length) {
+        console.log('[PG500041] 통계 업데이트 적용:', updates);
         setPosts((prev) =>
           prev.map((p) => {
             const u = updates.find((x) => x.id === p.id);
@@ -312,18 +156,17 @@ const PG500041: React.FC = () => {
 
   // 현재 페이지의 게시글들에 대해 진입/탭 이동 시 최신 통계로 동기화
   useEffect(() => {
-    const ids = currentPosts.map((p) => p.id);
     // 같은 세트에 대해 과도한 호출 방지
+    const ids = posts.map(p => p.id);
     if (JSON.stringify(ids) !== JSON.stringify(lastFetchedIdsRef.current)) {
       lastFetchedIdsRef.current = ids;
       refreshStats(ids);
     }
-
-  }, [currentBoard, currentPage, filteredPosts.length]);
+  }, [posts]);
 
   // 브라우저 포커스/가시성 변경 시에도 재동기화 
   useEffect(() => {
-    const onFocus = () => refreshStats(currentPosts.map((p) => p.id));
+    const onFocus = () => refreshStats(posts.map(p => p.id));
     const onVisibility = () => {
       if (document.visibilityState === 'visible') onFocus();
     };
@@ -333,17 +176,19 @@ const PG500041: React.FC = () => {
       window.removeEventListener('focus', onFocus);
       document.removeEventListener('visibilitychange', onVisibility);
     };
+  }, [posts]);
 
-  }, [currentBoard, currentPage, filteredPosts.length]);
 
   // 검색 핸들러
   const handleSearch = () => {
-    console.log("검색:", searchQuery);
+    console.log("[PG500041] 검색 실행, 검색어:", searchQuery);
     // 검색은 useEffect에서 자동으로 처리됨
+    setCurrentPage(1); // 검색 시 첫 페이지로 리셋
   };
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
+    console.log(`[PG500041] 페이지 변경: ${page}`);
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
       // 페이지 최상단으로 스크롤
@@ -356,7 +201,7 @@ const PG500041: React.FC = () => {
     const buttons = [];
     const maxVisiblePages = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    const endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
@@ -407,7 +252,7 @@ const PG500041: React.FC = () => {
             </Link>
             {/* 글쓰기 버튼 */}
             <Link
-              to={{ pathname: "PG500043" }}
+              to="/PG500043"
               state={{ board: currentBoard }}
               className="write-btn"
             >
@@ -496,8 +341,16 @@ const PG500041: React.FC = () => {
         </div>
         {/* 게시물 목록 */}
         <section className="board-list">
-          {currentPosts.length > 0 ? (
-            currentPosts.map((post) => (
+          {isLoading ? (
+            <div className="no-posts">
+              <p>게시글을 불러오는 중입니다...</p>
+            </div>
+          ) : error ? (
+            <div className="no-posts">
+              <p>오류: {error}</p>
+            </div>
+          ) : posts.length > 0 ? (
+            posts.map((post) => (
               <div key={post.id} className="board-item">
                 <div className="board-item-left">
                   <div className="board-item-icon">
@@ -571,7 +424,8 @@ const PG500041: React.FC = () => {
           </div>
         )}
       </div>
-      <ChatToggleButton isOpen={isChatOpen} setIsOpen={setIsChatOpen} />
+      <ChatToggleButton isOpen={isChatOpen}
+        onClick={() => setIsChatOpen((prev) => !prev)} />
     </PageContainer>
   );
 };

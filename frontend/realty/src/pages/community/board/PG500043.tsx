@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import Toast from "../../../components/ui/Toast";
 import useToast from "../../../hooks/useToast";
+import { type PostDetailWithFlags } from "./PG500042";
 
 /**
  * @file PG500043.tsx
@@ -13,8 +14,9 @@ import useToast from "../../../hooks/useToast";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.08.26
+ * 수정일 : 25.09.02
  * 파일명 : PG500043.tsx
  */
 
@@ -24,43 +26,51 @@ interface NewPost {
   tags: string;
 }
 
+type BoardKey = 'free' | 'support';
 
-const logError = (scope: string, err: unknown, extra?: Record<string, any>) => {
-  
-  console.error(`[PG500043][${scope}]`, err, extra ?? "");
+// Undo/Redo를 위한 히스토리 인터페이스
+interface EditorHistory {
+  content: string;
+  selection?: {
+    startContainer: Node;
+    startOffset: number;
+    endContainer: Node;
+    endOffset: number;
+  };
+}
+
+const logError = (scope: string, error: unknown, extra?: Record<string, unknown>) => {
+  console.error(`[PG500043][${scope}]`, error, extra ?? "");
 };
-const logInfo = (scope: string, info?: Record<string, any>) => {
-  
+const logInfo = (scope: string, info?: Record<string, unknown>) => {
   console.log(`[PG500043][${scope}]`, info ?? "");
 };
 
 const PG500043: React.FC = () => {
   // 렌더 시점 로깅(디버깅용)
-  console.log("[PG500043] render");
+  console.log('[PG500043] 컴포넌트 렌더링됨.');
 
   // 라우팅 훅
   const navigate = useNavigate();
   const location = useLocation();
 
   // 초기 보드 타입 결정
-  // - 작성/수정 진입 시 상위에서 state로 board를 넘겨줬다면 그 값을 사용
-  // - 아니면 기본값 'free'로 처리
-  const initialBoard: 'free' | 'support' = ((location.state as any)?.board as any) || 'free';
+  const initialBoard: BoardKey = (new URLSearchParams(location.search).get('board') as BoardKey) || (location.state as PostDetailWithFlags)?.board || 'free';
+  logInfo('컴포넌트.초기화', { initialBoard });
 
   // 수정 모드로 진입했는지 판별
-  // - PG500042 → 수정 버튼으로 들어올 때 state에 isEdit와 게시글 정보가 같이 담겨옴
-  const editPost = (location.state as any)?.isEdit
-    ? (location.state as any)
+  const editPost = (location.state as PostDetailWithFlags)?.isEdit
+    ? (location.state as PostDetailWithFlags)
     : null;
-  // 수정 모드 여부 (id 유무로 판별)
+  console.log('[PG500043] 수정 모드 데이터:', editPost);
+  logInfo('컴포넌트.초기화', { isEditMode: Boolean(editPost?.id), postId: editPost?.id });
   const isEditMode = Boolean(editPost?.id);
 
   // 작성/수정 공용 폼 상태
-  // - 수정 모드면 기존 값으로 프리필, 작성 모드면 공백
   const [newPost, setNewPost] = useState<NewPost>({
     title: editPost?.title ?? "",
     content: editPost?.content ?? "",
-    tags: (editPost?.tags as string) ?? "",
+    tags: Array.isArray(editPost?.tags) ? editPost.tags.join(", ") : "",
   });
 
   // 전송 중 상태 (버튼 비활성/스피너 표시)
@@ -72,34 +82,151 @@ const PG500043: React.FC = () => {
   // === contentEditable 기반 에디터 헬퍼 ===
   const editorRef = useRef<HTMLDivElement | null>(null);
 
+  // Undo/Redo 히스토리 관리
+  const historyRef = useRef<EditorHistory[]>([]);
+  const historyIndexRef = useRef(-1);
+  const isUndoRedoRef = useRef(false); // Undo/Redo 중인지 확인용
+
   // 수정 모드 진입 시 에디터에 기존 내용(HTML)을 주입
-  // - 의존성 없이 1회만 실행(마운트 시)
   React.useEffect(() => {
+    console.log('[PG500043] 수정 모드 초기 콘텐츠 설정 useEffect 실행');
     if (editorRef.current && newPost.content) {
+      logInfo('useEffect.초기콘텐츠설정', { contentLength: newPost.content.length });
       editorRef.current.innerHTML = newPost.content;
+      // 초기 히스토리 저장
+      saveToHistory();
     }
   }, []);
 
   // 마지막 선택 영역(Range) 저장용
-  const lastRangeRef = useRef<Range | null>(null);
+  const lastRangeRef = useRef<Range | null | undefined>(null);
 
   // 현재 selection이 에디터 내부에 있는지 확인
-  const isSelectionInsideEditor = (sel: Selection | null) => {
+  const isSelectionInsideEditor = React.useCallback((sel: Selection | null) => {
     if (!sel || sel.rangeCount === 0 || !editorRef.current) return false;
     const range = sel.getRangeAt(0);
     return editorRef.current.contains(range.commonAncestorContainer);
-  };
+  }, []);
 
   // 현재 selection을 lastRangeRef에 저장
-  const saveSelection = () => {
+  const saveSelection = React.useCallback(() => {
     const sel = window.getSelection();
     if (isSelectionInsideEditor(sel)) {
-      lastRangeRef.current = sel.getRangeAt(0).cloneRange();
+      lastRangeRef.current = sel?.getRangeAt(0).cloneRange();
     }
+  }, [isSelectionInsideEditor]);
+
+  // 히스토리에 현재 상태 저장
+  const saveToHistory = () => {
+    if (!editorRef.current || isUndoRedoRef.current) return;
+    
+    const currentContent = editorRef.current.innerHTML;
+    const history = historyRef.current;
+    const currentIndex = historyIndexRef.current;
+    
+    // 마지막 히스토리와 같으면 저장하지 않음
+    if (history[currentIndex]?.content === currentContent) return;
+    
+    // 현재 인덱스 이후의 히스토리 제거 (새로운 변경사항)
+    historyRef.current = history.slice(0, currentIndex + 1);
+    
+    // 새 히스토리 추가
+    historyRef.current.push({
+      content: currentContent
+    });
+    
+    // 히스토리 크기 제한 (50개)
+    if (historyRef.current.length > 50) {
+      historyRef.current = historyRef.current.slice(-50);
+    }
+    
+    historyIndexRef.current = historyRef.current.length - 1;
+    logInfo('히스토리.저장', { index: historyIndexRef.current, length: historyRef.current.length });
   };
 
+  // Undo 실행
+  const performUndo = () => {
+    if (!editorRef.current || historyIndexRef.current <= 0) return false;
+    
+    isUndoRedoRef.current = true;
+    historyIndexRef.current--;
+    const historyItem = historyRef.current[historyIndexRef.current];
+    
+    if (historyItem) {
+      editorRef.current.innerHTML = historyItem.content;
+      syncFromEditor();
+      logInfo('Undo.실행', { index: historyIndexRef.current });
+    }
+    
+    isUndoRedoRef.current = false;
+    return true;
+  };
+
+  // Redo 실행
+  const performRedo = () => {
+    if (!editorRef.current || historyIndexRef.current >= historyRef.current.length - 1) return false;
+    
+    isUndoRedoRef.current = true;
+    historyIndexRef.current++;
+    const historyItem = historyRef.current[historyIndexRef.current];
+    
+    if (historyItem) {
+      editorRef.current.innerHTML = historyItem.content;
+      syncFromEditor();
+      logInfo('Redo.실행', { index: historyIndexRef.current });
+    }
+    
+    isUndoRedoRef.current = false;
+    return true;
+  };
+
+  // 에디터의 onInput 핸들러
+  const handleInput = React.useCallback(() => {
+    if (editorRef.current) {
+      const currentHtml = editorRef.current.innerHTML;
+      setNewPost(p => {
+        if (p.content !== currentHtml) {
+          return { ...p, content: currentHtml };
+        }
+        return p;
+      });
+      
+      // 히스토리 저장 (디바운스)
+      clearTimeout(handleInput.timeoutId);
+      handleInput.timeoutId = setTimeout(() => {
+        saveToHistory();
+      }, 500);
+    }
+  }, []);
+  handleInput.timeoutId = null;
+
+  // 키보드 이벤트 핸들러 (Ctrl+Z, Ctrl+Y)
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        performUndo();
+        return;
+      }
+      if (e.key === 'z' && e.shiftKey || e.key === 'y') {
+        e.preventDefault();
+        performRedo();
+        return;
+      }
+    }
+    
+    // 일반 키 입력 시 selection 저장
+    saveSelection();
+  }, []);
+
+  // 에디터 포커스가 해제될 때 최종 내용을 동기화
+  const handleBlur = React.useCallback(() => {
+    logInfo('에디터.onBlur', { contentLength: editorRef.current?.innerHTML.length });
+    handleInput();
+    saveToHistory(); // 포커스 해제 시 히스토리 저장
+  }, [handleInput]);
+
   // 저장된 selection을 복원
-  // - 저장값이 없거나 포커스가 날아갔으면 커서를 에디터 끝으로 이동
   const restoreSelection = () => {
     const sel = window.getSelection();
     if (lastRangeRef.current && sel) {
@@ -117,8 +244,6 @@ const PG500043: React.FC = () => {
 
   /**
    * caret만 있을 때 같은 텍스트 노드에서 공백이 아닌 문자(\S) 단위로 단어 경계를 확장
-   * @param {Range} range - 현재 선택 범위(보통 collapsed caret). TEXT_NODE가 아니면 원본 range 반환.
-   * @returns {Range} 단어의 시작~끝으로 확장된 새 Range. 확장 실패 시 원본 Range.
    */
   const expandRangeToWord = (range: Range) => {
     if (!range.collapsed) return range;
@@ -136,104 +261,7 @@ const PG500043: React.FC = () => {
   };
 
   /**
-   * 브라우저의 Selection.modify(비표준) 기능이 지원되면 이를 이용해 단어 단위로 선택을 확장
-   * 미지원 또는 공백만 선택된 경우에는 expandRangeToWord로 폴백
-   * @returns {Range} 단어 단위로 확장된 Range. 실패 시 원본을 기반으로 한 폴백 Range.
-   */
-  const expandSelectionToWordSmart = (): Range => {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return document.createRange();
-    const original = sel.getRangeAt(0).cloneRange();
-
-    try {
-      // 일부 브라우저에서 selection.modify가 제공됨 (비표준이지만 폭넓게 동작)
-      // 1) 현재 위치에서 단어 경계로 확장
-      //    - 우선 selection을 collapse시켜 기준점만 유지
-      const collapsed = original.cloneRange();
-      collapsed.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(collapsed);
-      // 단어 경계로 확장 (뒤로/앞으로)
-      // backward/forward 순서를 바꿔가며 최대한 단어를 잡음
-      // NOTE: modify가 없으면 예외 발생 → catch에서 폴백 처리
-      if (typeof sel.modify === 'function') {
-      
-        sel.modify('extend', 'backward', 'word');
-        
-        sel.modify('extend', 'forward', 'word');
-        const r = sel.getRangeAt(0).cloneRange();
-        // 공백/제로폭만 선택되었으면 폴백 사용
-        if (r.toString().replace(/[\u200B\s]/g, '').length > 0) {
-          return r;
-        }
-      }
-    } catch (_) {
-      // ignore and fallback
-    }
-
-    // 폴백: 같은 텍스트 노드 내에서만 확장
-    const fb = expandRangeToWord(original);
-    return fb;
-  };
-
-  /**
-   * 시작 노드가 요소 노드일 때, 가장 가까운 의미 있는 TEXT_NODE를 탐색
-   * @param {Node | null} start - 기준 노드(보통 range.startContainer)
-   * @returns {Text | null} 발견된 TEXT_NODE. 없으면 null.
-   */
-  const findNearestTextNode = (start: Node | null): Text | null => {
-    if (!start || !editorRef.current) return null;
-
-    // 1) 자신/자식에서 텍스트 찾기 
-    const stack: Node[] = [start];
-    while (stack.length) {
-      const n = stack.pop()!;
-      if (n.nodeType === Node.TEXT_NODE && (n.textContent || '').trim().length > 0) return n as Text;
-      // 자식부터 먼저 검사
-      const children = (n as Element).childNodes;
-      for (let i = children.length - 1; i >= 0; i--) stack.push(children[i]);
-    }
-
-    // 2) 형제/부모 방향으로 확장
-    let cur: Node | null = start;
-    // 위로 올라가며 좌우 형제 검색
-    while (cur && cur !== editorRef.current) {
-      // 이전 형제들 뒤에서 앞으로 검색
-      let sib: Node | null = cur.previousSibling;
-      while (sib) {
-        if (sib.nodeType === Node.TEXT_NODE && (sib.textContent || '').trim().length > 0) return sib as Text;
-        // sib의 마지막 자손부터 텍스트를 찾음
-        const subStack: Node[] = [sib];
-        while (subStack.length) {
-          const sn = subStack.pop()!;
-          if (sn.nodeType === Node.TEXT_NODE && (sn.textContent || '').trim().length > 0) return sn as Text;
-          const kids = (sn as Element).childNodes;
-          for (let i = kids.length - 1; i >= 0; i--) subStack.push(kids[i]);
-        }
-        sib = sib.previousSibling;
-      }
-      // 다음 형제들도 검사
-      sib = cur.nextSibling;
-      while (sib) {
-        if (sib.nodeType === Node.TEXT_NODE && (sib.textContent || '').trim().length > 0) return sib as Text;
-        const subStack: Node[] = [sib];
-        while (subStack.length) {
-          const sn = subStack.pop()!;
-          if (sn.nodeType === Node.TEXT_NODE && (sn.textContent || '').trim().length > 0) return sn as Text;
-          const kids = (sn as Element).childNodes;
-          for (let i = kids.length - 1; i >= 0; i--) subStack.push(kids[i]);
-        }
-        sib = sib.nextSibling;
-      }
-      cur = cur.parentNode;
-    }
-    return null;
-  };
-
-  /**
-   * 에디터 DOM의 현재 innerHTML을 상태(newPost.content)와 동기화
-   * 버튼 활성/글자수 계산 등 UI 업데이트에 사용
-   * @returns {void}
+   * 에디터 DOM의 현재 innerHTML을 상태와 동기화
    */
   const syncFromEditor = () => {
     setNewPost((p) => ({
@@ -243,57 +271,10 @@ const PG500043: React.FC = () => {
   };
 
   /**
-   * 현재 선택 영역을 지정된 인라인 태그로 감쌈
-   * 선택이 비어있으면 빈 래퍼를 삽입해 이후 입력에 스타일을 적용
-   * @param {string} tagName - 감쌀 태그명(e.g., 'strong', 'em', 's').
-   * @returns {void}
-   */
-  const wrapSelectionWith = (tagName: string) => {
-    restoreSelection();
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    let range = sel.getRangeAt(0);
-
-    // 빈 래퍼 삽입
-    if (range.collapsed || range.startContainer.nodeType !== Node.TEXT_NODE) {
-      const wrapper = document.createElement(tagName);
-      const placeholder = document.createTextNode("");
-      wrapper.appendChild(placeholder);
-      range.insertNode(wrapper);
-
-      const newRange = document.createRange();
-      newRange.setStart(wrapper.firstChild as Text, 0);
-      newRange.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(newRange);
-
-      syncFromEditor();
-      return;
-    }
-
-    // 단어 경계 확장 후 감싸기
-    range = expandRangeToWord(range);
-
-    const frag = range.extractContents();
-    const wrapper = document.createElement(tagName);
-    wrapper.appendChild(frag);
-    range.insertNode(wrapper);
-
-    const newRange = document.createRange();
-    newRange.setStartAfter(wrapper);
-    newRange.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(newRange);
-
-    syncFromEditor();
-  };
-
-  /**
    * 선택 텍스트를 줄 단위로 분리하여 순서있는/없는 목록으로 변환
-   * @param {('ul'|'ol')} type - 목록 종류. 'ul'은 불릿, 'ol'은 숫자 목록.
-   * @returns {void}
    */
   const makeList = (type: "ul" | "ol") => {
+    logInfo('에디터.makeList', { type });
     restoreSelection();
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
@@ -316,14 +297,14 @@ const PG500043: React.FC = () => {
     sel.addRange(newRange);
 
     syncFromEditor();
+    saveToHistory();
   };
 
   /**
-   * 선택 영역을 block 요소로 감쌈. 'pre'의 경우 내부에 <code>를 중첩
-   * @param {('pre'|'blockquote')} tagName - 블록 태그명.
-   * @returns {void}
+   * 선택 영역을 block 요소로 감쌈
    */
   const makeBlock = (tagName: "pre" | "blockquote") => {
+    logInfo('에디터.makeBlock', { tagName });
     restoreSelection();
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
@@ -345,45 +326,14 @@ const PG500043: React.FC = () => {
     sel.addRange(newRange);
 
     syncFromEditor();
+    saveToHistory();
   };
 
   /**
-   * 현재 단어(또는 placeholder)를 h1/h2로 치환
-   * @param {(1|2)} level - 헤딩 레벨(1 또는 2).
-   * @returns {void}
-   */
-  const makeHeading = (level: 1 | 2) => {
-    restoreSelection();
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    const orig = sel.getRangeAt(0);
-    const range = expandRangeToWord(orig);
-    const text = range.toString();
-    const h = document.createElement(`h${level}`);
-    h.textContent = text || "제목";
-    range.deleteContents();
-    range.insertNode(h);
-    const newRange = document.createRange();
-    newRange.setStartAfter(h);
-    newRange.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(newRange);
-    syncFromEditor();
-  };
-
-  /**
-   * 현재 선택 영역에 취소선을 적용(인라인 s 태그 래핑).
-   * @returns {void}
-   */
-  const makeStrike = () => wrapSelectionWith("s");
-
-  /**
-   * 현재 커서 위치(또는 선택 영역)에 임의의 HTML 조각을 삽입
-   * 이미지/링크/임베드 등을 추가할 때 사용
-   * @param {string} html - 삽입할 안전한 HTML 문자열(신뢰된 소스만).
-   * @returns {void}
+   * 현재 커서 위치에 HTML 조각을 삽입
    */
   const insertHtmlAtCursor = (html: string) => {
+    logInfo('에디터.insertHtmlAtCursor', { htmlLength: html.length });
     restoreSelection();
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
@@ -408,171 +358,426 @@ const PG500043: React.FC = () => {
     }
 
     syncFromEditor();
+    saveToHistory();
   };
 
   /**
-   * 선택 영역(또는 caret 주변 단어)에 폰트 크기를 적용
-   * 1) 이미 span 내부면 해당 span의 font-size만 업데이트
-   * 2) Selection.modify로 단어 확장 시도 → 실패 시 최근접 TEXT_NODE 탐색
-   * 3) 그래도 실패하면 제로폭 span 삽입하여 다음 입력부터 적용
-   * @param {number} sizePx - 적용할 폰트 크기(px 단위)
-   * @returns {void}
+   * 선택 영역에 인라인 스타일을 토글
+   */
+  /**
+ * 선택 영역에 인라인 스타일을 토글 (개선된 버전 - 띄어쓰기 포함 처리)
+ */
+  const toggleInlineStyle = (tagName: 'b' | 'i' | 's') => {
+    logInfo('에디터.toggleInlineStyle', { tagName });
+    restoreSelection();
+    editorRef.current?.focus();
+
+    const sel = window.getSelection();
+    console.log('[선택 영역]', sel);
+    if (!sel || sel.rangeCount === 0) {
+      logError('toggleInlineStyle.선택없음', '선택된 범위가 없습니다');
+      return;
+    }
+
+    console.log('[선택된 텍스트]', sel.getRangeAt(0).toString());
+
+    let range = sel.getRangeAt(0);
+
+    // 선택된 텍스트 정규화
+    const selectedText = range.toString().trim();
+    const isCollapsed = range.collapsed;
+    const isOnlyWhitespace = !selectedText || /^\s*$/.test(range.toString());
+
+    // 현재 선택 영역이 해당 스타일로 감싸져 있는지 확인
+    const hasStyle = (node: Node): boolean => {
+      let current: Node | null = node;
+      while (current && current !== editorRef.current) {
+        if (
+          current.nodeType === Node.ELEMENT_NODE &&
+          (current as HTMLElement).tagName.toLowerCase() === tagName
+        ) {
+          return true;
+        }
+        current = current.parentNode;
+      }
+      return false;
+    };
+
+    const isStyled = hasStyle(range.startContainer) && hasStyle(range.endContainer);
+
+    try {
+      if (isStyled) {
+        // 스타일 제거: 해당 태그만 unwrap
+        const walker = document.createTreeWalker(
+          range.commonAncestorContainer,
+          NodeFilter.SHOW_ELEMENT,
+          {
+            acceptNode: (node) =>
+              (node as HTMLElement).tagName.toLowerCase() === tagName
+                ? NodeFilter.FILTER_ACCEPT
+                : NodeFilter.FILTER_SKIP,
+          }
+        );
+
+        const elementsToUnwrap: HTMLElement[] = [];
+        let node: Node | null;
+        while ((node = walker.nextNode())) {
+          const element = node as HTMLElement;
+          if (range.intersectsNode(element)) {
+            elementsToUnwrap.push(element);
+          }
+        }
+
+        elementsToUnwrap.forEach((element) => {
+          const parent = element.parentNode;
+          if (parent) {
+            // 자식 노드를 부모 앞에 삽입
+            while (element.firstChild) {
+              parent.insertBefore(element.firstChild, element);
+            }
+            parent.removeChild(element);
+          }
+        });
+
+        // DOM 정규화
+        editorRef.current?.normalize();
+      } else {
+        // 스타일 적용
+        if (isCollapsed || isOnlyWhitespace) {
+          // 커서가 있거나 공백만 선택된 경우: 빈 wrapper 삽입
+          const wrapper = document.createElement(tagName);
+          const placeholder = document.createTextNode('\u200B'); // Zero-width space
+          wrapper.appendChild(placeholder);
+          range.insertNode(wrapper);
+
+          const newRange = document.createRange();
+          newRange.setStart(placeholder, 1);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+        } else {
+          // 선택된 텍스트에 스타일 적용
+          // 띄어쓰기 포함 범위 확장
+          range = expandSelectionToWordSmart();
+          const contents = range.extractContents();
+          const wrapper = document.createElement(tagName);
+          wrapper.appendChild(contents);
+          range.insertNode(wrapper);
+
+          // 래퍼 다음에 커서 이동
+          const newRange = document.createRange();
+          newRange.setStartAfter(wrapper);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+
+          // DOM 정규화
+          editorRef.current?.normalize();
+        }
+      }
+
+      syncFromEditor();
+      saveToHistory();
+      saveSelection();
+    } catch (error) {
+      logError('toggleInlineStyle.예외', error, { tagName });
+    }
+  };
+
+  /**
+   * 선택 범위를 단어 경계로 확장 (띄어쓰기 포함 처리 개선)
+   */
+  const expandSelectionToWordSmart = (): Range => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) {
+      logError('expandSelectionToWordSmart.선택없음', '선택된 범위가 없습니다');
+      return document.createRange();
+    }
+
+    let range = sel.getRangeAt(0).cloneRange();
+
+    try {
+      if (range.collapsed) {
+        // 커서만 있는 경우: 단어 경계로 확장
+        const textNode = findNearestTextNode(range.startContainer);
+        if (textNode && textNode.textContent) {
+          const text = textNode.textContent;
+          let start = range.startOffset;
+          let end = range.startOffset;
+
+          // 단어 시작점 찾기 (공백 아닌 문자까지)
+          while (start > 0 && /\S/.test(text[start - 1])) {
+            start--;
+          }
+          // 단어 끝점 찾기 (공백 포함)
+          while (end < text.length && !/\s/.test(text[end])) {
+            end++;
+          }
+
+          range = document.createRange();
+          range.setStart(textNode, start);
+          range.setEnd(textNode, end);
+        }
+      } else {
+        // 선택된 범위가 있는 경우
+        const startNode = range.startContainer;
+        const endNode = range.endContainer;
+
+        if (startNode.nodeType === Node.TEXT_NODE && startNode.textContent) {
+          let start = range.startOffset;
+          const text = startNode.textContent;
+          // 시작점 확장 (공백 아닌 문자까지)
+          while (start > 0 && /\S/.test(text[start - 1])) {
+            start--;
+          }
+          range.setStart(startNode, start);
+        }
+
+        if (endNode.nodeType === Node.TEXT_NODE && endNode.textContent) {
+          let end = range.endOffset;
+          const text = endNode.textContent;
+          // 끝점 확장 (공백 포함)
+          while (end < text.length && !/\s/.test(text[end])) {
+            end++;
+          }
+          range.setEnd(endNode, end);
+        }
+      }
+
+      // 선택된 텍스트가 공백만 있는지 확인
+      const selectedText = range.toString();
+      if (!selectedText || /^\s*$/.test(selectedText)) {
+        // 공백만 있는 경우: 원래 범위 반환
+        return sel.getRangeAt(0).cloneRange();
+      }
+
+      return range;
+    } catch (error) {
+      logError('expandSelectionToWordSmart.예외', error);
+      return range;
+    }
+  };
+
+  /**
+   * 가장 가까운 텍스트 노드 찾기 (개선된 버전)
+   */
+  const findNearestTextNode = (start: Node | null): Text | null => {
+    if (!start || !editorRef.current) return null;
+
+    // 깊이 우선 탐색 (DFS)로 텍스트 노드 찾기
+    const stack: Node[] = [start];
+    while (stack.length) {
+      const node = stack.pop()!;
+      if (node.nodeType === Node.TEXT_NODE && (node.textContent || '').trim().length > 0) {
+        return node as Text;
+      }
+      const children = Array.from(node.childNodes);
+      for (let i = children.length - 1; i >= 0; i--) {
+        stack.push(children[i]);
+      }
+    }
+
+    // 부모/형제 방향으로 탐색
+    let current: Node | null = start;
+    while (current && current !== editorRef.current) {
+      // 이전 형제
+      let sibling = current.previousSibling;
+      while (sibling) {
+        if (sibling.nodeType === Node.TEXT_NODE && (sibling.textContent || '').trim().length > 0) {
+          return sibling as Text;
+        }
+        stack.push(sibling);
+        while (stack.length) {
+          const subNode = stack.pop()!;
+          if (subNode.nodeType === Node.TEXT_NODE && (subNode.textContent || '').trim().length > 0) {
+            return subNode as Text;
+          }
+          const children = Array.from(subNode.childNodes);
+          for (let i = children.length - 1; i >= 0; i--) {
+            stack.push(children[i]);
+          }
+        }
+        sibling = sibling.previousSibling;
+      }
+
+      // 다음 형제
+      sibling = current.nextSibling;
+      while (sibling) {
+        if (sibling.nodeType === Node.TEXT_NODE && (sibling.textContent || '').trim().length > 0) {
+          return sibling as Text;
+        }
+        stack.push(sibling);
+        while (stack.length) {
+          const subNode = stack.pop()!;
+          if (subNode.nodeType === Node.TEXT_NODE && (subNode.textContent || '').trim().length > 0) {
+            return subNode as Text;
+          }
+          const children = Array.from(subNode.childNodes);
+          for (let i = children.length - 1; i >= 0; i--) {
+            stack.push(children[i]);
+          }
+        }
+        sibling = sibling.nextSibling;
+      }
+
+      current = current.parentNode;
+    }
+
+    return null;
+  };
+
+  /**
+   * H1, H2 헤딩을 span + font-size로 적용 (개선된 버전)
+   */
+  const toggleHeading = (level: 1 | 2) => {
+    logInfo('에디터.toggleHeading', { level });
+    restoreSelection();
+    editorRef.current?.focus();
+
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+
+    // 헤딩 크기 정의
+    const headingSizes = {
+      1: 32, // H1 = 32px
+      2: 24  // H2 = 24px
+    };
+
+    const targetSize = headingSizes[level];
+    
+    // 현재 커서 위치에서 폰트 크기 적용
+    setFontSize(targetSize);
+    
+    logInfo('에디터.toggleHeading완료', { level, appliedSize: targetSize });
+  };
+
+  /**
+   * 폰트 크기 적용 (개선된 버전 - 서식 중첩 고려)
    */
   const setFontSize = (sizePx: number) => {
-    // 선택 복원 및 selection 확보 → 없으면 종료
-    logInfo("setFontSize.call", { sizePx });
+    logInfo("글자크기변경.호출", { sizePx });
     try {
       restoreSelection();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) {
-        logError("setFontSize.noSelection", "No selection available");
+        logError("글자크기변경.선택없음", "선택된 영역이 없습니다");
         return;
       }
       let range = sel.getRangeAt(0);
-      logInfo("setFontSize.selection", {
-        collapsed: range.collapsed,
-        startNode: range.startContainer?.nodeName,
-        endNode: range.endContainer?.nodeName,
-        startOffset: range.startOffset,
-        endOffset: range.endOffset,
-      });
 
       if (range.collapsed) {
-        // a) 이미 span 내부면 갱신
-        const parentEl = (range.startContainer as Node)?.parentElement as HTMLElement | null;
-        if (parentEl && parentEl.tagName === 'SPAN') {
-          parentEl.style.fontSize = `${sizePx}px`;
-          syncFromEditor();
-          saveSelection();
-          logInfo('setFontSize.updatedExistingSpan', { applied: `${sizePx}px` });
-          return;
+        // 현재 위치에서 기존 span 찾기
+        let parentSpan: HTMLSpanElement | null = null;
+        let current: Node | null = range.startContainer;
+        
+        while (current && current !== editorRef.current) {
+          if (current.nodeType === Node.ELEMENT_NODE && 
+              (current as HTMLElement).tagName === 'SPAN') {
+            parentSpan = current as HTMLSpanElement;
+            break;
+          }
+          current = current.parentNode;
         }
 
-        // b) 단어 확장 시도
-        let expanded = expandSelectionToWordSmart();
-        let selectedText = expanded.toString();
-        logInfo('setFontSize.collapsed.tryExpand', { selectedText });
-        if (!selectedText || selectedText.replace(/[\u200B\s]/g, '').length === 0) {
-          // c) 최근접 텍스트 탐색
-          const nearest = findNearestTextNode(range.startContainer);
-          if (nearest) {
-            const aux = document.createRange();
-            aux.setStart(nearest, 0);
-            aux.setEnd(nearest, nearest.length);
-            expanded = expandRangeToWord(aux);
-            selectedText = expanded.toString();
-            logInfo('setFontSize.collapsed.nearestText', { selectedText });
+        if (parentSpan) {
+          // 기존 span의 font-size만 업데이트
+          parentSpan.style.fontSize = `${sizePx}px`;
+          logInfo('글자크기변경.기존span업데이트', { applied: `${sizePx}px` });
+        } else {
+          // 단어 확장 시도
+          let expanded = expandSelectionToWordSmart();
+          let selectedText = expanded.toString();
+          
+          if (!selectedText || selectedText.replace(/[\u200B\s]/g, '').length === 0) {
+            // 최근접 텍스트 탐색
+            const nearest = findNearestTextNode(range.startContainer);
+            if (nearest) {
+              const aux = document.createRange();
+              aux.setStart(nearest, 0);
+              aux.setEnd(nearest, nearest.length);
+              expanded = expandRangeToWord(aux);
+              selectedText = expanded.toString();
+            }
+          }
+
+          if (selectedText && selectedText.replace(/[\u200B\s]/g, '').length > 0) {
+            // 확장된 단어에 적용
+            const frag = expanded.extractContents();
+            const span = document.createElement('span');
+            span.style.fontSize = `${sizePx}px`;
+            span.appendChild(frag);
+            expanded.insertNode(span);
+
+            const after = document.createRange();
+            after.setStartAfter(span);
+            after.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(after);
+            
+            logInfo('글자크기변경.확장된단어적용', { applied: `${sizePx}px` });
+          } else {
+            // 빈 span 삽입
+            const span = document.createElement("span");
+            span.style.fontSize = `${sizePx}px`;
+            const zwsp = document.createTextNode("\u200B");
+            span.appendChild(zwsp);
+            range.insertNode(span);
+
+            const newRange = document.createRange();
+            newRange.setStart(zwsp, 1);
+            newRange.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(newRange);
+            
+            logInfo("글자크기변경.빈영역적용", { applied: `${sizePx}px` });
           }
         }
-        // d) 성공 시 감싸기
-        if (selectedText && selectedText.replace(/[\u200B\s]/g, '').length > 0) {
-          const frag = expanded.extractContents();
-          const span = document.createElement('span');
-          span.style.fontSize = `${sizePx}px`;
-          span.appendChild(frag);
-          expanded.insertNode(span);
-
-          // caret을 적용된 span 뒤로 이동
-          const after = document.createRange();
-          after.setStartAfter(span);
-          after.collapse(true);
-          const sel2 = window.getSelection();
-          sel2?.removeAllRanges();
-          sel2?.addRange(after);
-
-          syncFromEditor();
-          saveSelection();
-          logInfo('setFontSize.rangeApplied(fromCollapsed)', { applied: `${sizePx}px` });
-          return;
-        }
-
-        // e) 실패 시 제로폭 span
+      } else {
+        // 선택된 영역에 적용
+        const contents = range.extractContents();
         const span = document.createElement("span");
         span.style.fontSize = `${sizePx}px`;
-        const zwsp = document.createTextNode("\u200B");
-        span.appendChild(zwsp);
+        span.appendChild(contents);
         range.insertNode(span);
 
-        // caret 이동/동기화 이유: 제로폭 뒤로 이동, 상태 반영
         const newRange = document.createRange();
-        newRange.setStart(zwsp, 1);
+        newRange.setStartAfter(span);
         newRange.collapse(true);
         sel.removeAllRanges();
         sel.addRange(newRange);
-
-        editorRef.current?.focus();
-        requestAnimationFrame(() => {
-          syncFromEditor();
-          saveSelection();
-          logInfo("setFontSize.collapsedApplied(zeroWidth)", {
-            applied: `${sizePx}px`,
-            htmlLen: editorRef.current?.innerHTML.length,
-          });
-          const around = editorRef.current?.innerHTML?.slice(Math.max(0, (editorRef.current?.innerHTML.length || 0) - 200));
-          logInfo('setFontSize.zeroWidth.afterHTMLTail', { tail: around });
-        });
-        return;
+        
+        logInfo("글자크기변경.선택영역적용", { applied: `${sizePx}px` });
       }
 
-      // 선택 영역이 있을 때: 단어 경계로 확장 후 감싸기
-      range = expandRangeToWord(range);
-      const frag = range.extractContents();
-      const span = document.createElement("span");
-      span.style.fontSize = `${sizePx}px`;
-      span.appendChild(frag);
-      range.insertNode(span);
-
-      const newRange = document.createRange();
-      newRange.setStartAfter(span);
-      newRange.collapse(true);
-      sel.removeAllRanges();
-      sel.addRange(newRange);
       syncFromEditor();
-      logInfo("setFontSize.rangeApplied", { applied: `${sizePx}px` });
-    } catch (err) {
-      logError("setFontSize.exception", err, { requested: sizePx });
+      saveToHistory();
+      saveSelection();
+    } catch (error) {
+      logError("글자크기변경.예외", error, { requested: sizePx });
     }
-  };
-
-  /**
-   * 문서 명령어(execCommand)로 굵게/기울임/취소선을 토글
-   * deprecated API지만 폭넓게 지원되어 간단 토글용으로 사용
-   * @param {'bold'|'italic'|'strikeThrough'} cmd - 실행할 토글 명령어
-   * @returns {void}
-   */
-  const execToggle = (cmd: 'bold' | 'italic' | 'strikeThrough') => {
-    restoreSelection();
-    // 에디터에 포커스 유지
-    editorRef.current?.focus();
-    try {
-      // execCommand는 deprecated지만 광범위 지원/토글 편의로 사용
-      (document as any).execCommand(cmd, false, undefined);
-    } catch (e) {
-      // 실패 시 무시 (브라우저 차이 대비)
-    }
-    // 내부 상태 동기화
-    syncFromEditor();
-    // 커서 위치 저장 (다음 토글을 위해)
-    saveSelection();
   };
 
   // === contentEditable 헬퍼 끝 ===
 
   /**
-   * HTML 태그를 제거하고 순수 텍스트 길이 계산 등에 사용
-   * @param {string} html - 원본 HTML 문자열
-   * @returns {string} 태그 제거 후 트림된 문자열
+   * HTML 태그를 제거하고 순수 텍스트 길이 계산
    */
   const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
 
+  const determinePostType = (tags: string, title: string, content: string): string => {
+    const allText = `${tags} ${title} ${stripHtml(content)}`.toLowerCase();
+  
+    if (allText.includes("질문") || allText.includes("?")) return "질문";
+    if (allText.includes("후기") || allText.includes("경험")) return "후기";
+    if (allText.includes("정보") || allText.includes("팁")) return "정보";
+    return "기타";
+  };
+
   /**
-   * 게시글 작성/수정 제출 핸들러.
-   * - 제목/내용 검증 → payload 구성 → (수정/작성)
-   * - 서버 성공 시 상세로 이동, 실패 시 로컬 폴백 저장 후 이동
-   * @returns {Promise<void>}
+   * 게시글 작성/수정 제출 핸들러
    */
   const handleSubmitPost = async () => {
-    // 입력 검증(제목/내용/길이)
+    logInfo('게시글제출.시작', { isEditMode });
     if (!newPost.title.trim()) {
       showToast("제목을 입력해주세요.", { type: "error" });
       return;
@@ -591,18 +796,18 @@ const PG500043: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // payload 작성/태그 정규화
       const payload = {
         board: initialBoard,
         title: newPost.title,
-        content: newPost.content, // HTML 가능
+        content: newPost.content,
         tags: newPost.tags
           .split(",")
           .map((tag) => tag.trim())
           .filter((tag) => tag),
       };
 
-      // 수정/작성 분기
+      logInfo('게시글제출.페이로드', payload);
+      
       if (isEditMode && editPost?.id) {
         // 수정
         try {
@@ -614,18 +819,18 @@ const PG500043: React.FC = () => {
           const data = res.ok
             ? await res.json()
             : { id: editPost.id, ...payload };
+          logInfo('게시글제출.수정성공', { response: data });
           showToast("게시글이 수정되었습니다.", { type: "success" });
-          // 서버 성공 시 상세로 이동
           navigate(`/PG500001/PG500041/PG500042/${data.id ?? editPost.id}?board=${initialBoard}`, {
             replace: true,
           });
           return;
-        } catch (e) {
-          // 서버 실패 시 로컬 폴백 반영
+        } catch (error) {
+          logError("게시글제출.오류", error);
           const posts = JSON.parse(
             localStorage.getItem("communityPosts") || "[]"
           );
-          const idx = posts.findIndex((p: any) => p.id === editPost.id);
+          const idx = posts.findIndex((p: PostDetailWithFlags) => p.id === editPost.id);
           if (idx >= 0) {
             posts[idx] = {
               ...posts[idx],
@@ -653,11 +858,12 @@ const PG500043: React.FC = () => {
         const data = res.ok
           ? await res.json()
           : { id: `post-${Date.now()}`, ...payload };
+        logInfo('게시글제출.생성성공', { response: data });
         showToast("게시글이 성공적으로 작성되었습니다.", { type: "success" });
         navigate(`/PG500001/PG500041/PG500042/${data.id}?board=${initialBoard}`, { replace: true });
         return;
-      } catch (e) {
-        // 서버 실패 시 로컬스토리지 저장 후 상세 이동
+      } catch (error) {
+        logError("게시글제출.오류", error);
         const posts = JSON.parse(
           localStorage.getItem("communityPosts") || "[]"
         );
@@ -687,34 +893,35 @@ const PG500043: React.FC = () => {
         return;
       }
     } catch (error) {
-      // 기타 예외
       console.error("게시글 작성/수정 실패:", error);
       showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
     } finally {
-      // finally에서 isSubmitting 해제
       setIsSubmitting(false);
     }
   };
 
   /**
-   * 취소 버튼 핸들러.
-   * - 수정 모드면 상세로, 작성 모드면 목록으로 이동
-   * - 작성 중 내용이 있다면 confirm으로 사용자 확인
-   * @returns {void}
+   * 취소 버튼 핸들러
    */
   const handleCancel = () => {
+    logInfo('취소처리.시작');
     const hasContent = newPost.title.trim() || newPost.content.trim();
     const go = () => {
       if (isEditMode && editPost?.id) {
+        logInfo('취소처리.상세페이지로 이동', { postId: editPost.id });
         navigate(`/PG500001/PG500041/PG500042/${editPost.id}?board=${initialBoard}`);
       } else {
+        logInfo('취소처리.목록페이지로 이동', { board: initialBoard });
         navigate(`/PG500001/PG500041?board=${initialBoard}`);
       }
     };
 
     if (hasContent) {
+      logInfo('취소처리.내용있음.확인요청');
       if (window.confirm("작성 중인 내용이 있습니다. 정말 취소하시겠습니까?")) {
         go();
+      } else {
+        logInfo('취소처리.사용자취소');
       }
     } else {
       go();
@@ -722,15 +929,12 @@ const PG500043: React.FC = () => {
   };
 
   /**
-   * 태그 입력 인풋의 키 입력 핸들러.
-   * Enter로 submit되는 것을 방지하고, 필요 시 커스텀 태그 추가 로직 연결
-   * @param {React.KeyboardEvent<HTMLInputElement>} e - 키보드 이벤트
-   * @returns {void}
+   * 태그 입력 핸들러
    */
   const handleTagKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      // 필요 시 태그 추가 로직
+      logInfo('태그입력.엔터키', { value: e.currentTarget.value });
     }
   };
 
@@ -781,7 +985,25 @@ const PG500043: React.FC = () => {
                 type="button"
                 className="tb-btn"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => execToggle('bold')}
+                onClick={() => toggleHeading(1)}
+                title="제목1 (32px)"
+              >
+                H1
+              </button>
+              <button
+                type="button"
+                className="tb-btn"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => toggleHeading(2)}
+                title="제목2 (24px)"
+              >
+                H2
+              </button>
+              <button
+                type="button"
+                className="tb-btn"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => toggleInlineStyle('b')}
                 title="굵게"
               >
                 B
@@ -790,63 +1012,50 @@ const PG500043: React.FC = () => {
                 type="button"
                 className="tb-btn"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => execToggle('italic')}
+                onClick={() => toggleInlineStyle('i')}
                 title="기울임"
               >
                 <i>I</i>
               </button>
-            <select
-              className="tb-select"
-              onChange={(e) => {
-                const raw = (e.target as HTMLSelectElement).value;
-                const val = Number(raw);
-                logInfo("FontSizeSelect.change", { raw, val, isNaN: isNaN(val) });
+              <select
+                className="tb-select"
+                onChange={(e) => {
+                  const raw = (e.target as HTMLSelectElement).value;
+                  const val = Number(raw);
+                  logInfo("폰트크기선택.변경", { raw, val, isNaN: isNaN(val) });
 
-                if (isNaN(val)) {
-                  logError("FontSizeSelect.NaN", "Invalid font size value", { raw });
-                  return;
-                }
-                try {
-                  restoreSelection();
-                  setFontSize(val);
-                  editorRef.current?.focus();
-                  saveSelection();
-                  logInfo("FontSizeSelect.applied", { applied: val });
-                } catch (err) {
-                  logError("FontSizeSelect.apply", err, { requested: val });
-                }
-              }}
-              defaultValue="16"
-              title="글자 크기"
-              aria-label="글자 크기"
-            >
-              <option value="14">14px</option>
-              <option value="16">16px</option>
-              <option value="18">18px</option>
-              <option value="20">20px</option>
-              <option value="24">24px</option>
-            </select>
+                  if (isNaN(val)) {
+                    logError("폰트크기선택.NaN", "유효하지 않은 폰트 크기 값", { raw });
+                    return;
+                  }
+                  try {
+                    restoreSelection();
+                    setFontSize(val);
+                    editorRef.current?.focus();
+                    saveSelection();
+                    logInfo("폰트크기선택.적용됨", { applied: val });
+                  } catch (error) {
+                    logError("폰트크기선택.적용실패", error, { requested: val });
+                  }
+                }}
+                defaultValue="16"
+                title="글자 크기"
+                aria-label="글자 크기"
+              >
+                <option value="14">14px</option>
+                <option value="16">16px</option>
+                <option value="18">18px</option>
+                <option value="20">20px</option>
+                <option value="24">24px</option>
+              </select>
               <button
                 type="button"
                 className="tb-btn"
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => execToggle('strikeThrough')}
+                onClick={() => toggleInlineStyle('s')}
                 title="취소선"
               >
                 S
-              </button>
-              <button
-                type="button"
-                className="tb-btn"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  restoreSelection();
-                  editorRef.current?.focus();
-                  makeBlock("pre");
-                }}
-                title="코드"
-              >
-                {"</>"}
               </button>
               <span className="toolbar-sep" />
               <button
@@ -888,8 +1097,8 @@ const PG500043: React.FC = () => {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
+                    logInfo('파일첨부.선택', { name: file.name, size: file.size, type: file.type });
 
-                    // 5MB 제한
                     const MAX_SIZE = 5 * 1024 * 1024;
                     if (file.size > MAX_SIZE) {
                       const mb = (file.size / (1024 * 1024)).toFixed(2);
@@ -923,23 +1132,13 @@ const PG500043: React.FC = () => {
               className="form-textarea content-textarea"
               contentEditable
               suppressContentEditableWarning
-              onInput={(e) =>
-                setNewPost({
-                  ...newPost,
-                  content: (e.target as HTMLDivElement).innerHTML,
-                })
-              }
+              onInput={handleInput}
               onBeforeInput={saveSelection}
               onMouseUp={saveSelection}
-              onKeyDown={saveSelection}
+              onKeyDown={handleKeyDown}
               onKeyUp={saveSelection}
               onFocus={saveSelection}
-              onBlur={() =>
-                setNewPost((p) => ({
-                  ...p,
-                  content: editorRef.current?.innerHTML || p.content,
-                }))
-              }
+              onBlur={handleBlur}
               style={{ minHeight: 260, overflow: "auto" }}
             />
             <div className="input-help">
@@ -949,6 +1148,9 @@ const PG500043: React.FC = () => {
                 }
               >
                 {stripHtml(newPost.content).length}/2000자
+              </span>
+              <span style={{ marginLeft: '10px', fontSize: '12px', color: '#666' }}>
+                Ctrl+Z: 실행취소, Ctrl+Y: 다시실행
               </span>
             </div>
           </div>
@@ -987,9 +1189,7 @@ const PG500043: React.FC = () => {
               type="button"
               className="submit-button"
               onClick={handleSubmitPost}
-              disabled={
-                isSubmitting || !newPost.title.trim() || !newPost.content.trim()
-              }
+              disabled={isSubmitting}
             >
               {isSubmitting
                 ? isEditMode

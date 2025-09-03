@@ -11,12 +11,12 @@ import { useState, useCallback } from "react";
  * 생성자 : 문원주
  * 생성일 : 25.07.30
  * 파일명 : useToast.css
- * 수정자 :
- * 수정일 :
+ * 수정자 : 박윤성
+ * 수정일 : 25.09.03
  * 설명 : 토스트 메시지를 위한 커스텀 훅 useToast
  */
 
-export type ToastType = "success" | "error" | "info";
+export type ToastType = "success" | "error" | "info" | "warning";
 
 interface ToastOptions {
     duration?: number;

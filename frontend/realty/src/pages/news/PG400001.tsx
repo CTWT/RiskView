@@ -9,8 +9,8 @@ import PageContainer from "../../components/layout/PageContainer";
  * 생성자 : 이주하
  * 생성일 : 25.08.01
  * 파일명 : PG400001.tsx
- * 수정자 : 박윤성
- * 수정일 : 25.08.04
+ * 수정자 : 유연우
+ * 수정일 : 25.09.04
  * 설명 : 뉴스 페이지 컴포넌트
  */
 
@@ -191,7 +191,7 @@ const PG400001: React.FC = () => {
   ];
 
   // 탭 목록 데이터
-  const tabs = ["연합뉴스", "조선비즈", "부동산114"];
+  const tabs = ["코알라뉴스", "비버하우스", "수달빌리지"];
 
   // 페이지네이션 클릭 핸들러
   const goToPage = (pageNumber: number) => {

@@ -16,7 +16,7 @@ from datetime import datetime
 
 # .env 파일에서 환경 변수 로드
 load_dotenv()
-estate_url = os.getenv('estate_url')  # 실거래 API의 기본 URL
+estate_url = os.getenv('ESTATE_API_URL')  # 실거래 API의 기본 URL
 
 def build_url(base_url: str, end_index: str, cgg_nm: str, ctrt_day: str, bldg_usg: str) -> str:
     """

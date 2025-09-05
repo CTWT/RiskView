@@ -84,7 +84,7 @@ const PG500021: React.FC = () => {
             description="업데이트 안내, 이벤트, 주요 변경 사항을 빠르게 확인하세요."
           />
 
-          {/* 종합 위험 배너(임시) */}
+          {/* 배너(임시) */}
           <div className="rv05-banner">
             <div>
               <div className="rv05-banner-title"></div>

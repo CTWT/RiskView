@@ -342,7 +342,7 @@ const PG500041: React.FC = () => {
           </div>
         </div>
 
-        {/* 종합 위험 배너(임시) */}
+        {/* 배너(임시) */}
         <div className="rv05-banner">
           <div>
             <div className="rv05-banner-title"></div>

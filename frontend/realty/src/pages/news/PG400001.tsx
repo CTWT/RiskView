@@ -421,7 +421,7 @@ const PG400001: React.FC = () => {
                 <h2>{selectedNews.title}</h2>
                 <p className="news-date">{selectedNews.date}</p>
                 <p className="news-content">{selectedNews.content}</p>
-                {/* 종합 위험 배너(임시) */}
+                {/* 배너(임시) */}
                 <div className="rv05-banner">
                   <div>
                     <div className="rv05-banner-title"></div>

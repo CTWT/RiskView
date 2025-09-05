@@ -70,7 +70,7 @@ const PG500011 = () => {
             </NavLink>
           </div>
 
-          {/* 종합 위험 배너(임시) */}
+          {/* 배너(임시) */}
           <div className="rv05-banner">
             <div>
               <div className="rv05-banner-title"></div>

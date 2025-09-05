@@ -1,5 +1,3 @@
-// src/pages/community/announcements/PG500021.tsx
-
 import React from "react";
 import { Link } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
@@ -71,6 +69,12 @@ const MOCK: AnnItem[] = [
 ];
 
 const PG500021: React.FC = () => {
+    React.useEffect(() => {
+        try {
+            localStorage.setItem('noticePosts', JSON.stringify(MOCK));
+        } catch {}
+    }, []);
+
     return (
         <PageContainer showBreadcrumb={true} centerContent={true}>
             <div className="community-container">
@@ -103,7 +107,9 @@ const PG500021: React.FC = () => {
 
                                 <div className="co21-col-title">
                                     <Link
-                                        to={`detail/${item.id}`}
+                                        to={`/PG500001/PG500021/detail/${item.id}`}
+                                        state={{ title: item.title }}
+                                        replace
                                         className="co21-row-title-link"
                                     >
                                         {item.title}

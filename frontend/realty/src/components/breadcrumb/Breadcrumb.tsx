@@ -32,11 +32,24 @@ const Breadcrumb: React.FC = () => {
     const board = new URLSearchParams(location.search).get('board') || 'free';
     const pathnames = location.pathname.split("/").filter((x) => x);
     const state: any = location.state;
-    const isPostId = (seg: string) => /^(post-|\d+$)/.test(seg);
+    // id 패턴: 게시글(post-123), 숫자(123), 공지(n-1 등 하이픈 포함)
+    const isPostId = (seg: string) => /^(post-|notice-|n-)[A-Za-z0-9-]+$|^\d+$/.test(seg);
     const resolvePostTitle = (id: string): string | null => {
         if (state?.title) return state.title;
         try {
             const raw = localStorage.getItem('communityPosts');
+            if (raw) {
+                const arr = JSON.parse(raw);
+                const found = Array.isArray(arr) ? arr.find((p: any) => String(p.id) === String(id)) : null;
+                if (found?.title) return String(found.title);
+            }
+        } catch {}
+        return null;
+    };
+    const resolveNoticeTitle = (id: string): string | null => {
+        if (state?.title) return state.title;
+        try {
+            const raw = localStorage.getItem('noticePosts');
             if (raw) {
                 const arr = JSON.parse(raw);
                 const found = Array.isArray(arr) ? arr.find((p: any) => String(p.id) === String(id)) : null;
@@ -59,24 +72,39 @@ const Breadcrumb: React.FC = () => {
                 // 기본 경로
                 let routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
 
+                // 공지 상세 경로 처리: /PG500001/PG500021/detail/:id
+                if (name === 'detail' && pathnames[index - 1] === 'PG500021') {
+                    // 공지 목록으로 돌아가도록 링크 고정
+                    routeTo = `/PG500001/PG500021`;
+                }
+
                 // 상세 경로(PG500042)는 목록으로
                 if (name === 'PG500042') {
                     routeTo = `/PG500001/PG500041?board=${board}`;
                 }
 
-                // 마지막 여부 (단, PG500042 다음에 id가 오면 그 조합을 마지막으로 취급)
+                // 마지막 여부 (PG500042 다음 id 조합, 혹은 공지 detail 다음 id 조합을 마지막으로 취급)
                 const nextSeg = pathnames[index + 1];
-                const nextIsId = nextSeg && isPostId(nextSeg);
-                const isLast = index === pathnames.length - 1 || (name === 'PG500042' && nextIsId && index === pathnames.length - 2);
+                // detail 다음(공지) 또는 PG500042 다음(게시글)은 id 세그먼트로 간주
+                const nextIsId = !!nextSeg && (isPostId(nextSeg) || name === 'detail' || name === 'PG500042');
+                const isNoticeDetail = name === 'detail' && pathnames[index - 1] === 'PG500021';
+                const isLast =
+                    index === pathnames.length - 1 ||
+                    (name === 'PG500042' && nextIsId && index === pathnames.length - 2) ||
+                    (isNoticeDetail && nextIsId && index === pathnames.length - 2);
 
-                // 텍스트 치환: PG500042 다음의 id를 글제목으로 치환
+                // 텍스트 치환
                 let displayText: string = nameMap[name] || name;
                 if (name === 'PG500042' && nextIsId) {
                     displayText = resolvePostTitle(nextSeg) || '게시글 상세';
                 }
+                if (name === 'detail' && pathnames[index - 1] === 'PG500021' && nextIsId) {
+                    displayText = resolveNoticeTitle(nextSeg) || '공지 상세';
+                }
 
-                // 만약 현재 세그먼트가 id 자체이고, 직전이 PG500042이면 이 세그먼트는 렌더링 건너뜀
-                if (isPostId(name) && pathnames[index - 1] === 'PG500042') {
+                // id 세그먼트는 이전 세그먼트 성격에 따라 건너뜀
+                // 직전 세그먼트가 상세 식별자면(게시글/공지) 현재 id 세그먼트는 출력하지 않음
+                if (pathnames[index - 1] === 'PG500042' || pathnames[index - 1] === 'detail') {
                     return null;
                 }
 

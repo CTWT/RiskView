@@ -296,6 +296,10 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
         }
     }, [selectedFile, previewImage, onStartAnalysis, showToast]);
 
+    const cancelUpload = useCallback(() => {
+        setPreviewImage(null);
+    }, []);
+
     return (
         <PageContainer showBreadcrumb={true} centerContent={true}>
         <div className="an02-container">
@@ -340,9 +344,17 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
             <button
                 className="an02-ai-analyze-start-btn"
                 onClick={handleAnalyzeClick}
-                disabled={!selectedFile || isUploading || isModalOpen}
+                disabled={!selectedFile || isUploading || isModalOpen || !previewImage}
             >
                 {isUploading ? "OCR 스캔 중..." : "AI 분석 시작하기"}
+            </button>
+
+            <button
+                className="an02-ai-analyze-start-btn"
+                onClick={cancelUpload}
+                disabled={!selectedFile || isUploading || isModalOpen || !previewImage}
+            >
+                업로드 취소하기
             </button>
 
             {/* OCR 스캔 진행 모달 컴포넌트 사용 */}

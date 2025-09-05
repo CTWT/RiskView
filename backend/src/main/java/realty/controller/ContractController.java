@@ -23,6 +23,7 @@ import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.MapInfo;
+import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
 import realty.domain.model.User;
 import realty.service.ContractService;
 import realty.service.UserService;
@@ -73,6 +74,8 @@ public class ContractController {
         // 불러온 임시파일 저장
         fileComponent.saveFile(file, fileName, session);
 
+        UserDataToDBData(contractInfo.getStructuredContractDataDTO());
+
         String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity
                 .ok()
@@ -81,35 +84,12 @@ public class ContractController {
 
     @GetMapping("/contracts")
     public ResponseEntity<ContractDTO.StructuredContractDataDTO> getData(
-            @RequestParam("documentCode") String documentCode,
-            HttpSession session) {
-
-        // // 로그인 체크
-        // User user = (User) session.getAttribute("user");
-        // if (user == null) {
-        //     return ResponseEntity
-        //             .status(HttpStatus.UNAUTHORIZED) // 401
-        //             .body(null);
-        // }
-
-        // Documents document = contractService
-        //         .findDocumentByUsercode(documentCode);
-
-        // if (document == null) {
-        //     return ResponseEntity
-        //             .status(HttpStatus.NOT_FOUND) // 404
-        //             .body(null);
-        // }
-
-        // // 권한 체크
-        // if (!user.getUserCode().equals(document.getUserCode())) {
-        //     return ResponseEntity
-        //             .status(HttpStatus.FORBIDDEN) // 403
-        //             .body(null);
-        // }
+            @RequestParam("documentCode") String documentCode) {
 
         ContractDTO.StructuredContractDataDTO dto = ContractDTO.StructuredContractDataDTO.from(
                 contractService.findStructuredContractDataByDocumentcode(documentCode));
+
+        DBDataToUserData(dto);
 
         return ResponseEntity
                 .ok()
@@ -129,6 +109,8 @@ public class ContractController {
         // 맵 정보
         String address = contractInfo.getStructuredContractDataDTO().getLocation();
         MapInfo mapinfo = mapComponent.localSearch(address);
+
+        DBDataToUserData(contractInfo.getStructuredContractDataDTO());
 
         ContractDTO.ContractResponse contractResponse = ContractDTO.ContractResponse.builder()
                 .contractInfo(contractInfo)
@@ -164,5 +146,24 @@ public class ContractController {
         // 유저 정보 조회
         User user = userService.findByUserId(userId);
         return user;
+    }
+
+    private void DBDataToUserData(StructuredContractDataDTO dto){
+        if(dto.getLeaseType().equals("JEONSE"))
+        {
+            dto.setLeaseType("전세");
+        }
+        else if(dto.getLeaseType().equals("MONTHLY")){
+            dto.setLeaseType("월세");
+        }
+    }
+
+    private void UserDataToDBData(StructuredContractDataDTO dto) {
+        if(dto.getLeaseType().equals("전세")){
+            dto.setLeaseType("JEONSE");
+        }
+        else if(dto.getLeaseType().equals("월세")){
+            dto.setLeaseType("MONTHLY");
+        }
     }
 }

@@ -214,6 +214,8 @@
     min-width: 180px;
     /* 이미지의 버튼에 보이는 부드러운 발광/그림자 효과 */
     box-shadow: 0 5px 15px rgba(123, 104, 238, 0.35); /* 보라색 계열의 그림자 */
+    float:right;
+    margin:5px;
 }
 
 .an02-ai-analyze-start-btn:hover:not(:disabled) {
@@ -226,6 +228,15 @@
     background-color: #cccccc;
     cursor: not-allowed;
     box-shadow: none; /* 비활성화 시 그림자 제거 */
+}
+
+.an02-uploaded-preview-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 20px;
+    object-fit: contain;
 }
 
 /* PG100003 -  OCR 분석 후 담당 스타일*/
@@ -284,7 +295,7 @@
 .an03-uploaded-image-preview {
     max-width: 100%;
     height: auto;
-    max-height: 400px; /* 미리보기 이미지 최대 높이 제한 */
+    max-height: 600px; /* 미리보기 이미지 최대 높이 제한 */
     object-fit: contain; /* 이미지 비율 유지하며 컨테이너에 맞춤 */
     border-radius: 4px;
     border: 1px solid #eee;

@@ -421,6 +421,14 @@ const PG400001: React.FC = () => {
                 <h2>{selectedNews.title}</h2>
                 <p className="news-date">{selectedNews.date}</p>
                 <p className="news-content">{selectedNews.content}</p>
+                {/* 종합 위험 배너(임시) */}
+                <div className="rv05-banner">
+                  <div>
+                    <div className="rv05-banner-title"></div>
+                    <div className="rv05-banner-sub">AI 분석 준비 중입니다. 현재는 OCR 데이터만 반영합니다.</div>
+                  </div>
+                  <div className="rv05-badge warn">준비중</div>
+                </div>
               </div>
             ) : (
               // 없으면 워드클라우드 표시

@@ -230,10 +230,10 @@ const PG500041: React.FC = () => {
           <div className="community-tabs">
             <Link
               to={{ pathname: "", search: "?board=free" }}
-              className={`tab-item ${currentBoard === 'free' ? 'active' : ''}`}
+              className={`tab-item ${currentBoard === "free" ? "active" : ""}`}
               onClick={(e) => {
                 e.preventDefault();
-                setSearchParams({ board: 'free' });
+                setSearchParams({ board: "free" });
                 setCurrentPage(1);
               }}
             >
@@ -241,10 +241,12 @@ const PG500041: React.FC = () => {
             </Link>
             <Link
               to={{ pathname: "", search: "?board=support" }}
-              className={`tab-item ${currentBoard === 'support' ? 'active' : ''}`}
+              className={`tab-item ${
+                currentBoard === "support" ? "active" : ""
+              }`}
               onClick={(e) => {
                 e.preventDefault();
-                setSearchParams({ board: 'support' });
+                setSearchParams({ board: "support" });
                 setCurrentPage(1);
               }}
             >
@@ -339,6 +341,18 @@ const PG500041: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* 종합 위험 배너(임시) */}
+        <div className="rv05-banner">
+          <div>
+            <div className="rv05-banner-title"></div>
+            <div className="rv05-banner-sub">
+              게시판 페이지는 아직 개발 단계입니다.
+            </div>
+          </div>
+          <div className="rv05-badge warn">준비중</div>
+        </div>
+
         {/* 게시물 목록 */}
         <section className="board-list">
           {isLoading ? (
@@ -424,8 +438,10 @@ const PG500041: React.FC = () => {
           </div>
         )}
       </div>
-      <ChatToggleButton isOpen={isChatOpen}
-        onClick={() => setIsChatOpen((prev) => !prev)} />
+      <ChatToggleButton
+        isOpen={isChatOpen}
+        onClick={() => setIsChatOpen((prev) => !prev)}
+      />
     </PageContainer>
   );
 };

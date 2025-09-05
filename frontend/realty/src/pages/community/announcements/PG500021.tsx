@@ -76,68 +76,73 @@ const PG500021: React.FC = () => {
     }, []);
 
     return (
-        <PageContainer showBreadcrumb={true} centerContent={true}>
-            <div className="community-container">
-                <CommonContainerHeader
-                    subtitle="공지사항"
-                    title="RiskView의 새로운 소식을 전해드립니다"
-                    description="업데이트 안내, 이벤트, 주요 변경 사항을 빠르게 확인하세요."
-                />
+      <PageContainer showBreadcrumb={true} centerContent={true}>
+        <div className="community-container">
+          <CommonContainerHeader
+            subtitle="공지사항"
+            title="RiskView의 새로운 소식을 전해드립니다"
+            description="업데이트 안내, 이벤트, 주요 변경 사항을 빠르게 확인하세요."
+          />
 
-                <section className="co21-card">
-                    {/* 헤더 라인 */}
-                    <div className="co21-head">
-                        <div className="co21-col-type">분류</div>
-                        <div className="co21-col-title">제목</div>
-                        <div className="co21-col-author">작성자</div>
-                        <div className="co21-col-date">작성일</div>
-                    </div>
-
-                    {/* 리스트 */}
-                    <div className="co21-body">
-                        {MOCK.map((item) => (
-                            <div key={item.id} className="co21-row">
-                                <div className="co21-col-type">
-                                    <span
-                                        className={`co21-pill co21-pill-${item.type}`}
-                                    >
-                                        {item.type}
-                                    </span>
-                                </div>
-
-                                <div className="co21-col-title">
-                                    <Link
-                                        to={`/PG500001/PG500021/detail/${item.id}`}
-                                        state={{ title: item.title }}
-                                        replace
-                                        className="co21-row-title-link"
-                                    >
-                                        {item.title}
-                                    </Link>
-                                    {item.subtags?.map((t) => (
-                                        <span
-                                            key={t}
-                                            className={`co21-pill-sub ${
-                                                t === "NEW"
-                                                    ? "is-new"
-                                                    : "is-file"
-                                            }`}
-                                        >
-                                            {t}
-                                        </span>
-                                    ))}
-                                </div>
-
-                                <div className="co21-col-author">
-                                    {item.author}
-                                </div>
-                                <div className="co21-col-date">{item.date}</div>
-                            </div>
-                        ))}
-                    </div>
-                </section>
+          {/* 종합 위험 배너(임시) */}
+          <div className="rv05-banner">
+            <div>
+              <div className="rv05-banner-title"></div>
+              <div className="rv05-banner-sub">
+                공지사항 페이지는 아직 개발 단계입니다.
+              </div>
             </div>
-        </PageContainer>
+            <div className="rv05-badge warn">준비중</div>
+          </div>
+
+          <section className="co21-card">
+            {/* 헤더 라인 */}
+            <div className="co21-head">
+              <div className="co21-col-type">분류</div>
+              <div className="co21-col-title">제목</div>
+              <div className="co21-col-author">작성자</div>
+              <div className="co21-col-date">작성일</div>
+            </div>
+
+            {/* 리스트 */}
+            <div className="co21-body">
+              {MOCK.map((item) => (
+                <div key={item.id} className="co21-row">
+                  <div className="co21-col-type">
+                    <span className={`co21-pill co21-pill-${item.type}`}>
+                      {item.type}
+                    </span>
+                  </div>
+
+                  <div className="co21-col-title">
+                    <Link
+                      to={`/PG500001/PG500021/detail/${item.id}`}
+                      state={{ title: item.title }}
+                      replace
+                      className="co21-row-title-link"
+                    >
+                      {item.title}
+                    </Link>
+                    {item.subtags?.map((t) => (
+                      <span
+                        key={t}
+                        className={`co21-pill-sub ${
+                          t === "NEW" ? "is-new" : "is-file"
+                        }`}
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="co21-col-author">{item.author}</div>
+                  <div className="co21-col-date">{item.date}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </PageContainer>
     );
 };
 

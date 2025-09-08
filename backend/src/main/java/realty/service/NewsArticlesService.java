@@ -43,9 +43,7 @@ public class NewsArticlesService {
                 news.getArticleId(),
                 news.getTitle(),
                 news.getContent(),
-                news.getPublishedAt() != null ? news.getPublishedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : "",
-                news.getSourceUrl(),
-                "뉴스출처" // source (DB에 필드 있으면 news.getSource()로 교체)
+                news.getPublishedAt() != null ? news.getPublishedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : ""
             )
         );
 

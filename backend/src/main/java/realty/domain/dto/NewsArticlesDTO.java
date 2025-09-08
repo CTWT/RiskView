@@ -23,6 +23,4 @@ public class NewsArticlesDTO {
     private String title;
     private String content;
     private String date;
-    private String url;
-    private String source;
 }

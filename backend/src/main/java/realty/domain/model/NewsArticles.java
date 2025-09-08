@@ -48,17 +48,10 @@ public class NewsArticles {
     @Column(name = "content", nullable = false)
     private String content;
     
-    @Column(name = "source_url", nullable = false, length = 500)
-    private String sourceUrl;
-    
     @Column(name = "published_at", nullable = false)
     private LocalDateTime publishedAt;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
-    
-    @Column(name = "is_deleted")
-    @Builder.Default
-    private int isDeleted = 0;
 }

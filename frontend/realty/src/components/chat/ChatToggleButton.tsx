@@ -31,7 +31,7 @@ const ChatToggleButton: React.FC<ChatToggleButtonProps> = ({
         onClick={onClick}
         title={isOpen ? "실시간 채팅 닫기" : "실시간 채팅 열기"}
       >
-        💬
+        🤖
       </button>
     </div>
   );

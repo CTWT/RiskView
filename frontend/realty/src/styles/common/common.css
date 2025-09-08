@@ -1597,6 +1597,13 @@
     font-size: 16px;
 }
 
+.headerLogoImage {
+    height: 100%;
+    max-height: 60px;
+    width: auto;
+    display: block;
+}
+
 @media (max-width: 768px) {
     .headerContainer {
         padding: 0 20px;

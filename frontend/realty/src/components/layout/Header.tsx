@@ -4,6 +4,7 @@ import "../../styles/common/common.css";
 import { useContext } from "react";
 import { AuthContext } from "../../pages/auth/components/authentication/AuthContext.ts";
 import { useNavigate } from "react-router-dom";
+import logo from "../../assets/images/logo.png";
 // Header Component
 
 /*
@@ -33,8 +34,7 @@ const Header: React.FC = () => {
     <header className="headerContainer">
     <div className="headerLogo">
         <Link to="/" className="headerLogoText">
-        <strong>Risk-view</strong>
-        <span className="headerLogoSubText">Team. Debugging Monster</span>
+        <img src={logo} alt="RiskView Logo" className="headerLogoImage" />
         </Link>
     </div>
     <nav className="headerNav">

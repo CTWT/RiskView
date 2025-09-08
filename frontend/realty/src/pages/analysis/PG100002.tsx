@@ -3,7 +3,6 @@
 import React, { useState, useRef, useCallback } from "react";
 import axios from "axios";
 import "../../styles/common/common.css";
-import uploadIconImage from "../../assets/images/upload-img.png"; // 기본 업로드 아이콘 이미지 경로 확인
 import useToast from "../../hooks/useToast"; // useToast 훅 임포트
 import Toast from "../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import OcrProgressModal from "../../components/ui/OcrProgressModal"; // OCR 진행 모달 컴포넌트 임포트 (이름 변경 반영)
@@ -318,7 +317,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 onDrop={handleDrop}
                 onClick={triggerFileInput}
             >
-                {/* 미리보기 이미지가 있으면 미리보기 이미지를, 없으면 기본 아이콘을 표시 */}
+                {/* 미리보기 이미지가 있으면 미리보기 이미지를, 없으면 기본 아이콘(인라인 SVG) 표시 */}
                 {previewImage ? (
                     <img
                         src={previewImage}
@@ -326,11 +325,32 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                         className="an02-uploaded-preview-image"
                     />
                 ) : (
-                    <img
-                        src={uploadIconImage}
-                        alt="파일 업로드 아이콘"
-                        className="an02-upload-image-icon"
-                    />
+                    <div className="an02-upload-placeholder-icon">
+                    <svg
+                        width="128"
+                        height="128"
+                        viewBox="0 0 140 128"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <rect x="8" y="24" width="112" height="72" rx="10" fill="url(#grad1)" />
+                        <path d="M16 84L40 44L64 84L88 44L112 68" stroke="white" strokeWidth="6" />
+                        <path
+                        d="M112 0H122V10H132V20H122V30H112V20H102V10H112V0Z"
+                        fill="url(#grad1)"
+                        />
+                        <defs>
+                        <linearGradient id="grad1" x1="8" y1="24" x2="120" y2="96" gradientUnits="userSpaceOnUse">
+                            <stop stopColor="#c4e5fb"/>
+                            <stop offset="1" stopColor="#c3b5fb"/>
+                        </linearGradient>
+                        </defs>
+                    </svg>
+                    <p className="an02-upload-placeholder-text">
+                        계약서 또는 등기부등본 파일을 드래그하거나 클릭하여 업로드하세요<br />
+                        PNG, JPG, PDF 파일
+                    </p>
+                    </div>
                 )}
                 <input
                     type="file"

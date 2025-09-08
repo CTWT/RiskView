@@ -144,16 +144,40 @@
     margin-top: -100px !important;
 }
 .an02-upload-area {
-    border-radius: 8px; /* 이미지와 동일한 둥근 모서리 */
-    margin-bottom: 40px;
+    border: 1px dashed #ccc;
+    border-radius: 12px;
+    padding: 32px;
+    background-color: #fff;
+    min-height: 240px;
+    width: 600px;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 250px; /* 높이 확보 */
-    background-color: #fcfcfc; /* 이미지의 거의 흰색에 가까운 옅은 배경 */
-    transition: all 0.3s ease; /* 호버/드래그 효과를 위한 부드러운 전환 */
     cursor: pointer;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.an02-upload-area:hover {
+    transform: scale(1.03);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: #6d50ff;
+    /* 강조 색상 */
+}
+
+.an02-upload-placeholder-icon {
+    text-align: center;
+}
+
+.an02-upload-placeholder-icon svg {
+    margin-bottom: 16px;
+}
+
+.an02-upload-placeholder-text {
+    font-size: 20px;
+    color: #a3a3a3;
+    line-height: 1.6;
 }
 
 .an02-upload-image-icon {
@@ -164,18 +188,15 @@
     margin-left: auto;
     margin-right: auto;
     /* 이미지 아이콘에 필요하다면 기존 그림자 유지 */
-    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.05));
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease; /* 호버 효과를 위한 부드러운 전환 */
 }
 
 /* 이미지 자체에 마우스 호버 시 강조 효과 */
 .an02-upload-image-icon:hover {
     transform: scale(1.06); /* 8% 확대 */
-    filter: drop-shadow(
-        0 5px 15px rgba(123, 104, 238, 0.4)
-    ); /* 더 선명한 보라색 그림자 */
-    /* 원한다면 이미지 자체의 밝기나 채도를 조절할 수도 있습니다. */
-    /* filter: brightness(1.1) saturate(1.2); */
+    box-shadow:
+        0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .an02-upload-guide-text {
@@ -201,8 +222,8 @@
 }
 
 .an02-ai-analyze-start-btn {
-    background-color: #7b68ee; /* 이미지의 메인 보라색 버튼 */
-    color: white;
+    background-color: white;
+    color: black;
     padding: 15px 20px;
     border: none;
     border-radius: 10px; /* 이미지의 캡슐형 버튼 */
@@ -213,21 +234,23 @@
         box-shadow 0.3s ease;
     min-width: 180px;
     /* 이미지의 버튼에 보이는 부드러운 발광/그림자 효과 */
-    box-shadow: 0 5px 15px rgba(123, 104, 238, 0.35); /* 보라색 계열의 그림자 */
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     float:right;
     margin:5px;
 }
 
 .an02-ai-analyze-start-btn:hover:not(:disabled) {
-    background-color: #6a5acd; /* 호버 시 약간 더 진한 보라색 */
+    background-color: #6d50ff; /* 호버 시 약간 더 진한 보라색 */
+    color: white;
     transform: translateY(-2px); /* 약간 위로 떠오르는 효과 */
-    box-shadow: 0 8px 20px rgba(106, 90, 205, 0.45); /* 호버 시 그림자 강화 */
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08); /* 호버 시 그림자 강화 */
 }
 
 .an02-ai-analyze-start-btn:disabled {
-    background-color: #cccccc;
+    background-color: white;
     cursor: not-allowed;
     box-shadow: none; /* 비활성화 시 그림자 제거 */
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .an02-uploaded-preview-image {
@@ -1192,6 +1215,7 @@
     position: relative;
     margin: 12px auto 18px; /* 상단 여백만 유지 */
     width: 100%;
+    display: flex;
 }
 .co31-search-ic {
     position: absolute;
@@ -1205,13 +1229,17 @@
 .co31-search-input {
     width: 100%;
     height: 48px;
-    border: 1px solid #e5e7eb;
+    border: 1px solid #f0f0f0;
     border-radius: 12px;
     padding: 0 16px 0 42px;
     font-size: 15px;
     outline: none;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
+
 .co31-search-input:focus {
     border-color: #c7cbe0;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
@@ -1220,9 +1248,9 @@
 /* ───────── 설명 카드 ───────── */
 .co31-term-card {
     background: #fff;
-    border: 1px solid #edf1f7;
+    border: 1px solid #f0f0f0;
     border-radius: 16px;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     padding: 22px;
     margin: 0 auto 18px;
 }
@@ -1261,14 +1289,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 18px rgba(123, 104, 238, 0.28);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 .co31-chip:hover {
     transform: translateY(-1px);
 }
 .co31-chip.active {
-    background-color: #6a5acd;
-    box-shadow: 0 10px 22px rgba(106, 90, 205, 0.38);
+    background-color: #b2a1ff;
+    color: white;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 /* 반응형 */
@@ -2613,13 +2642,15 @@
 
 .pagination-button {
     padding: 8px 14px;
-    background: white;
-    border: 1px solid #ccc;
+    background-color: white;
+    color: #666;
+    border: none;
     border-radius: 6px;
     font-size: 14px;
     color: #333;
     cursor: pointer;
     transition: background 0.2s ease, color 0.2s ease;
+    box-shadow: 0px 1px 5px 1px rgba(0, 0, 0, 0.1);
 }
 
 .pagination-button:hover {
@@ -2627,9 +2658,8 @@
 }
 
 .pagination-button.active {
-    background: #1976d2;
+    background: #a290ff;
     color: white;
-    border-color: #1976d2;
     font-weight: bold;
 }
 
@@ -2645,7 +2675,7 @@
     background: white;
     border-radius: 12px;
     padding: 25px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     border: 1px solid #f0f0f0;
     min-height: 600px;
 }

@@ -9,8 +9,8 @@ import PageContainer from "../../components/layout/PageContainer";
  * 생성자 : 이주하
  * 생성일 : 25.08.01
  * 파일명 : PG400001.tsx
- * 수정자 : 유연우
- * 수정일 : 25.09.04
+ * 수정자 : 박윤성
+ * 수정일 : 25.08.04
  * 설명 : 뉴스 페이지 컴포넌트
  */
 
@@ -43,6 +43,16 @@ interface PaginationInfo {
   nextBlockStartPage?: number; // 다음 블록의 시작 페이지
 }
 
+// 감성 분석 데이터 타입
+interface SentimentAnalysis {
+  score: number; // 감성 점수 (0-100)
+  type: "positive" | "negative" | "neutral"; // 감성 유형
+  confidence: number; // 신뢰도 (0-100)
+  keywords: string[]; // 핵심 키워드
+  marketImpact: "bullish" | "bearish" | "neutral"; // 시장 영향도
+  analysisTime: string; // 분석 시간
+}
+
 // 뉴스 페이지 컴포넌트
 const PG400001: React.FC = () => {
   // 활성화된 탭 상태
@@ -55,6 +65,11 @@ const PG400001: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   // 선택된 뉴스 상태
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+  // 감성 분석 결과 상태
+  const [sentimentAnalysis, setSentimentAnalysis] =
+    useState<SentimentAnalysis | null>(null);
+  // 감성 분석 로딩 상태
+  const [sentimentLoading, setSentimentLoading] = useState<boolean>(false);
   // 페이지네이션 정보 상태
   const [pagination, setPagination] = useState<PaginationInfo>({
     // 초기값 설정
@@ -68,6 +83,183 @@ const PG400001: React.FC = () => {
 
   // 뉴스 상세 DOM 참조
   const detailRef = useRef<HTMLDivElement | null>(null);
+
+  // 감성 분석 API 호출 함수
+  const fetchSentimentAnalysis = async (newsId: number) => {
+    setSentimentLoading(true);
+    try {
+      // API 호출 (실제 API 엔드포인트로 변경 필요)
+      const response = await fetch(`/api/sentiment/analyze/${newsId}`);
+      if (!response.ok) {
+        throw new Error("감성 분석 API 호출 실패");
+      }
+      const data = await response.json();
+      setSentimentAnalysis(data);
+    } catch (error) {
+      console.error("감성 분석 오류:", error);
+      // 임시 더미 데이터 (실제 환경에서는 제거)
+      setSentimentAnalysis({
+        score: 72,
+        type: "negative",
+        confidence: 85,
+        keywords: ["위험 요가", "신용 붕괴", "신중 접근"],
+        marketImpact: "bearish",
+        analysisTime: "2025.08.15 오후 17:39:48",
+      });
+    } finally {
+      setSentimentLoading(false);
+    }
+  };
+
+  // 뉴스 선택 시 감성 분석 실행
+  const handleNewsSelect = (news: NewsItem) => {
+    setSelectedNews(news);
+    setSentimentAnalysis(null); // 이전 분석 결과 초기화
+    fetchSentimentAnalysis(news.id);
+  };
+
+  // 감성 분석 결과 렌더링 함수
+  const renderSentimentAnalysis = () => {
+    if (!sentimentAnalysis) return null;
+
+    const getSentimentColor = () => {
+      switch (sentimentAnalysis.type) {
+        case "positive":
+          return "#4CAF50";
+        case "negative":
+          return "#f44336";
+        default:
+          return "#FF9800";
+      }
+    };
+
+    const getSentimentText = () => {
+      switch (sentimentAnalysis.type) {
+        case "positive":
+          return "긍정적 시장 선호";
+        case "negative":
+          return "부정적 시장 선호";
+        default:
+          return "중립적";
+      }
+    };
+
+    const getMarketImpactIcon = () => {
+      switch (sentimentAnalysis.marketImpact) {
+        case "bullish":
+          return "📈";
+        case "bearish":
+          return "📉";
+        default:
+          return "➡️";
+      }
+    };
+
+    const getMarketImpactText = () => {
+      switch (sentimentAnalysis.marketImpact) {
+        case "bullish":
+          return "시장 영향도\n보통";
+        case "bearish":
+          return "시장 영향도\n우려";
+        default:
+          return "거래 신호\n신중 접근";
+      }
+    };
+
+    const getMarketImpactColor = () => {
+      switch (sentimentAnalysis.marketImpact) {
+        case "bullish":
+          return "#4CAF50";
+        case "bearish":
+          return "#f44336";
+        default:
+          return "#f44336";
+      }
+    };
+
+    return (
+      <div className="sentiment-analysis">
+        <div className="sentiment-header">
+          <h3>🤖 AI 감성 분석</h3>
+        </div>
+
+        <div className="sentiment-alert">
+          <div className="sentiment-alert-header">
+            <span className="alert-icon">😰</span>
+            <span className="alert-title">{getSentimentText()}</span>
+            <div className="sentiment-score-container">
+              <span className="score-label">감성 점수:</span>
+              <div className="score-bar">
+                <div
+                  className="score-fill"
+                  style={{
+                    width: `${sentimentAnalysis.score}%`,
+                    backgroundColor: getSentimentColor(),
+                  }}
+                ></div>
+              </div>
+              <span className="score-value">{sentimentAnalysis.score}/100</span>
+            </div>
+          </div>
+
+          <div className="sentiment-description">
+            <h4>🧠 AI 분석 결과</h4>
+            <p>
+              전세가율 상승과 전세사기 증가로 인해 시장 불안감이 높아지고
+              있습니다. 임차인들의 위험 부담이 증가하고 있어 신중한 접근이
+              필요한 상황입니다.
+            </p>
+          </div>
+
+          <div className="sentiment-keywords">
+            <span className="keywords-label">핵심 키워드:</span>
+            {sentimentAnalysis.keywords.map((keyword, index) => (
+              <span key={index} className="keyword-tag">
+                {keyword}
+              </span>
+            ))}
+          </div>
+
+          <div className="analysis-time">
+            <span className="time-icon">🕒</span>
+            <span>분석 시간: {sentimentAnalysis.analysisTime}</span>
+          </div>
+        </div>
+
+        <div className="market-indicators">
+          <div className="indicator-item">
+            <div className="indicator-icon">📈</div>
+            <div className="indicator-text">
+              <div className="indicator-title">시장 영향도</div>
+              <div className="indicator-value" style={{ color: "#4CAF50" }}>
+                보통
+              </div>
+            </div>
+          </div>
+
+          <div className="indicator-item">
+            <div className="indicator-icon">😟</div>
+            <div className="indicator-text">
+              <div className="indicator-title">시장 영향도</div>
+              <div className="indicator-value" style={{ color: "#f44336" }}>
+                우려
+              </div>
+            </div>
+          </div>
+
+          <div className="indicator-item">
+            <div className="indicator-icon">🔴</div>
+            <div className="indicator-text">
+              <div className="indicator-title">거래 신호</div>
+              <div className="indicator-value" style={{ color: "#f44336" }}>
+                신중 접근
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   // 컴포넌트 외부 클릭 감지
   useEffect(() => {
@@ -86,6 +278,7 @@ const PG400001: React.FC = () => {
         !isNewsItem
       ) {
         setSelectedNews(null);
+        setSentimentAnalysis(null);
       }
     };
 
@@ -191,7 +384,7 @@ const PG400001: React.FC = () => {
   ];
 
   // 탭 목록 데이터
-  const tabs = ["코알라뉴스", "비버하우스", "수달빌리지"];
+  const tabs = ["연합뉴스", "조선비즈", "부동산114"];
 
   // 페이지네이션 클릭 핸들러
   const goToPage = (pageNumber: number) => {
@@ -332,7 +525,7 @@ const PG400001: React.FC = () => {
                     {/* 클릭 시 상세 보기 */}
                     <div
                       className="news-item-click-area"
-                      onClick={() => setSelectedNews(news)}
+                      onClick={() => handleNewsSelect(news)}
                     >
                       <div className="news-date">{news.date}</div>
                       <h3 className="news-title">{news.title}</h3>
@@ -421,14 +614,18 @@ const PG400001: React.FC = () => {
                 <h2>{selectedNews.title}</h2>
                 <p className="news-date">{selectedNews.date}</p>
                 <p className="news-content">{selectedNews.content}</p>
-                {/* 배너(임시) */}
-                <div className="rv05-banner">
-                  <div>
-                    <div className="rv05-banner-title"></div>
-                    <div className="rv05-banner-sub">AI 분석 준비 중입니다. 현재는 OCR 데이터만 반영합니다.</div>
+
+                <hr className="Ai-divider" />
+
+                {/* AI 감성 분석 결과 */}
+                {sentimentLoading ? (
+                  <div className="sentiment-loading">
+                    <div className="spinner"></div>
+                    <p>AI가 감성을 분석하는 중...</p>
                   </div>
-                  <div className="rv05-badge warn">준비중</div>
-                </div>
+                ) : (
+                  renderSentimentAnalysis()
+                )}
               </div>
             ) : (
               // 없으면 워드클라우드 표시

@@ -2527,12 +2527,14 @@
     margin-top: -40px;
     width: 100%;
     max-width: 100%;
+    margin-left: -380px
 }
 
 /* 뉴스 섹션 */
 .news-section {
     background: white;
     margin: 0 0 0 -95px;
+
 }
 
 .news-header-row {
@@ -2667,8 +2669,8 @@
 .keyword-section {
     position: sticky;
     top: 20px;
-    width: 500px;
-    margin-left: -70px;
+    width: 650px;
+    margin-left: 100px;
 }
 
 .keyword-card {
@@ -2733,6 +2735,103 @@
     text-align: center;
     line-height: 1.4;
     margin: 0;
+}
+/* AI 분석 카드 전체 */
+.ai-analysis-card {
+    background: #fff5f5;
+    border: 2px solid #f8cfd1;
+    border-radius: 16px;
+    padding: 24px 32px;
+    margin-top: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(255, 0, 0, 0.05);
+}
+
+/* 감정 유형 + 점수 표시 */
+.emotion-summary {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    color: #e53935;
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.emotion-summary img,
+.emotion-detail img {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+}
+
+/* 감정 점수 바 */
+.score-bar-container {
+    width: 100%;
+    background-color: #ffe6e6;
+    height: 6px;
+    border-radius: 4px;
+    margin: 4px 0 16px;
+    position: relative;
+}
+
+.score-bar-fill {
+    background-color: #e53935;
+    height: 6px;
+    border-radius: 4px;
+    width: 72%;
+    /* 실제 점수 비율로 조절 가능 */
+}
+
+/* 감정 해설 */
+.emotion-detail {
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    color: #444;
+}
+
+/* 분석 텍스트 */
+.analysis-main-text {
+    color: #222;
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+/* 키워드 뱃지 */
+.analysis-keywords {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.keyword-badge {
+    padding: 4px 10px;
+    background: #fff0f0;
+    color: #e53935;
+    font-size: 13px;
+    border: 1px solid #f8cfd1;
+    border-radius: 12px;
+}
+
+/* 분석 기준 및 시간 */
+.analysis-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #888;
+    border-top: 1px solid #f2bcbc;
+    padding-top: 12px;
+    margin-top: 16px;
+}
+
+.analysis-footer .time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 /* 로딩 스피너 */
@@ -2930,6 +3029,265 @@
     text-align: center;
     line-height: 1.4;
     margin: 0;
+}
+
+/* AI 감성 분석 스타일 */
+
+.sentiment-header h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+}
+
+.sentiment-alert {
+    background: #fef7f7;
+    border: 2px solid rgba(255, 69, 69, 0.54);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.sentiment-alert-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.alert-icon {
+    font-size: 24px;
+}
+
+.alert-title {
+    font-weight: bold;
+    color: #d32f2f;
+    font-size: 16px;
+}
+
+.sentiment-score-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.score-label {
+    font-size: 14px;
+    color: #666;
+    white-space: nowrap;
+}
+
+.score-bar {
+    width: 100px;
+    height: 8px;
+    background: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: 4px;
+}
+
+.score-value {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.sentiment-description {
+    margin: 15px 0;
+}
+
+.sentiment-description h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: bold;
+}
+
+.sentiment-description p {
+    margin: 0;
+    line-height: 1.6;
+    color: #555;
+    font-size: 14px;
+}
+
+.sentiment-keywords {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.keywords-label {
+    font-weight: bold;
+    color: #333;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.keyword-tag {
+    background: none;
+    border: 1px solid #FF3D3D;
+    border-radius: 16px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: #FF3D3D;
+    white-space: nowrap;
+}
+
+.Ai-divider {
+    border: none;
+    border-bottom: 0.5px solid rgba(130, 130, 130, 0.5);
+    margin: 16px 0;
+}
+
+.analysis-time {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    font-size: 12px;
+    color: #888;
+}
+
+.time-icon {
+    font-size: 14px;
+}
+
+.market-indicators {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.indicator-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background: white;
+    transition: transform 0.2s ease;
+}
+
+.indicator-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.indicator-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.indicator-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.indicator-title {
+    font-size: 12px;
+    color: #666;
+    white-space: pre-line;
+    line-height: 1.2;
+}
+
+.indicator-value {
+    font-size: 14px;
+    font-weight: bold;
+    white-space: pre-line;
+    line-height: 1.2;
+}
+
+/* 감성 분석 로딩 스타일 */
+.sentiment-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.sentiment-loading .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #2196F3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+.sentiment-loading p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .sentiment-alert-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .sentiment-score-container {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .score-bar {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .market-indicators {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .sentiment-keywords {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .sentiment-analysis {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sentiment-score-container {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .indicator-icon {
+        font-size: 24px;
+    }
+
+    .indicator-title,
+    .indicator-value {
+        font-size: 12px;
+    }
 }
 
 /* 로딩 스피너 */

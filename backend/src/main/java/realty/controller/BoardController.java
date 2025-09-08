@@ -108,11 +108,13 @@ public class BoardController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<PostDetailResponseDTO> getPostById(@PathVariable Long id, HttpServletRequest request) {
+        log.info("API: getPostById - id={}", id);
         String userCode = userService.getCurrentUserCode(request);
         
         PostDetailResponseDTO detailResponseDTO 
         = boardService.getPostDetailResponseDTOByPostIdAndUserCode(id, userCode);
 
+        log.info("Successfully fetched post details for id: {}", id);
         return ResponseEntity.ok(detailResponseDTO);
     }
 
@@ -144,9 +146,11 @@ public class BoardController {
      */
     @PutMapping("/{id}")
     public ResponseEntity<PostDetailResponseDTO> updatePost(@PathVariable Long id, @RequestBody PostUpdateRequestDTO requestDTO, HttpServletRequest request) {
+        log.info("API: updatePost - id={}", id);
         String postCode = boardService.getPostCodeById(id);
         String userCode = userService.getCurrentUserCode(request);
         PostDetailResponseDTO updatedPost = boardService.updatePost(requestDTO, postCode, userCode);
+        log.info("Successfully updated post with id: {}", id);
         return ResponseEntity.ok(updatedPost);
     }
 
@@ -157,18 +161,20 @@ public class BoardController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePost(@PathVariable Long id, HttpServletRequest request) {
+        log.info("API: deletePost - id={}", id);
         String postCode = boardService.getPostCodeById(id);
         String userCode = userService.getCurrentUserCode(request);
         boardService.deletePost(postCode, userCode);
-
+        log.info("Successfully deleted post with id: {}", id);
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/{id}/views")
     public ResponseEntity<Void> increaseViews(@PathVariable Long id) {
+        log.info("API: increaseViews - id={}", id);
         // 조회수 증가
         boardService.PostViewIncrease(id);
-
+        log.info("Successfully increased view count for post with id: {}", id);
         return ResponseEntity.ok().build();
     }
 
@@ -179,9 +185,11 @@ public class BoardController {
      */
     @PostMapping("/{id}/likes")
     public ResponseEntity<LikeResponseDTO> likePost(@PathVariable Long id, HttpServletRequest request) {
+        log.info("API: likePost - id={}", id);
         String userCode = userService.getCurrentUserCode(request);
         String postCode = boardService.getPostCodeById(id);
         LikeResponseDTO likeResponseDTO = boardService.likePost(postCode, userCode);
+        log.info("User {} liked post {}. Current likes: {}", userCode, id, likeResponseDTO.getLikes());
         return ResponseEntity.ok().body(likeResponseDTO);
     }
 
@@ -192,14 +200,17 @@ public class BoardController {
      */
     @DeleteMapping("/{id}/likes")
     public ResponseEntity<LikeResponseDTO> unlikePost(@PathVariable Long id, HttpServletRequest request) {
+        log.info("API: unlikePost - id={}", id);
         String userCode = userService.getCurrentUserCode(request);
         String postCode = boardService.getPostCodeById(id);
         LikeResponseDTO likeResponseDTO = boardService.unlikePost(postCode, userCode);
+        log.info("User {} unliked post {}. Current likes: {}", userCode, id, likeResponseDTO.getLikes());
         return ResponseEntity.ok().body(likeResponseDTO);
     }
 
     @PostMapping("/{id}/comments")
     public ResponseEntity<CommentResponseDTO> addComment(@PathVariable Long id, @RequestBody CommentCreateRequestDTO requestDTO, HttpServletRequest request) {
+        log.info("API: addComment - postId={}", id);
         String userCode = userService.getCurrentUserCode(request);
         String postCode = boardService.getPostCodeById(id);
         CommentCreateRequestDTO commentCreateRequestDTO = CommentCreateRequestDTO.builder()
@@ -207,23 +218,27 @@ public class BoardController {
                                                                                     .build();
 
         CommentResponseDTO commentResponseDTO = boardService.addComment(commentCreateRequestDTO, postCode, userCode);
+        log.info("Successfully added comment to post {}. New comment id: {}", id, commentResponseDTO.getId());
         return ResponseEntity.ok().body(commentResponseDTO);
     }
 
     @PutMapping("/{id}/comments/{commentId}")
     public ResponseEntity<CommentResponseDTO> updateComment(@PathVariable Long id, @PathVariable Long commentId, @RequestBody CommentUpdateRequestDTO requestDTO, HttpServletRequest request) {
+        log.info("API: updateComment - postId={}, commentId={}", id, commentId);
         String commentCode = boardService.getCommunityCommentById(commentId).getCommentCode();
         String userCode = userService.getCurrentUserCode(request);
         String postCode = boardService.getPostCodeById(id);
         CommentResponseDTO commentResponseDTO = boardService.updateComment(requestDTO,postCode, commentCode, userCode);
     
+        log.info("Successfully updated comment {} on post {}", commentId, id);
         return ResponseEntity.ok().body(commentResponseDTO);
     }
 
     @DeleteMapping("/{id}/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+    public ResponseEntity<Void> deleteComment(@PathVariable Long id, @PathVariable Long commentId, HttpServletRequest request) {
+        log.info("API: deleteComment - postId={}, commentId={}", id, commentId);
         boardService.deleteComment(commentId);
-
+        log.info("Successfully deleted comment {} from post {}", commentId, id);
         return ResponseEntity.ok().build();
     }
 }

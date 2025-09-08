@@ -4,6 +4,7 @@ import realty.service.NewsArticlesService;
 import realty.service.NewsArticlesService.NewsArticlesPage;
 import java.util.HashMap;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 작성일 : 25.07.28
  * 파일명 : NewsArticlesController.java
  */
+@Slf4j
 @RequestMapping("/api/board/news_articles")
 @RestController
 public class NewsArticlesController {
@@ -30,15 +32,20 @@ public class NewsArticlesController {
      * 뉴스 기사 목록 호출 메서드
      * @param pageNum 페이지 번호(기본값: 1)
      * @param size 한 페이지당 보여줄 항목 수(기본값: 6)
+     * @param source 뉴스 출처 (선택 사항)
      * @return 부동산 뉴스 페이지
      */
     @GetMapping(value = "", produces = "application/json; charset=UTF-8")
     public ResponseEntity<Map<String, Object>> getNewsArticles(
         @RequestParam(name = "pageNum", defaultValue = "1") int pageNum,
-        @RequestParam(name = "size", defaultValue = "6") int size) {
-        // 뉴스 페이지 정보 불러오기
-        NewsArticlesPage articlesData = newsArticlesService.getNewsPages(pageNum, size);
+        @RequestParam(name = "size", defaultValue = "6") int size,
+        @RequestParam(name = "source", required = false) String source) 
+    {
+        log.info("뉴스 기사 목록 요청 수신: pageNum={}, size={}, source={}", pageNum, size, source);
+        // 뉴스 페이지 정보 불러오기 (source 파라미터 추가)
+        NewsArticlesPage articlesData = newsArticlesService.getNewsPages(pageNum, size, source);
         
+        log.info("뉴스 기사 목록 응답 생성: 총 {} 페이지, {}개 항목", articlesData.getTotalPages(), articlesData.getTotalItems());
         // 응답 데이터 구성
         Map<String, Object> response = new HashMap<>();
         response.put("content", articlesData.getNewsList());  // 기사 목록

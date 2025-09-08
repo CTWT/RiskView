@@ -19,8 +19,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewsArticlesDTO {
-    private Long id;
-    private String title;
-    private String content;
-    private String date;
+    private Long id; // 뉴스 기사 ID
+    private String title; // 뉴스 기사 제목
+    private String content; // 뉴스 기사 내용
+    private String siteName; // 뉴스 출처
+    private String publishedAt; // 뉴스 게시일
 }

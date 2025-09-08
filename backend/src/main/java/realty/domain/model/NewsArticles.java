@@ -20,7 +20,7 @@ import lombok.Setter;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.07.28
  * 파일명 : NewsArticles.java
  */
@@ -48,6 +48,9 @@ public class NewsArticles {
     @Column(name = "content", nullable = false)
     private String content;
     
+    @Column(name = "site_name", length = 50)
+    private String siteName;
+
     @Column(name = "published_at", nullable = false)
     private LocalDateTime publishedAt;
     

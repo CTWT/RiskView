@@ -2,6 +2,7 @@ package realty.service;
 
 import realty.domain.dto.NewsArticlesDTO;
 import realty.domain.repository.NewsArticlesRepository;
+import lombok.extern.slf4j.Slf4j;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
  * 작성일 : 25.07.28
  * 파일명 : NewsArticlesService.java
  */
+@Slf4j
 @Service
 public class NewsArticlesService {
     
@@ -28,27 +30,41 @@ public class NewsArticlesService {
      * 현재 페이지에 표시할 뉴스 기사 항목들을 가져오는 메서드
      * @param pageNum 페이지 번호
      * @param size 한 페이지당 보여줄 항목 수
+     * @param source 뉴스 출처 (null일 경우 전체 검색)
      * @return 현재 페이지에 표시할 뉴스 기사 항목들 및 페이징 정보 (NewsArticlesPage 객체)
      */
-    public NewsArticlesPage getNewsPages(int pageNum, int size) {
+    public NewsArticlesPage getNewsPages(int pageNum, int size, String source) {
+        log.info("뉴스 페이지 데이터 조회 시작: pageNum={}, size={}, source={}", pageNum, size, source);
         // 가져올 페이지의 번호(pageNum)와 한 페이지당 항목수(size)를 지정
         // 유저가 제출한 페이지 번호는 1부터 시작하지만, Spring Data JPA는 0부터 시작하므로 -1
         Pageable pageable = PageRequest.of(pageNum - 1, size);
 
-        // 데이터베이스에서 Pageable 객체에 저장된 조건에 해당하는 뉴스 기사를 찾아서 가져옴.
-        // Page<NewsArticles> 타입으로 결과 반환.
-        Page<NewsArticlesDTO> newsPage = newsArticlesRepository.findAll(pageable)
+        Page<realty.domain.model.NewsArticles> newsArticlesPage;
+
+        // source 파라미터 유무에 따라 분기
+        if (source != null && !source.isEmpty()) {
+            // source가 있으면 해당 출처의 뉴스만 조회
+            log.debug("뉴스 출처로 필터링: {}", source);
+            newsArticlesPage = newsArticlesRepository.findAllBySiteName(source, pageable);
+        } else {
+            // source가 없으면 모든 뉴스 조회
+            log.debug("모든 뉴스 조회");
+            newsArticlesPage = newsArticlesRepository.findAll(pageable);
+        }
+
+        Page<NewsArticlesDTO> newsDtoPage = newsArticlesPage
             // Page<NewsArticles> 타입을 Page<NewsArticleDTO>로 매핑
             .map(news -> new NewsArticlesDTO(
                 news.getArticleId(),
                 news.getTitle(),
                 news.getContent(),
+                news.getSiteName(),
                 news.getPublishedAt() != null ? news.getPublishedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) : ""
             )
         );
 
         // 총 페이지 수
-        int totalPages = newsPage.getTotalPages();
+        int totalPages = newsDtoPage.getTotalPages();
         // 페이지 수가 0이 되는 것을 방지(최소 1이상): 데이터가 없을 때도 1페이지는 표시해야 하기 때문
         if (totalPages == 0) {
             totalPages = 1;
@@ -71,11 +87,12 @@ public class NewsArticlesService {
         // 다음 블록의 시작 페이지
         int nextBlockStartPage = hasNextBlock ? endPage + 1 : totalPages;
 
+        log.info("뉴스 페이지 데이터 조회 완료: {}개의 뉴스 항목 반환", newsDtoPage.getContent().size());
 
         // 페이징된 뉴스 기사 목록과 모든 페이징 관련 정보를 NewsArticlesPage 객체에 담아 반환
         return new NewsArticlesPage(
-            newsPage.getContent(), // 뉴스 목록
-            newsPage.getTotalElements(), // 총 게시물 수
+            newsDtoPage.getContent(), // 뉴스 목록
+            newsDtoPage.getTotalElements(), // 총 게시물 수
             totalPages, // 총 페이지 수
             pageNum, // 현재 페이지 (Spring Page는 0-based이므로 이미 처리됨)
             size, // 한 페이지당 보여줄 항목 수

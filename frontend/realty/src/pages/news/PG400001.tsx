@@ -10,7 +10,7 @@ import PageContainer from "../../components/layout/PageContainer";
  * 생성일 : 25.08.01
  * 파일명 : PG400001.tsx
  * 수정자 : 박윤성
- * 수정일 : 25.08.04
+ * 수정일 : 25.09.08
  * 설명 : 뉴스 페이지 컴포넌트
  */
 
@@ -18,17 +18,17 @@ import PageContainer from "../../components/layout/PageContainer";
 interface NewsItem {
   id: number;
   title: string;
-  date: string;
-  content?: string; // 선택적 속성
-  url?: string; // 선택적 속성
-  source?: string; // 선택적 속성
+  publishedAt: string; // 날짜 필드
+  content?: string; // 내용(선택적 속성)
+  url?: string; // URL(선택적 속성)
+  siteName?: string; // 사이트명(선택적 속성)
 }
 
 // 키워드 데이터 타입
 interface KeywordItem {
   text: string;
   weight: number;
-  color?: string; // 선택적 속성
+  color?: string; // 색상(선택적 속성)
 }
 
 // 페이지네이션 정보 타입
@@ -39,8 +39,8 @@ interface PaginationInfo {
   endPage: number; // 끝 페이지
   hasPrevBlock: boolean; // 이전 블록 존재 여부
   hasNextBlock: boolean; // 다음 블록 존재 여부
-  prevBlockStartPage?: number; // 이전 블록의 시작 페이지
-  nextBlockStartPage?: number; // 다음 블록의 시작 페이지
+  prevBlockStartPage?: number; // 이전 블록의 시작 페이지(선택적 속성)
+  nextBlockStartPage?: number; // 다음 블록의 시작 페이지(선택적 속성)
 }
 
 // 감성 분석 데이터 타입
@@ -55,8 +55,8 @@ interface SentimentAnalysis {
 
 // 뉴스 페이지 컴포넌트
 const PG400001: React.FC = () => {
-  // 활성화된 탭 상태
-  const [activeTab, setActiveTab] = useState<string>("News");
+  // 선택된 뉴스 출처 상태 ('전체'를 기본값으로 설정)
+  const [selectedSource, setSelectedSource] = useState<string>("전체");
   // 뉴스 목록 상태
   const [newsData, setNewsData] = useState<NewsItem[]>([]);
   // 키워드 상태
@@ -293,12 +293,17 @@ const PG400001: React.FC = () => {
     };
   }, [selectedNews]);
 
-  // API 호출 함수
-  const fetchNewsData = async (pageNum: number) => {
+  // 뉴스 데이터 가져오기
+  const fetchNewsData = async (pageNum: number, source: string) => {
     // 데이터를 불러오기 시작했으므로 로딩 상태를 true로 설정
     setLoading(true);
+
+    // '전체'가 아닐 경우에만 source 파라미터를 추가
+    const sourceParam = source !== "전체" ? `&source=${encodeURIComponent(source)}` : "";
+    const apiUrl = `/api/board/news_articles?pageNum=${pageNum}&size=6${sourceParam}`;
+
     // 지정된 주소로 API 호출 보냄
-    fetch(`/api/board/news_articles?pageNum=${pageNum}&size=6`)
+    fetch(apiUrl)
       // 서버로부터 응답을 받았으면
       .then((response) => {
         console.log("Response status:", response.status);
@@ -326,7 +331,14 @@ const PG400001: React.FC = () => {
       .then((data) => {
         console.log("API 응답 데이터:", data);
         // 뉴스 데이터 설정
-        setNewsData(data.content);
+        const formattedNews = data.content.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          publishedAt: item.publishedAt, // API 응답 필드명 확인
+          content: item.content,
+          siteName: item.siteName,
+        }));
+        setNewsData(formattedNews);
         // 페이지네이션 데이터 설정
         setPagination({
           totalPages: data.totalPages,
@@ -352,12 +364,12 @@ const PG400001: React.FC = () => {
       });
   };
 
-  // 컴포넌트 마운트 시 API 호출
+  // 컴포넌트 마운트 시 또는 selectedSource가 변경될 때 API 호출
   useEffect(() => {
-    // 뉴스 페이지네이션 API 호출하여 페이지 1로 이동
-    fetchNewsData(1);
+    // 선택된 소스로 뉴스 데이터의 첫 페이지를 불러옴
+    fetchNewsData(1, selectedSource);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedSource]);
 
   // 임시 키워드 데이터
   const mockKeywords: KeywordItem[] = [
@@ -384,14 +396,14 @@ const PG400001: React.FC = () => {
   ];
 
   // 탭 목록 데이터
-  const tabs = ["연합뉴스", "조선비즈", "부동산114"];
+  const tabs = ["전체", "코알라 뉴스", "비버 하우스", "수달 빌리지"];
 
   // 페이지네이션 클릭 핸들러
   const goToPage = (pageNumber: number) => {
     // 페이지 번호가 1개 이상이고 총 페이지 수보다 작거나 같으면
     if (pageNumber >= 1 && pageNumber <= pagination.totalPages) {
       // 뉴스 페이지네이션 API 호출하여 해당되는 페이지로 이동
-      fetchNewsData(pageNumber);
+      fetchNewsData(pageNumber, selectedSource);
     }
   };
 
@@ -497,10 +509,8 @@ const PG400001: React.FC = () => {
                 {tabs.map((tab) => (
                   <button
                     key={tab}
-                    className={`tab-button ${
-                      activeTab === tab ? "active" : ""
-                    }`}
-                    onClick={() => setActiveTab(tab)}
+                    className={`tab-button ${selectedSource === tab ? "active" : ""}`}
+                    onClick={() => setSelectedSource(tab)}
                   >
                     {tab}
                   </button>
@@ -527,7 +537,10 @@ const PG400001: React.FC = () => {
                       className="news-item-click-area"
                       onClick={() => handleNewsSelect(news)}
                     >
-                      <div className="news-date">{news.date}</div>
+                      <div className="news-meta">
+                        <span className="news-date">{news.publishedAt.split(' ')[0]}</span>
+                        {news.siteName && <span className="news-source">{news.siteName}</span>}
+                      </div>
                       <h3 className="news-title">{news.title}</h3>
                     </div>
                   </article>
@@ -612,7 +625,8 @@ const PG400001: React.FC = () => {
             {selectedNews ? (
               <div className="news-detail" ref={detailRef}>
                 <h2>{selectedNews.title}</h2>
-                <p className="news-date">{selectedNews.date}</p>
+                <p className="news-publishedAt">{selectedNews.publishedAt}</p>
+                <p className="news-siteName">{selectedNews.siteName}</p>
                 <p className="news-content">{selectedNews.content}</p>
 
                 <hr className="Ai-divider" />

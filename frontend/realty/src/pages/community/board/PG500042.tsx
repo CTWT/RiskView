@@ -248,7 +248,6 @@ const PG500042: React.FC = () => {
     // 1) 현재 라우터/쿼리/상태에서 게시글 ID를 결정
     const id = getPostId();
     console.log(`[PG500042] 게시글 ID ${id} 조회 시도`);
-    console.log(`[PG500042] currentUserId: ${localStorage.getItem("accessToken")}`);
     
     if (!id) {
       setError("게시글 ID를 찾을 수 없습니다.");
@@ -1006,27 +1005,27 @@ const PG500042: React.FC = () => {
                     // 댓글 내용 + 수정/삭제 버튼 (작성자 본인만 노출)
                     <div className="comment-content-row">
                       <div className="comment-content">{comment.content}</div>
-                      {(canEditPost || (isAuthed() &&
-                        currentUserId === (comment.authorId || ""))) && (
-                          <div className="comment-actions">
-                            <button
-                              className="comment-edit-btn"
-                              onClick={() =>
-                                startEditComment(comment.id, comment.content)
-                              }
-                              disabled={Boolean(deletingCommentId)}
-                            >
-                              수정
-                            </button>
-                            <button
-                              className="comment-delete-btn"
-                              onClick={() => deleteComment(comment.id)}
-                              disabled={isDeleting}
-                            >
-                              {isDeleting ? "삭제 중…" : "삭제"}
-                            </button>
-                          </div>
+                      <div className="comment-actions">
+                        {canEditPost && currentUserId === (comment.authorId || "") && (
+                          <button
+                            className="comment-edit-btn"
+                            onClick={() => startEditComment(comment.id, comment.content)}
+                            disabled={Boolean(deletingCommentId)}
+                          >
+                            수정
+                          </button>
                         )}
+                        {canEditPost && (
+                          <button
+                            className="comment-delete-btn"
+                            onClick={() => deleteComment(comment.id)}
+                            disabled={isDeleting}
+                          >
+                            {isDeleting ? "삭제 중…" : "삭제"}
+                          </button>
+                        )}
+
+                      </div>
                     </div>
                   )}
                 </div>

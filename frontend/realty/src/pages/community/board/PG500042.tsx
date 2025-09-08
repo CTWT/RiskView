@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import useToast from "../../../hooks/useToast";
+import { AuthContext } from "../../auth/components/authentication/AuthContext";
 import axios from "axios";
 
 /**
@@ -62,7 +63,7 @@ interface Comment {
  */
 const getCurrentUser = async () => {
   try {
-    const res = await axios.get("http://localhost:8080/api/user/me", {
+    const res = await axios.get("/api/user/me", {
       withCredentials: true, // 세션 쿠키 포함
     })
     console.log(res.data)
@@ -77,6 +78,7 @@ const getCurrentUser = async () => {
 // - 게시글 불러오기, 수정/삭제, 좋아요, 댓글 CRUD 지원
 const PG500042: React.FC = () => {
   console.log('[PG500042] 컴포넌트 렌더링됨');
+  const { isLoggedIn } = useContext(AuthContext);
   const { id } = useParams<{ id: string }>();
   // 댓글 입력창 상태
   const [newComment, setNewComment] = useState<string>("");
@@ -206,12 +208,7 @@ const PG500042: React.FC = () => {
    * - accessToken/idToken/user 중 하나라도 존재하면 true
    * @returns {boolean} 인증 상태
    */
-  const isAuthed = () =>
-    Boolean(
-      localStorage.getItem("accessToken") ||
-        localStorage.getItem("idToken") ||
-        localStorage.getItem("user")
-    );
+  const isAuthed = () => isLoggedIn;
 
   // 현재 사용자 정보 및 권한 플래그
   // - currentUser: 현재 사용자 정보
@@ -432,6 +429,7 @@ const PG500042: React.FC = () => {
         const res = await fetch(`/api/posts/${id}/comments/${commentId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
+          credentials: "include", // 쿠키를 포함하도록 설정
           body: JSON.stringify({
             content
           }),
@@ -713,11 +711,13 @@ const PG500042: React.FC = () => {
   const handleCommentSubmit = async () => {
     console.log('[PG500042] 새 댓글 제출');
     // 1) 인증 검사: 비로그인 시 로그인 페이지로 이동
-    if (!isAuthed()) {
+    if (!isAuthed) {
       showToast("댓글 작성은 로그인 후 이용 가능합니다.", { type: "error" });
       navigate("/login", { state: { from: location.pathname + location.search } });
       return;
     }
+
+    console.log('인증 상태:', isLoggedIn);
 
     // 2) 입력값 정리 및 공백 방지
     const content = newComment.trim();
@@ -727,10 +727,12 @@ const PG500042: React.FC = () => {
     setIsCommentSubmitting(true); // 작성 중 상태
     try {
       if (id) {
+        console.log(`[PG500042] 게시글 ID ${id}에 댓글 작성 시도`);
         // 3) 서버에 댓글 작성 요청 (POST)
         const res = await fetch(`/api/posts/${id}/comments`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include", // 쿠키를 포함하도록 설정
           body: JSON.stringify({
             content,
           }),

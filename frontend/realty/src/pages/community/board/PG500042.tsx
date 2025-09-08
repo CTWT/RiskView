@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import useToast from "../../../hooks/useToast";
+import axios from "axios";
 
 /**
  * @file PG500042.tsx
@@ -59,14 +60,17 @@ interface Comment {
  * 저장 포맷: JSON 문자열 
  * @returns {any | null} 사용자 객체 또는 null
  */
-const getCurrentUser = () => {
+const getCurrentUser = async () => {
   try {
-    const raw = localStorage.getItem('user');
-    if (raw) return JSON.parse(raw);
-  } catch (error) {
-    console.error("사용자 정보를 가져오는 데 실패했습니다.", error);
+    const res = await axios.get("http://localhost:8080/api/user/me", {
+      withCredentials: true, // 세션 쿠키 포함
+    })
+    console.log(res.data)
+    return res.data; // { success: true, user: { ... } }
+  } catch (err) {
+    console.error("사용자 정보 요청 실패:", err);
+    return null;
   }
-  return null;
 };
 
 // 게시글 상세 화면 컴포넌트
@@ -92,6 +96,8 @@ const PG500042: React.FC = () => {
     null
   );
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
   // 게시글 수정 모드 여부
   const [isPostEditing, setIsPostEditing] = useState<boolean>(false);
   // 게시글 수정 제목/내용 상태
@@ -211,8 +217,19 @@ const PG500042: React.FC = () => {
   // - currentUser: 현재 사용자 정보
   // - currentUserId: 현재 사용자 id
   // - canEditPost: 게시글 수정/삭제 권한 여부(작성자 본인)
-  const currentUser = getCurrentUser();
-  const currentUserId: string = currentUser?.id || localStorage.getItem("userId") || "";
+
+  const fetchCurrentUser = async () => {
+    const user = await getCurrentUser();
+    setCurrentUser(user);
+    setCurrentUserId(user?.user?.userId || "");
+    console.log("현재 사용자 ID:", user?.user?.userId);
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
+
+
   const canEditPost = Boolean(
     isAuthed() && post && post.authorId && currentUserId === post.authorId
   );
@@ -221,6 +238,7 @@ const PG500042: React.FC = () => {
   React.useEffect(() => {
     const st: PostDetailWithFlags | undefined = location.state as PostDetailWithFlags;
     console.log('[PG500042] location.state에서 게시글 데이터 확인:', st);
+
     if (st && st.__fromWrite && st.id) {
       setPost(st);
     }
@@ -233,7 +251,8 @@ const PG500042: React.FC = () => {
     // 1) 현재 라우터/쿼리/상태에서 게시글 ID를 결정
     const id = getPostId();
     console.log(`[PG500042] 게시글 ID ${id} 조회 시도`);
-
+    console.log(`[PG500042] currentUserId: ${localStorage.getItem("accessToken")}`);
+    
     if (!id) {
       setError("게시글 ID를 찾을 수 없습니다.");
       return;
@@ -518,7 +537,7 @@ const PG500042: React.FC = () => {
         console.log('[PG500042] 게시글 수정 성공, 새 데이터:', updatedPost);
         setPost(normalize(updatedPost));
         showToast("게시글이 수정되었습니다.", { type: "success" });
-        setIsPostEditing(false);
+        setIsPostEditing(true);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "게시글 수정에 실패했습니다.";
@@ -589,7 +608,7 @@ const PG500042: React.FC = () => {
     }
 
     // 2) 수정 페이지(PG500043)로 이동하며 현재 게시글 정보를 state로 전달
-    navigate("../PG500043", { state: { ...post, isEdit: true } });
+    navigate("../PG500041/PG500043", { state: { ...post, isEdit: true } });
   };
 
   /**

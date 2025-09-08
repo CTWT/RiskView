@@ -1,20 +1,27 @@
 package realty.domain.model;
 
-import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
+import java.time.LocalDateTime;
+
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
 
-/*
- * 수업명 : 가비아 2회차
- * 작성자 : 박윤성
- * 수정자 : 
- * 작성일 : 25.09.03
- * 파일명 : CommunityComment.java
- */
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PostPersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "community_comments")
@@ -29,28 +36,41 @@ public class CommunityComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
-    private Long id;
+    private Long id; // BoardService.getId() 호출용
+
+    @Column(name = "comment_code", length = 20, nullable = false, unique = true)
+    private String commentCode;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
+    @JoinColumn(name = "user_code", referencedColumnName = "user_code", nullable = false)
+    private User author; // BoardService.getAuthor() 호출용
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "post_code", referencedColumnName = "post_code", nullable = false)
     private Post post;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "user_seq", nullable = false)
-    private User author;
-
-    @Lob
-    @Column(nullable = false)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Builder.Default
-    @ColumnDefault("false")
-    private boolean isDeleted = false;
-
     @CreatedDate
-    @Column(updatable = false)
+    @Column(name = "created_at", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Builder.Default
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
+
+    // 편의 메서드
+    public void setDeleted(boolean deleted) {
+        this.isDeleted = deleted;
+    }
+
+    @PostPersist
+    public void generateCode() {
+        this.commentCode = "CC" + String.format("%08d", id);
+    }
 }

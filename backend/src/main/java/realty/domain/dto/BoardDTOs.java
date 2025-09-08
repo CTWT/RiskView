@@ -1,6 +1,7 @@
 package realty.domain.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.List;
@@ -42,6 +43,7 @@ public class BoardDTOs {
      * 게시글 상세 조회 응답 DTO
      */
     @Data
+    @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class PostDetailResponseDTO {
@@ -60,6 +62,7 @@ public class BoardDTOs {
     }
 
     @Data
+    @Builder
     @AllArgsConstructor
     @NoArgsConstructor
     public static class CommentResponseDTO {
@@ -85,10 +88,10 @@ public class BoardDTOs {
         private List<String> tags;
     }
 
-    @Data public static class CommentCreateRequestDTO { private String content; }
+    @Data @Builder public static class CommentCreateRequestDTO { private String content; }
     @Data public static class CommentUpdateRequestDTO { private String content; }
 
-    @Data @AllArgsConstructor public static class LikeResponseDTO { private int likes; private boolean likedByMe; }
+    @Data @AllArgsConstructor @Builder public static class LikeResponseDTO { private int likes; private boolean likedByMe; }
 
     @Data @AllArgsConstructor public static class PostSearchCondition {
         private String board; private String searchCategory; private String searchQuery;

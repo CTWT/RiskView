@@ -1,6 +1,9 @@
 package realty.domain.repository;
 
 import realty.domain.model.User;
+
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -28,6 +31,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return
      */
     User findByNameAndEmail(String name, String email);
+
+    /**
+     * 데이터베이스에서 유저코드로 조회하는 메서드
+     * @param userCode
+     * @return
+     */
+    Optional<User> findByUserCode(String userCode);
 
     /**
      * 데이터베이스에서 사용자 ID와 이메일로 조회하는 메서드

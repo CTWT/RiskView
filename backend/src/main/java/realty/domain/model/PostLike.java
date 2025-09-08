@@ -5,6 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import jakarta.persistence.*;
 
 /*
@@ -16,14 +22,16 @@ import jakarta.persistence.*;
  */
 
 @Entity
-@Table(name = "post_likes", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"post_id", "user_id"})
-})
+@Table(name = "post_likes",
+       uniqueConstraints = {
+           @UniqueConstraint(name = "UK_post_user_like", columnNames = {"post_code", "user_code"})
+       })
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class PostLike {
 
     @Id
@@ -31,11 +39,13 @@ public class PostLike {
     @Column(name = "like_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @Column(name = "post_code", nullable = false)
+    private String postCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "user_seq", nullable = false)
-    private User user;
+    @Column(name = "user_code", nullable = false)
+    private String userCode;
+
+    @CreatedDate
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 }

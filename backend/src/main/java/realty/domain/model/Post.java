@@ -29,22 +29,25 @@ import java.util.List;
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Post {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "post_id")
-    private Long id;
+    private Long Id;
 
+    @Column(name = "post_code", nullable = false, unique = true, length = 20)
+    private String postCode;
+
+    // FK → users.user_code 참조
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "user_seq", nullable = false)
+    @JoinColumn(name = "user_code", referencedColumnName = "user_code", nullable = false)
     private User author;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "board_type", nullable = false, length = 20)
     private BoardType boardType;
 
-    @Column(length = 20)
-    private String postType; // "인기", "정보", "질문" 등. '인기'는 동적으로 결정될 수 있으므로 nullable.
+    @Column(name = "post_type", length = 20)
+    private String postType; // 인기, 정보, 질문 등 (nullable)
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -53,18 +56,22 @@ public class Post {
     @Column(nullable = false)
     private String content;
 
-    @Lob
-    private String tags; // 쉼표로 구분된 태그 문자열
+    @Column(name = "tags", length = 255)
+    private String tags; // 쉼표 구분 태그
 
     @ColumnDefault("0")
+    @Column(nullable = false)
     private int views;
 
-    @Formula("(select count(*) from post_likes pl where pl.post_id = post_id)")
+    // 좋아요 개수
+    @Formula("(select count(*) from post_likes pl where pl.post_code = post_code)")
     private int likesCount;
 
-    @Formula("(select count(*) from community_comments cc where cc.post_id = post_id and cc.is_deleted = false)")
+    // 댓글 개수
+    @Formula("(select count(*) from community_comments cc where cc.post_code = post_code and cc.is_deleted = false)")
     private int commentsCount;
 
+    // 댓글 엔티티 연관관계
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     @Where(clause = "is_deleted = false")
@@ -72,19 +79,22 @@ public class Post {
     private List<CommunityComment> comments = new ArrayList<>();
 
     @ColumnDefault("false")
+    @Column(name = "has_attachment", nullable = false)
     private boolean hasAttachment;
 
     @CreatedDate
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     public enum BoardType {
         FREE, SUPPORT
     }
 
+    // == 유틸 메서드 == //
     public void incrementViews() {
         this.views++;
     }

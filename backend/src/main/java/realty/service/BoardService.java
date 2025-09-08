@@ -1,6 +1,11 @@
 package realty.service;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+
 import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,10 +21,13 @@ import realty.domain.repository.CommunityCommentRepository;
 import realty.domain.repository.PostLikeRepository;
 import realty.domain.repository.PostRepository;
 import realty.domain.repository.UserRepository;
+import realty.exception.AccessDeniedException;
 import jakarta.persistence.EntityNotFoundException;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /*
@@ -58,31 +66,31 @@ public class BoardService {
     }
 
     /**
-     * 게시글 상세 정보를 조회하고, 조회수를 1 증가시킵니다.
+     * 게시글 상세 정보를 조회합니다.
      */
     @Transactional
-    public PostDetailResponseDTO findPostById(Long postId, Long currentUserId) {
-        log.info("Finding post by id: {} for user: {}", postId, currentUserId);
+    public PostDetailResponseDTO getPostDetailResponseDTOByPostIdAndUserCode(Long postId, String userCode) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
+                    .orElseThrow(() -> new EntityNotFoundException("Post not found with postId: " + postId));
 
-        post.incrementViews();
-
-        User user = new User(currentUserId); // Proxy user for existence check
-        boolean likedByMe = postLikeRepository.existsByPostAndUser(post, user);
-
+        String postCode = post.getPostCode();
+        boolean likedByMe = postLikeRepository.existsByPostCodeAndUserCode(postCode, userCode);
         return mapToPostDetailDTO(post, likedByMe);
     }
 
     /**
      * 새 게시글을 생성합니다.
      */
-    public PostDetailResponseDTO createPost(PostCreateRequestDTO requestDTO, Long currentUserId) {
-        log.info("Creating post with title '{}' by user {}", requestDTO.getTitle(), currentUserId);
-        User author = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + currentUserId));
+    @Transactional
+    public PostDetailResponseDTO createPost(PostCreateRequestDTO requestDTO, String currentUserCode) {
+        log.info("Creating post with title '{}' by userCode {}", requestDTO.getTitle(), currentUserCode);
+        User author = userRepository.findByUserCode(currentUserCode)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with code: " + currentUserCode));
+
+        log.info("user_code: {}", author.getUserCode());
 
         Post post = Post.builder()
+                .postCode("not-set")
                 .boardType(Post.BoardType.valueOf(requestDTO.getBoard().toUpperCase()))
                 .title(requestDTO.getTitle())
                 .content(requestDTO.getContent())
@@ -90,118 +98,124 @@ public class BoardService {
                 .author(author)
                 .build();
 
-        Post savedPost = postRepository.save(post);
-        log.info("Successfully created post with id: {}", savedPost.getId());
-        return mapToPostDetailDTO(savedPost, false);
+        Post savedEntity = postRepository.save(post);
+        postRepository.flush();
+
+        String generatedCode = "P" + String.format("%08d", savedEntity.getId());
+        savedEntity.setPostCode(generatedCode);
+
+        Post resultEntity = postRepository.save(savedEntity);
+        
+        log.info("Successfully created post with code: {}", resultEntity.getPostCode());
+        return mapToPostDetailDTO(resultEntity, false);
     }
 
     /**
      * 게시글을 수정합니다. 작성자 본인만 수정할 수 있도록 권한 검사가 필요합니다.
      */
-    public PostDetailResponseDTO updatePost(Long postId, PostUpdateRequestDTO requestDTO, Long currentUserId) {
-        log.info("Updating post {} with title '{}' by user {}", postId, requestDTO.getTitle(), currentUserId);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
+    public PostDetailResponseDTO updatePost(PostUpdateRequestDTO requestDTO, String postCode, String currentUserCode) {
+            Post post = getPostByCode(postCode);
 
-        if (!post.getAuthor().getUserSeq().equals(currentUserId)) {
-            log.warn("User {} attempted to update post {} owned by {}", currentUserId, postId, post.getAuthor().getUserSeq());
-            boolean likedByMe = postLikeRepository.existsByPostAndUser(post, new User(currentUserId));
-            return mapToPostDetailDTO(post, likedByMe); // Return original post without updating
-        }
+            if(false == post.getAuthor().getUserCode().equals(currentUserCode)){
+                throw new AccessDeniedException("게시글 작성자만 수정할 수 있습니다.");
+            }
 
-        post.update(requestDTO.getTitle(), requestDTO.getContent(), requestDTO.getTags() != null ? String.join(",", requestDTO.getTags()) : null);
-        Post updatedPost = postRepository.save(post);
+            post.setTitle(requestDTO.getTitle());
+            post.setContent(requestDTO.getContent());
+            post.setTags(String.join(",", requestDTO.getTags()));
 
-        User user = new User(currentUserId);
-        boolean likedByMe = postLikeRepository.existsByPostAndUser(updatedPost, user);
-        return mapToPostDetailDTO(updatedPost, likedByMe);
+            boolean likedByMe = postLikeRepository.existsByPostCodeAndUserCode(postCode, currentUserCode);
+            
+            return mapToPostDetailDTO(post, likedByMe);
     }
 
     /**
      * 게시글을 삭제합니다. 작성자 본인만 삭제할 수 있도록 권한 검사가 필요합니다.
      */
-    public void deletePost(Long postId, Long currentUserId) {
-        log.info("Deleting post {} by user {}", postId, currentUserId);
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postId));
+    @Transactional
+    public void deletePost(String postCode, String currentUserCode) {
+        Post post = getPostByCode(postCode);
 
-        if (!post.getAuthor().getUserSeq().equals(currentUserId)) {
-            log.warn("User {} attempted to delete post {} owned by {}", currentUserId, postId, post.getAuthor().getUserSeq());
-            return;
+        if(post == null) {
+            throw new EntityNotFoundException("User not found with code: " + currentUserCode);
         }
+
+        if(false == post.getAuthor().getUserCode().equals(currentUserCode)){
+            throw new AccessDeniedException("게시글 작성자만 수정할 수 있습니다.");
+        }
+        postLikeRepository.findByPostCode(postCode).stream().forEach(postLike -> {postLikeRepository.delete(postLike);});
+        commentRepository.findByPost(post).stream().forEach(comment -> {commentRepository.delete(comment);});
+
         postRepository.delete(post);
-        log.info("Successfully deleted post with id: {}", postId);
     }
 
-    public LikeResponseDTO likePost(Long postId, Long currentUserId) {
-        log.info("User {} liked post {}", currentUserId, postId);
-        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        User user = userRepository.findById(currentUserId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+    public LikeResponseDTO likePost(String postCode, String currentUserCode) {
+        PostLike postLike = PostLike.builder()
+                                    .postCode(postCode)
+                                    .userCode(currentUserCode)
+                                    .build();
 
-        if (postLikeRepository.existsByPostAndUser(post, user)) {
-            log.warn("User {} already liked post {}", currentUserId, postId);
-            return new LikeResponseDTO((int) postLikeRepository.countByPost(post), true);
-        }
+        postLikeRepository.save(postLike);
 
-        PostLike like = PostLike.builder().post(post).user(user).build();
-        postLikeRepository.save(like);
-        return new LikeResponseDTO((int) postLikeRepository.countByPost(post), true);
+        long likes = postLikeRepository.countByPostCode(postCode);
+        boolean likedByMe = true;
+
+        return LikeResponseDTO.builder()
+                        .likes((int)likes)
+                        .likedByMe(likedByMe)
+                        .build();
+
+
     }
 
-    public LikeResponseDTO unlikePost(Long postId, Long currentUserId) {
-        log.info("User {} unliked post {}", currentUserId, postId);
-        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        User user = userRepository.findById(currentUserId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+    public LikeResponseDTO unlikePost(String postCode, String currentUserCode) {
+        postLikeRepository.deleteByPostCodeAndUserCode(postCode, currentUserCode);
 
-        postLikeRepository.deleteByPostAndUser(post, user);
-        return new LikeResponseDTO((int) postLikeRepository.countByPost(post), false);
+        long likes = postLikeRepository.countByPostCode(postCode);
+        boolean likedByMe = false;
+
+        return LikeResponseDTO.builder()
+                        .likes((int)likes)
+                        .likedByMe(likedByMe)
+                        .build(); 
     }
 
-    public CommentResponseDTO addComment(Long postId, CommentCreateRequestDTO requestDTO, Long currentUserId) {
-        log.info("User {} commented on post {}", currentUserId, postId);
-        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post not found"));
-        User author = userRepository.findById(currentUserId).orElseThrow(() -> new EntityNotFoundException("User not found"));
+    @Transactional
+    public CommentResponseDTO addComment(CommentCreateRequestDTO requestDTO, String postCode, String currentUserCode) {
+        Post post = getPostByCode(postCode);
+        User user = userRepository.findByUserCode(currentUserCode).orElseThrow(
+                            () -> new EntityNotFoundException("Post not found with currentUserCode: " + currentUserCode));
+        
+        CommunityComment communityComment = CommunityComment.builder()
+                                                        .post(post)
+                                                        .author(user)
+                                                        .commentCode("not-set")
+                                                        .content(requestDTO.getContent())
+                                                        .build();   
 
-        CommunityComment comment = CommunityComment.builder()
-                .post(post)
-                .author(author)
-                .content(requestDTO.getContent())
-                .build();
-        CommunityComment savedComment = commentRepository.save(comment);
-        return mapToCommentDTO(savedComment);
+        commentRepository.save(communityComment);
+
+        return mapToCommentDTO(communityComment);
     }
 
-    public CommentResponseDTO updateComment(Long commentId, CommentUpdateRequestDTO requestDTO, Long currentUserId) {
-        log.info("User {} updated comment {}", currentUserId, commentId);
-        CommunityComment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+    public CommentResponseDTO updateComment(CommentUpdateRequestDTO requestDTO, String postCode, String commentCode, String userCode) {
+        Post post = getPostByCode(postCode);
+        if(false == post.getAuthor().getUserCode().equals(userCode)) {
+            throw new AccessDeniedException("게시글 작성자만 수정할 수 있습니다.");
+         }
 
-        if (!comment.getAuthor().getUserSeq().equals(currentUserId)) {
-            log.warn("User {} attempted to update comment {} owned by {}", currentUserId, commentId, comment.getAuthor().getUserSeq());
-            return mapToCommentDTO(comment);
-        }
+        CommunityComment communityComment = getCommunityCommentByCommentCode(commentCode);
+        communityComment.setContent(requestDTO.getContent());
 
-        comment.setContent(requestDTO.getContent());
-        return mapToCommentDTO(commentRepository.save(comment));
+        return mapToCommentDTO(communityComment);
     }
 
-    public void deleteComment(Long commentId, Long currentUserId) {
-        log.info("User {} deleted comment {}", currentUserId, commentId);
-        CommunityComment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
-
-        if (!comment.getAuthor().getUserSeq().equals(currentUserId)) {
-            log.warn("User {} attempted to delete comment {} owned by {}", currentUserId, commentId, comment.getAuthor().getUserSeq());
-            return;
-        }
-
-        comment.setDeleted(true);
-        commentRepository.save(comment);
-        log.info("Soft-deleted comment with id: {}", commentId);
+    public void deleteComment(Long commentId) {
+        CommunityComment communityComment = commentRepository.findById(commentId).orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+        commentRepository.delete(communityComment);
     }
 
     // --- Mapper-like helper methods ---
-
     private PostListResponseDTO mapToPostListDTO(Post post) {
         return new PostListResponseDTO(
                 post.getId(),
@@ -223,7 +237,7 @@ public class BoardService {
                 post.getBoardType().name().toLowerCase(),
                 post.getTitle(),
                 post.getAuthor().getUserNickname(),
-                post.getAuthor().getUserCode(),
+                post.getAuthor().getUserId(),
                 formatDate(post.getCreatedAt()),
                 post.getContent(),
                 post.getViews(),
@@ -238,14 +252,51 @@ public class BoardService {
         return new CommentResponseDTO(
                 comment.getId(),
                 comment.getAuthor().getUserNickname(),
-                comment.getAuthor().getUserCode(),
+                comment.getAuthor().getUserId(),
                 formatDate(comment.getCreatedAt()),
                 comment.getContent()
         );
     }
 
+    // 게시물의 조회수를 1 올립니다.
+    public void PostViewIncrease(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(
+            () -> new EntityNotFoundException("Post not found with postId: " + postId));
+        post.incrementViews();
+    }
+
     private String formatDate(LocalDateTime dateTime) {
         if (dateTime == null) return "";
         return dateTime.format(DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+    }
+
+    public String getPostCodeById(Long postId) {
+        Post post = postRepository.findById(postId).orElseThrow(
+            () -> new EntityNotFoundException("Post not found with postId: " + postId));
+
+        return post.getPostCode();
+    }
+
+    public Post getPostByCode(String postCode) {
+        Post post = postRepository.findByPostCode(postCode).orElseThrow(
+            () -> new EntityNotFoundException("Post not found with postCode: " + postCode));
+
+        return post;
+    }
+
+    public CommunityComment getCommunityCommentById(Long commentId){
+        CommunityComment communityComment =  commentRepository.findById(commentId).orElseThrow(
+            ()-> new EntityNotFoundException("CommunityComment not found with CommentId: " + commentId)
+        );
+
+        return communityComment;
+    }
+
+    public CommunityComment getCommunityCommentByCommentCode(String commentCode){
+        CommunityComment communityComment =  commentRepository.findByCommentCode(commentCode).orElseThrow(
+            ()-> new EntityNotFoundException("CommunityComment not found with commentCode: " + commentCode)
+        );
+
+        return communityComment;
     }
 }

@@ -1,9 +1,9 @@
 package realty.domain.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import realty.domain.model.Post;
 import realty.domain.model.PostLike;
-import realty.domain.model.User;
 
 /*
  * 수업명 : 가비아 2회차
@@ -14,7 +14,8 @@ import realty.domain.model.User;
  */
 
 public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
-    boolean existsByPostAndUser(Post post, User user);
-    void deleteByPostAndUser(Post post, User user);
-    long countByPost(Post post);
+    boolean existsByPostCodeAndUserCode(String postCode, String userCode);
+    void deleteByPostCodeAndUserCode(String postCode, String userCode);
+    long countByPostCode(String postCode);
+    List<PostLike> findByPostCode(String postCode);
 }

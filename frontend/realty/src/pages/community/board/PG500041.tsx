@@ -254,7 +254,7 @@ const PG500041: React.FC = () => {
             </Link>
             {/* 글쓰기 버튼 */}
             <Link
-              to="/PG500043"
+              to="./PG500043"
               state={{ board: currentBoard }}
               className="write-btn"
             >

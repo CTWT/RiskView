@@ -63,50 +63,8 @@ public class UserController {
      */
     @GetMapping("/me")
     public ResponseEntity<Map<String, Object>> getCurrentUser(HttpServletRequest request) {
-        Map<String, Object> response = new HashMap<>();
-        // 쿠키에서 accessToken 추출
-        String accessToken = jwtUtil.extractTokenFromCookies(request, "accessToken");
-
-        // accessToken이 없으면
-        if (accessToken == null || accessToken.isEmpty()) {
-            // 응답에 실패 정보 담음
-            response.put("success", false);
-            response.put("message", "Access Token이 없습니다.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        // accessToken에서 Claims 추출
-        Claims claims = jwtUtil.getClaims(accessToken);
-        // Claims가 유효하지 않으면
-        if (claims == null) {
-            response.put("success", false);
-            response.put("message", "유효하지 않은 토큰입니다.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        // Claims에서 userId 추출
-        String userId = claims.get("userId", String.class);
-        if (userId == null) {
-            response.put("success", false);
-            response.put("message", "토큰에 사용자 ID가 없습니다.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        // 유저 정보 조회
-        User user = userService.findByUserId(userId);
-        // 사용자를 찾을 수 없으면
-        if (user == null) {
-            response.put("success", false);
-            response.put("message", "사용자를 찾을 수 없습니다.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
-
-        // 응답에 사용자 정보 담기
-        response.put("success", true);
-        response.put("user", Map.of(
-            "userId", user.getUserId(),
-            "nickname", user.getUserNickname()
-        ));
+        logger.info("API: getCurrentUser");
+        Map<String, Object> response = userService.getCurrentUserResponse(request);
         // 응답 반환
         return ResponseEntity.ok(response);
     }
@@ -120,6 +78,7 @@ public class UserController {
      */
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> postLogin(@RequestBody UserDTO userDTO, HttpServletRequest request, HttpServletResponse response) {
+        logger.info("API: postLogin - userId={}", userDTO.getUserId());
         // 프론트에 전달할 응답 정보 담는 객체
         Map<String, Object> responseBody = new HashMap<>();
         
@@ -128,6 +87,7 @@ public class UserController {
 
         // JWT 발급
         String accessToken = jwtUtil.generateAccessToken(user);
+        logger.debug("JWT access token generated for user: {}", user.getUserId());
 
         // 쿠키 생성
         Cookie accessTokenCookie = new Cookie("accessToken", accessToken);
@@ -138,11 +98,12 @@ public class UserController {
 
         // 응답에 쿠키 추가
         response.addCookie(accessTokenCookie);
+        logger.debug("Access token cookie added to response.");
 
         // 프론트에 전달할 응답 정보 담음
         responseBody.put("success", true);
         responseBody.put("message", "로그인 성공");
-        logger.info("로그인 성공!");
+        logger.info("Login successful for userId: {}", user.getUserId());
         // 담았던 정보들과 함께 성공 응답 반환
         return ResponseEntity.ok(responseBody);
     }
@@ -154,6 +115,7 @@ public class UserController {
      */
     @PostMapping("/logout")
     public ResponseEntity<Map<String, Object>> logout(HttpServletResponse response) {
+        logger.info("API: logout");
         Map<String, Object> responseBody = new HashMap<>();
 
         // accessToken 쿠키 삭제 (만료시킴)
@@ -165,11 +127,12 @@ public class UserController {
 
         // 응답에 쿠키 추가
         response.addCookie(accessTokenCookie);
+        logger.debug("Access token cookie cleared.");
 
         // 프론트에 전달할 응답 정보 담음
         responseBody.put("success", true);
         responseBody.put("message", "로그아웃 성공");
-        logger.info("로그아웃 성공!");
+        logger.info("Logout successful.");
         // 담았던 정보들과 함께 성공 응답 반환
         return ResponseEntity.ok(responseBody);
     }
@@ -185,14 +148,17 @@ public class UserController {
         @RequestBody UserDTO userDTO,
         HttpServletRequest request,
         HttpServletResponse response) {
+        logger.info("API: postSignUp - userId={}, email={}", userDTO.getUserId(), userDTO.getEmail());
         String token = null;
 
+        logger.debug("Attempting to retrieve emailToken from cookies.");
         // 토큰이 쿠키에 있으면
         if (request.getCookies() != null) {
             // 쿠키를 하나씩 꺼내서
             for (Cookie cookie : request.getCookies()) {
                 // 쿠키 이름이 emailToken이면
                 if ("emailToken".equals(cookie.getName())) {
+                    logger.debug("emailToken found in cookies.");
                     // 토큰 저장
                     token = cookie.getValue();
                     break;
@@ -202,20 +168,24 @@ public class UserController {
 
         // 토큰이 없으면
         if (token == null || !jwtUtil.validateToken(token)) {
+            logger.warn("Email verification token is missing or invalid.");
             throw new IllegalStateException("이메일 인증이 필요합니다.");
         }
 
         // 토큰에서 클레임 꺼내기
         Claims claims = jwtUtil.getClaims(token);
         if (claims == null) {
+            logger.warn("Could not get claims from emailToken.");
             throw new IllegalStateException("유효하지 않은 인증 토큰입니다.");
         }
 
         // 토큰에서 이메일 꺼내기
         String tokenEmail = claims.getSubject();
+        logger.debug("Email from token: {}, Email from DTO: {}", tokenEmail, userDTO.getEmail());
 
         // 요청한 이메일과 토큰 이메일이 다르면 인증 불가
         if (!tokenEmail.equals(userDTO.getEmail())) {
+            logger.warn("Email from token ({}) does not match user DTO email ({}).", tokenEmail, userDTO.getEmail());
             throw new IllegalStateException("이메일 인증이 완료된 이메일과 다릅니다.");
         }
         
@@ -231,11 +201,12 @@ public class UserController {
         emailTokenCookie.setPath("/");
         emailTokenCookie.setMaxAge(0);
         response.addCookie(emailTokenCookie);
+        logger.debug("Email verification token cookie cleared.");
 
         // 프론트에 전달할 응답 정보 담음
         responseBody.put("success", true);
         responseBody.put("message", "회원가입 성공!");
-        logger.info("회원가입 성공!");
+        logger.info("Signup successful for userId: {}", userDTO.getUserId());
         // 성공 응답 반환
         return ResponseEntity.ok(responseBody);
     }
@@ -247,12 +218,14 @@ public class UserController {
      */
     @PostMapping("/forgot-id")
     public ResponseEntity<Map<String, Object>> postForgotId(@RequestBody UserDTO userDTO) {
+        logger.info("API: postForgotId - name={}, email={}", userDTO.getName(), userDTO.getEmail());
         Map<String, Object> response = new HashMap<>();
         
         // 아이디를 데이터베이스에서 조회해서 찾아옴
         User foundUser = userService.findByNameAndEmail(userDTO.getName(), userDTO.getEmail());
         // 찾은 사용자 ID를 응답 객체에 추가
         response.put("userId", foundUser.getUserId());
+        logger.info("User ID found for name={} and email={}: {}", userDTO.getName(), userDTO.getEmail(), foundUser.getUserId());
         // 찾은 사용자 ID와 함께 성공 응답 반환
         return ResponseEntity.ok(response);
     }
@@ -267,6 +240,7 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> sendPasswordResetCode(
         @RequestBody Map<String, String> payload,
         HttpServletResponse response) {
+        logger.info("API: sendPasswordResetCode - userId={}, email={}", payload.get("userId"), payload.get("email"));
         Map<String, Object> responseBody = new HashMap<>();
 
         // payload에서 아이디와 이메일 꺼내기
@@ -276,11 +250,13 @@ public class UserController {
         // 아이디가 입력되지 않았을 경우
         if (userId == null || userId.trim().isEmpty()) {
             responseBody.put("message", "아이디를 입력해주세요.");
+            logger.warn("Password reset code request failed: userId is empty or null.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
         // 이메일이 입력되지 않았을 경우
         if (email == null || email.trim().isEmpty()) {
             responseBody.put("message", "이메일을 입력해주세요.");
+            logger.warn("Password reset code request failed: email is empty or null.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
 
@@ -291,11 +267,13 @@ public class UserController {
         // 사용자를 찾지 못했다면
         if (foundUser == null) {
             responseBody.put("message", "입력하신 아이디와 이메일에 해당하는 계정을 찾을 수 없습니다.");
+            logger.warn("User not found for password reset with userId={} and email={}", userId.trim(), email.trim());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
 
         // 이메일 인증코드 발송
         String emailToken = emailService.sendVerificationEmailCode(email.trim());
+        logger.info("Password reset code sent to email: {}", email.trim());
 
         // HttpOnly 쿠키로 저장
         Cookie emailTokenCookie = new Cookie("emailToken", emailToken);
@@ -304,6 +282,7 @@ public class UserController {
         // cookie.setSecure(true); // HTTPS 환경일 때만 전송 허용하는 설정. 추후 활용.
         emailTokenCookie.setMaxAge(emailTokenExpiration);
         response.addCookie(emailTokenCookie);
+        logger.debug("emailToken for password reset added to cookie.");
 
         // 성공 응답
         responseBody.put("message", email + "로 인증코드를 발송했습니다.");
@@ -320,6 +299,7 @@ public class UserController {
     @PostMapping("/reset-pass")
     public ResponseEntity<Map<String, Object>> postResetPass(@RequestBody UserDTO userDTO,
         HttpServletResponse response) {
+        logger.info("API: postResetPass - userId={}", userDTO.getUserId());
         Map<String, Object> responseBody = new HashMap<>();
 
         // 비밀번호와 비밀번호 확인 입력이 일치하지 않으면
@@ -327,6 +307,7 @@ public class UserController {
             // 실패 여부와 에러 메시지를 응답 객체에 추가
             responseBody.put("success", false);
             responseBody.put("message", "비밀번호가 일치하지 않습니다.");
+            logger.warn("Password reset failed for user {}: new password and confirmation do not match.", userDTO.getUserId());
             // 실패 응답 반환
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
         }
@@ -341,10 +322,12 @@ public class UserController {
         emailTokenCookie.setPath("/");
         emailTokenCookie.setMaxAge(0);
         response.addCookie(emailTokenCookie);
+        logger.debug("emailToken cookie cleared after password reset.");
 
         // 프론트에 보낼 정보들을 담음
         responseBody.put("success", true);
         responseBody.put("message", "비밀번호 재설정이 완료되었습니다. 다시 로그인해주세요.");
+        logger.info("Password successfully reset for user: {}", userDTO.getUserId());
         // 담았던 정보들과 함께 성공 응답 반환
         return ResponseEntity.ok(responseBody);
     }
@@ -356,12 +339,14 @@ public class UserController {
      */
     @GetMapping("/check-email/{email}")
     public ResponseEntity<Map<String, Object>> checkEmail(@PathVariable String email) {
+        logger.info("API: checkEmail - email={}", email);
         Map<String, Object> response = new HashMap<>();
         // 이메일 형식 검증
         if (email == null || email.trim().isEmpty()) {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "이메일을 입력해주세요.");
+            logger.warn("Email check failed: email is null or empty.");
             // 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         }
@@ -372,6 +357,7 @@ public class UserController {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "유효한 이메일 형식이 아닙니다.");
+            logger.warn("Email check failed: invalid email format for '{}'.", email);
             // 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         }
@@ -384,10 +370,12 @@ public class UserController {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "이미 사용 중인 이메일 주소입니다.");
+            logger.info("Email '{}' is already in use.", email);
         } else {
             // 성공 여부와 메시지를 응답 객체에 추가
             response.put("available", true);
             response.put("message", "사용 가능한 이메일 주소입니다.");
+            logger.info("Email '{}' is available.", email);
         }
         // 성공 응답 반환
         return ResponseEntity.ok(response);
@@ -400,6 +388,7 @@ public class UserController {
      */
     @GetMapping("/check-userid/{userId}")
     public ResponseEntity<Map<String, Object>> checkUsername(@PathVariable String userId) {
+        logger.info("API: check-userid - userId={}", userId);
         Map<String, Object> response = new HashMap<>();
         
         // 아이디가 없거나 공백이면
@@ -407,6 +396,7 @@ public class UserController {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "아이디를 입력해주세요.");
+            logger.warn("UserID check failed: userId is null or empty.");
             // 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         }
@@ -419,10 +409,12 @@ public class UserController {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "이미 사용 중인 아이디입니다.");
+            logger.info("UserID '{}' is already in use.", userId);
         } else {
             // 성공 여부와 메시지를 응답 객체에 추가
             response.put("available", true);
             response.put("message", "사용 가능한 아이디입니다.");
+            logger.info("UserID '{}' is available.", userId);
         }
         // 성공 응답 반환
         return ResponseEntity.ok(response);
@@ -435,6 +427,7 @@ public class UserController {
      */
     @GetMapping("/check-nickname/{nickname}")
     public ResponseEntity<Map<String, Object>> checkNickname(@PathVariable String nickname) {
+        logger.info("API: check-nickname - nickname={}", nickname);
         Map<String, Object> response = new HashMap<>();
         
         // 닉네임이 없거나 공백이면
@@ -442,6 +435,7 @@ public class UserController {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "닉네임을 입력해주세요.");
+            logger.warn("Nickname check failed: nickname is null or empty.");
             // 실패 응답 반환
             return ResponseEntity.badRequest().body(response);
         }
@@ -454,10 +448,12 @@ public class UserController {
             // 실패 여부와 메시지를 응답 객체에 추가
             response.put("available", false);
             response.put("message", "이미 사용 중인 닉네임입니다.");
+            logger.info("Nickname '{}' is already in use.", nickname);
         } else {
             // 성공 여부와 메시지를 응답 객체에 추가
             response.put("available", true);
             response.put("message", "사용 가능한 닉네임입니다.");
+            logger.info("Nickname '{}' is available.", nickname);
         }
         // 성공 응답 반환
         return ResponseEntity.ok(response);

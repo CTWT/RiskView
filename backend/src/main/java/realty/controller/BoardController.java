@@ -19,16 +19,21 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import jakarta.servlet.http.HttpServletRequest;
 import realty.domain.dto.BoardDTOs.CommentResponseDTO;
 import realty.domain.dto.BoardDTOs.PostListResponseDTO;
 import realty.domain.dto.BoardDTOs.PostDetailResponseDTO;
 import realty.domain.dto.BoardDTOs.PostSearchCondition;
 import realty.domain.dto.BoardDTOs.PostCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.PostUpdateRequestDTO;
+import realty.domain.repository.CommunityCommentRepository;
 import realty.domain.dto.BoardDTOs.LikeResponseDTO;
 import realty.domain.dto.BoardDTOs.CommentCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.CommentUpdateRequestDTO;
 import realty.service.BoardService;
+import realty.service.UserService;
+
 import java.net.URI;
 
 /*
@@ -48,10 +53,10 @@ import java.net.URI;
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class BoardController {
-
     private static final Logger log = LoggerFactory.getLogger(BoardController.class);
-
+    
     private final BoardService boardService;
+    private final UserService userService;
 
     /**
      * 게시글 목록을 조건에 따라 조회합니다 (검색, 필터링, 정렬, 페이지네이션).
@@ -102,12 +107,13 @@ public class BoardController {
      * @return 게시글 상세 정보
      */
     @GetMapping("/{id}")
-    public ResponseEntity<PostDetailResponseDTO> getPostById(@PathVariable Long id) {
-        log.info("API: getPostById - id={}", id);
-        Long currentUserId = 1L; // Placeholder for testing
-        PostDetailResponseDTO post = boardService.findPostById(id, currentUserId);
-        log.info("Found post: {}", post.getTitle());
-        return ResponseEntity.ok(post);
+    public ResponseEntity<PostDetailResponseDTO> getPostById(@PathVariable Long id, HttpServletRequest request) {
+        String userCode = userService.getCurrentUserCode(request);
+        
+        PostDetailResponseDTO detailResponseDTO 
+        = boardService.getPostDetailResponseDTOByPostIdAndUserCode(id, userCode);
+
+        return ResponseEntity.ok(detailResponseDTO);
     }
 
     /**
@@ -116,16 +122,17 @@ public class BoardController {
      * @return 생성된 게시글 상세 정보
      */
     @PostMapping
-    public ResponseEntity<PostDetailResponseDTO> createPost(@RequestBody PostCreateRequestDTO requestDTO) {
+    public ResponseEntity<PostDetailResponseDTO> createPost(@RequestBody PostCreateRequestDTO requestDTO, HttpServletRequest request) {
         log.info("API: createPost - title='{}'", requestDTO.getTitle());
-        Long currentUserId = 1L; // Placeholder for testing
-        PostDetailResponseDTO createdPost = boardService.createPost(requestDTO, currentUserId);
+        String currentUserCode = userService.getCurrentUserCode(request); // Placeholder for testing
+        log.info("Current UserCode: {}", currentUserCode);
+        PostDetailResponseDTO createdPost = boardService.createPost(requestDTO, currentUserCode);
         log.info("Post created with ID: {}", createdPost.getId());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdPost.getId())
                 .toUri();
-        log.debug("New post location URI: {}", location);
+        log.info("New post location URI: {}", location);
         return ResponseEntity.created(location).body(createdPost);
     }
 
@@ -136,11 +143,10 @@ public class BoardController {
      * @return 수정된 게시글 상세 정보
      */
     @PutMapping("/{id}")
-    public ResponseEntity<PostDetailResponseDTO> updatePost(@PathVariable Long id, @RequestBody PostUpdateRequestDTO requestDTO) {
-        log.info("API: updatePost - id={}, title='{}'", id, requestDTO.getTitle());
-        Long currentUserId = 1L; // Placeholder for testing, will be replaced by authenticated user's ID
-        PostDetailResponseDTO updatedPost = boardService.updatePost(id, requestDTO, currentUserId);
-        log.info("Post with ID: {} updated successfully", id);
+    public ResponseEntity<PostDetailResponseDTO> updatePost(@PathVariable Long id, @RequestBody PostUpdateRequestDTO requestDTO, HttpServletRequest request) {
+        String postCode = boardService.getPostCodeById(id);
+        String userCode = userService.getCurrentUserCode(request);
+        PostDetailResponseDTO updatedPost = boardService.updatePost(requestDTO, postCode, userCode);
         return ResponseEntity.ok(updatedPost);
     }
 
@@ -150,12 +156,20 @@ public class BoardController {
      * @return 응답 없음 (204 No Content)
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletePost(@PathVariable Long id) {
-        log.info("API: deletePost - id={}", id);
-        Long currentUserId = 1L; // Placeholder for testing
-        boardService.deletePost(id, currentUserId);
-        log.info("Post with ID: {} deleted successfully", id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deletePost(@PathVariable Long id, HttpServletRequest request) {
+        String postCode = boardService.getPostCodeById(id);
+        String userCode = userService.getCurrentUserCode(request);
+        boardService.deletePost(postCode, userCode);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{id}/views")
+    public ResponseEntity<Void> increaseViews(@PathVariable Long id) {
+        // 조회수 증가
+        boardService.PostViewIncrease(id);
+
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -164,12 +178,11 @@ public class BoardController {
      * @return 업데이트된 좋아요 정보
      */
     @PostMapping("/{id}/likes")
-    public ResponseEntity<LikeResponseDTO> likePost(@PathVariable Long id) {
-        log.info("API: likePost - id={}", id);
-        Long currentUserId = 1L; // Placeholder for testing
-        LikeResponseDTO response = boardService.likePost(id, currentUserId);
-        log.info("Post {} liked. Total likes: {}", id, response.getLikes());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LikeResponseDTO> likePost(@PathVariable Long id, HttpServletRequest request) {
+        String userCode = userService.getCurrentUserCode(request);
+        String postCode = boardService.getPostCodeById(id);
+        LikeResponseDTO likeResponseDTO = boardService.likePost(postCode, userCode);
+        return ResponseEntity.ok().body(likeResponseDTO);
     }
 
     /**
@@ -178,38 +191,39 @@ public class BoardController {
      * @return 업데이트된 좋아요 정보
      */
     @DeleteMapping("/{id}/likes")
-    public ResponseEntity<LikeResponseDTO> unlikePost(@PathVariable Long id) {
-        log.info("API: unlikePost - id={}", id);
-        Long currentUserId = 1L; // Placeholder for testing
-        LikeResponseDTO response = boardService.unlikePost(id, currentUserId);
-        log.info("Post {} unliked. Total likes: {}", id, response.getLikes());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<LikeResponseDTO> unlikePost(@PathVariable Long id, HttpServletRequest request) {
+        String userCode = userService.getCurrentUserCode(request);
+        String postCode = boardService.getPostCodeById(id);
+        LikeResponseDTO likeResponseDTO = boardService.unlikePost(postCode, userCode);
+        return ResponseEntity.ok().body(likeResponseDTO);
     }
 
     @PostMapping("/{id}/comments")
-    public ResponseEntity<CommentResponseDTO> addComment(@PathVariable Long id, @RequestBody CommentCreateRequestDTO requestDTO) {
-        log.info("API: addComment - postId={}", id);
-        Long currentUserId = 1L; // Placeholder for testing
-        CommentResponseDTO createdComment = boardService.addComment(id, requestDTO, currentUserId);
-        log.info("Comment added to post {} with new commentId {}", id, createdComment.getId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdComment);
+    public ResponseEntity<CommentResponseDTO> addComment(@PathVariable Long id, @RequestBody CommentCreateRequestDTO requestDTO, HttpServletRequest request) {
+        String userCode = userService.getCurrentUserCode(request);
+        String postCode = boardService.getPostCodeById(id);
+        CommentCreateRequestDTO commentCreateRequestDTO = CommentCreateRequestDTO.builder()
+                                                                                    .content(requestDTO.getContent())
+                                                                                    .build();
+
+        CommentResponseDTO commentResponseDTO = boardService.addComment(commentCreateRequestDTO, postCode, userCode);
+        return ResponseEntity.ok().body(commentResponseDTO);
     }
 
     @PutMapping("/{id}/comments/{commentId}")
-    public ResponseEntity<CommentResponseDTO> updateComment(@PathVariable Long id, @PathVariable Long commentId, @RequestBody CommentUpdateRequestDTO requestDTO) {
-        log.info("API: updateComment - postId={}, commentId={}", id, commentId);
-        Long currentUserId = 1L; // Placeholder for testing
-        CommentResponseDTO updatedComment = boardService.updateComment(commentId, requestDTO, currentUserId);
-        log.info("Comment {} on post {} updated successfully", commentId, id);
-        return ResponseEntity.ok(updatedComment);
+    public ResponseEntity<CommentResponseDTO> updateComment(@PathVariable Long id, @PathVariable Long commentId, @RequestBody CommentUpdateRequestDTO requestDTO, HttpServletRequest request) {
+        String commentCode = boardService.getCommunityCommentById(commentId).getCommentCode();
+        String userCode = userService.getCurrentUserCode(request);
+        String postCode = boardService.getPostCodeById(id);
+        CommentResponseDTO commentResponseDTO = boardService.updateComment(requestDTO,postCode, commentCode, userCode);
+    
+        return ResponseEntity.ok().body(commentResponseDTO);
     }
 
     @DeleteMapping("/{id}/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long id, @PathVariable Long commentId) {
-        log.info("API: deleteComment - postId={}, commentId={}", id, commentId);
-        Long currentUserId = 1L; // Placeholder for testing
-        boardService.deleteComment(commentId, currentUserId);
-        log.info("Comment {} on post {} deleted successfully", commentId, id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
+        boardService.deleteComment(commentId);
+
+        return ResponseEntity.ok().build();
     }
 }

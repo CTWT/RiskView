@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import "../../styles/common/common.css"; // 공통 스타일 임포트
 import PageContainer from "../../components/layout/PageContainer";
+import PG600002 from "./PG600002";
 
 import {
     FaRegFileAlt,
@@ -26,8 +27,8 @@ import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
  * 생성자 : 문원주
  * 생성일 : 25.07.31
  * 파일명 : PG600001.tsx
- * 수정자 :
- * 수정일 :
+ * 수정자 : 이주하
+ * 수정일 : 25.09.09
  * 설명 : 서비스 소개를 총괄하는 페이지입니다.
  */
 
@@ -89,7 +90,9 @@ const FeatureList: React.FC<FeatureListProps> = ({
 
 const PG600001: React.FC = () => {
     // 선택된 기능의 상태를 관리
-    const [selectedFeature, setSelectedFeature] = useState<string | null>(null);
+    const [selectedFeature, setSelectedFeature] = useState<string | null>(
+    "riskAnalysis"
+    );
 
     const features = [
         {
@@ -129,41 +132,36 @@ const PG600001: React.FC = () => {
     };
 
     return (
-        <PageContainer showBreadcrumb={true} centerContent={true}>
-            <div className="in01-container">
-                {/* 상단 제목 영역 */}
-                <CommonContainerHeader
-                    subtitle="핵심 기능"
-                    title="숨겨진 리스크를 한눈에 파악하세요"
-                    description="RiskView는 AI 기술을 활용하여 부동산 계약서와 등기부등본을 분석하고 숨겨진 위험 요소를 찾아냅니다."
-                />
+    <PageContainer showBreadcrumb={true} centerContent={true}>
+        <div className="in01-container">
+          {/* 상단 제목 영역 */}
+        <CommonContainerHeader
+            subtitle="핵심 기능"
+            title="숨겨진 리스크를 한눈에 파악하세요"
+            description="RiskView는 AI 기술을 활용하여 부동산 계약서와 등기부등본을 분석하고 숨겨진 위험 요소를 찾아냅니다."
+        />
 
-                {/* 좌우 패널 영역 */}
-                <div className="in01-content-wrapper">
-                    {/* 좌측 패널 */}
-                    <div className="in01-left-panel">
-                        <FeatureList
-                            features={features}
-                            selectedFeature={selectedFeature}
-                            onSelectFeature={handleSelectFeature}
-                        />
-                    </div>
-
-                    {/* 우측 패널 */}
-                    <div className="in01-right-panel">
-                        {selectedFeature ? (
-                            // PG60003: 특정 기능 선택 시 상세 설명 렌더링
-                            //<FeatureDetail />
-                            <p>특정기능이 들어갈 장면</p>
-                        ) : (
-                            // PG60004: 아무것도 선택되지 않았을 때 캐러셀 렌더링
-                            //<IntroCarousel />
-                            <p>이미지 캐러셀이 들어갈 장면</p>
-                        )}
-                    </div>
-                </div>
+          {/* 좌우 패널 영역 */}
+        <div className="in01-content-wrapper">
+            {/* 좌측 패널 */}
+            <div className="in01-left-panel">
+            <FeatureList
+                features={features}
+                selectedFeature={selectedFeature}
+                onSelectFeature={handleSelectFeature}
+            />
             </div>
-        </PageContainer>
+            {/* 우측 패널 */}
+            <div className="in01-right-panel">
+            {selectedFeature ? (
+                <PG600002 selectedFeature={selectedFeature} />
+            ) : (
+                <p>이미지 캐러셀이 들어갈 장면</p>
+            )}
+            </div>
+        </div>
+        </div>
+    </PageContainer>
     );
 };
 

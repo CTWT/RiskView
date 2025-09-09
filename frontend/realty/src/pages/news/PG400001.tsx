@@ -179,6 +179,17 @@ const PG400001: React.FC = () => {
 
     return (
       <div className="sentiment-analysis">
+        {/* 배너(임시) */}
+        <div className="rv05-banner">
+          <div>
+            <div className="rv05-banner-title"></div>
+            <div className="rv05-banner-sub">
+              AI 감성분석은 아직 개발 단계입니다.
+            </div>
+          </div>
+          <div className="rv05-badge warn">준비중</div>
+        </div>
+        
         <div className="sentiment-header">
           <h3>🤖 AI 감성 분석</h3>
         </div>
@@ -642,7 +653,7 @@ const PG400001: React.FC = () => {
                 )}
               </div>
             ) : (
-              // 없으면 워드클라우드 표시
+                // 없으면 워드클라우드 표시
               <>
                 <h2 className="keyword-title">연관 키워드</h2>
                 {/* 로딩 중 로딩 스피너 표시 */}

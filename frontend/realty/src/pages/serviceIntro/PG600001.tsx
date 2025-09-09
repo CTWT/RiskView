@@ -13,6 +13,8 @@ import {
     FaBook,
 } from "react-icons/fa";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
+import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 /**
  * @file PG600001.tsx
@@ -94,6 +96,11 @@ const PG600001: React.FC = () => {
     "riskAnalysis"
     );
 
+    const navigate = useNavigate();
+    const handleStartAnalysis = () => {
+    navigate("/PG100001"); // PG100001로 이동
+    };
+
     const features = [
         {
             id: "riskAnalysis",
@@ -160,7 +167,19 @@ const PG600001: React.FC = () => {
             )}
             </div>
         </div>
-        </div>
+            {/* 하단 CTA 배너 */}
+            <div className="cta-banner">
+            <h2 className="cta-title">지금 바로 RiskView를 경험해보세요!</h2>
+            <p className="cta-subtitle">AI 기반 부동산 분석으로 안전한 거래를 시작하세요</p>
+            <div className="cta-buttons">
+                <button className="cta-button primary" onClick={handleStartAnalysis}>
+                    무료 분석 시작하기 🚀
+                </button>
+            </div>
+            </div>
+            </div>
+            
+            
     </PageContainer>
     );
 };

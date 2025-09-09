@@ -4896,3 +4896,59 @@
 .feature-content {
     flex: 1;
 }
+
+/* PG600001.tsx -> 하단 */
+.cta-banner {
+    background: linear-gradient(90deg,
+            #cdebff 14%,
+            #b7caff 34%,
+            #bcbbff 56%,
+            #b2a1ff 79%,
+            #a290ff 100%);
+    color: white;
+    text-align: center;
+    padding: 48px 24px;
+    border-radius: 16px;
+    margin: 80px auto 40px auto;
+    /* 수직 간격 + 중앙 정렬 */
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+
+    /* 🔒 고정 너비 설정 */
+    width: 800px;
+    max-width: 100%;
+    /* 모바일 대응은 유지 */
+}
+
+.cta-title {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 16px;
+}
+
+.cta-subtitle {
+    font-size: 18px;
+    margin-bottom: 32px;
+}
+
+.cta-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.cta-button.primary {
+    background-color: white;
+    border: none;
+    color: #6d50ff;
+    font-weight: bold;
+    padding: 14px 32px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: all 0.2s ease-in-out;
+}
+
+.cta-button.primary:hover {
+    background-color: #f2f2f2;
+}

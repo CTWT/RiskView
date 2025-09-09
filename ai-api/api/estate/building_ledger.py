@@ -8,9 +8,9 @@ import os
 # ============================================
 #  수업명 : 가비아 2회차
 #  작성자 : 박윤성
-#  수정자 : 
+#  수정자 : 박윤성
 #  작성일 : 25.09.08
-#  수정일 : 
+#  수정일 : 25.09.09
 #  파일명 : building_ledger.py
 #  설명  : 건축물대장 API 호출
 # ============================================
@@ -25,28 +25,21 @@ building_ledger_api_base_url = os.getenv('BUILDING_LEDGER_API_BASE_URL')
 # 층수 파악(지상층수/지하층수)
 # 총주차수 파악(실내/실외, 기계식/자주식, 주차대수/면적별)
 # https://www.data.go.kr/data/15134735/openapi.do#/
-def build_building_ledger_api_url(**kwargs) -> str:
+def get_building_info_from_ledger(**kwargs) -> dict:
     """
-    건축물대장 API 호출 URL 생성 함수
+    건축물대장 API를 호출하고,
+    사용 승인일, 층수, 주차 대수를 추출하여 반환하는 메서드
     """
-    base_url = kwargs.get('base_url', building_ledger_api_base_url)
-    _type = kwargs.get('_type', "json")
-    pageNo = kwargs.get('pageNo', "1")
-    
-    # 기본값 처리
-    default_values = {
-        "sigunguCd": "11110",  # 서울 종로구
-        "bjdongCd": "10100",   # 청운동
+    # 기본 파라미터 설정
+    default_params = {
+        "sigunguCd": "11110",
+        "bjdongCd": "10100",
         "platGbCd": "",
         "bun": "",
         "ji": "",
-        "startDate": "",
-        "endDate": "",
-        "dongNm": "",
-        "hoNm": "",
-        "_type": "json",
-        "numOfRows": "200000",
+        "numOfRows": "1",
         "pageNo": "1",
+        "_type": "json"
     }
 
     """
@@ -151,35 +144,55 @@ def build_building_ledger_api_url(**kwargs) -> str:
     ============================================
     """
 
-    # 사용자 입력으로 덮어쓰기
-    params = {**default_values, **kwargs}
-    
-    # 불필요한 빈 값 제거
-    filtered_params = {k: v for k, v in params.items() if v and k != "base_url"}
+    # 병합 및 정리
+    params = {**default_params, **kwargs}
+    filtered_params = {k: v for k, v in params.items() if v}
 
-    # URL 생성
+    # URL 구성
     query_string = urlencode(filtered_params, encoding='utf-8')
-    full_url = f"{base_url}&{query_string}"
-    return full_url
+    full_url = f"{building_ledger_api_base_url}&{query_string}"
 
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "application/json",  # 서버가 지원한다면
-}
+    try:
+        response = requests.get(full_url) # API 호출
+        response.raise_for_status() # HTTP 에러 체크
+        data = response.json() # JSON 응답
+    except Exception as e:
+        print("API 요청 오류:", e)
+        return {}
 
-# 테스트 호출
-test_url = build_building_ledger_api_url(
-    sigunguCd="11110",  # 종로구 (예시)
-    bjdongCd="10100",   # 청운동 (예시)
-    pageNo="1",
-    numOfRows="1"
-)
+    # 데이터 파싱
+    try:
+        item = data['response']['body']['items']['item'][0] # 응답 데이터에서 첫 번째 아이템 추출
 
-print("최종 URL:")
-print("\n", test_url)
+        # 사용 승인일 (건물 연식 판단)
+        use_approval_date = item.get('useAprDay')  # 예: "20080512"
+        
+        # 층수
+        ground_floors = int(item.get('grndFlrCnt', 0))  # 지상층수
+        underground_floors = int(item.get('ugrndFlrCnt', 0))  # 지하층수
 
-response = requests.get(test_url, headers=headers)
-response.raise_for_status()
-data = response.json()
+        # 주차 대수
+        indr_mech = int(item.get('indrMechUtcnt', 0))  # 실내 기계식
+        oudr_mech = int(item.get('oudrMechUtcnt', 0))  # 실외 기계식
+        indr_auto = int(item.get('indrAutoUtcnt', 0))  # 실내 자주식
+        oudr_auto = int(item.get('oudrAutoUtcnt', 0))  # 실외 자주식
 
-print(json.dumps(data, indent=4, ensure_ascii=False))
+        total_parking_spaces = indr_mech + oudr_mech + indr_auto + oudr_auto
+
+        return {
+            "use_approval_date": use_approval_date, # 건물 연식
+            "ground_floors": ground_floors, # 지상층수
+            "underground_floors": underground_floors, # 지하층수
+            "total_parking_spaces": total_parking_spaces, # 총 주차 대수
+            "indr_mech": indr_mech, # 실내 기계식 주차 대수
+            "oudr_mech": oudr_mech, # 실외 기계식 주차 대수
+            "indr_auto": indr_auto, # 실내 자주식 주차 대수
+            "oudr_auto": oudr_auto # 실외 자주식 주차 대수
+        }
+
+    except (KeyError, IndexError, TypeError) as e:
+        print("응답 데이터 파싱 오류:", e)
+        return {}
+    except Exception as e:
+        print("기타 오류:", e)
+        return {}

@@ -42,10 +42,6 @@ public class ContractService {
         return documentsRepository.findByUserCode(Usercode);
     }
 
-    public FileStorageMetadata findFileStorageMetaDataByDocumentCode(String documentcode) {
-        return fileStorageMetadataRepository.findByDocumentCode(documentcode);
-    }
-
     private String documentSave(ContractDTO.DocumentsDTO documentsDTO, String userCode) {
         Documents entity = ContractDTO.DocumentsDTO.toEntity(documentsDTO);
         entity.setUserCode(userCode);
@@ -69,8 +65,8 @@ public class ContractService {
 
     private void fileStorageMetadataSave(ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO, String documentCode) {
         FileStorageMetadata entity = ContractDTO.FileStorageMetadataDTO.toEntity(fileStorageMetadataDTO);
-        entity.setDocumentCode(documentCode);
         entity.setFileCode("not-set");
+        entity.setEntityCode(documentCode);
         FileStorageMetadata savedEntity = fileStorageMetadataRepository.save(entity);
 
         String generateCode = "FSM" + String.format("%08d", savedEntity.getFileId());

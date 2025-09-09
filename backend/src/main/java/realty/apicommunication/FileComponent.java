@@ -142,12 +142,16 @@ public class FileComponent {
     }
 
     public String getStoredPath() {
-        return Paths.get(System.getProperty("user.dir"), "backend", "src", "main", "java", "realty", "savedfile")
+        return Paths.get(System.getProperty("user.dir"),  "src", "main", "java", "realty","storedfile" ,"savedfile")
                 .toString();
+
+        // TODO
+        // 클라우드 연동되면 활성화
+        // return "https://my-bucket.s3.ap-northeast-2.amazonaws.com/uploads/"; //클라우드 스토리지 URL;
     }
 
     public String getTempPath() {
-        return Paths.get(System.getProperty("user.dir"), "backend", "src", "main", "java", "realty", "tempfile")
+        return Paths.get(System.getProperty("user.dir"),  "src", "main", "java", "realty","storedfile", "tempfile")
                 .toString();
     }
 

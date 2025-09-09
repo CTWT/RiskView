@@ -47,9 +47,8 @@ public class FileStorageMetadata {
             columnDefinition = "VARCHAR(20) COMMENT '파일 고유 코드'")
     private String fileCode;
 
-    @Column(name = "document_code", length = 20, nullable = false,
-            columnDefinition = "VARCHAR(20) COMMENT '문서 고유코드(FK)'")
-    private String documentCode;
+    @Column(name = "entity_code", length = 20, nullable = false)
+    private String entityCode;
 
     @Column(name = "original_name", length = 255,
             columnDefinition = "VARCHAR(255) COMMENT '원본 파일명'")
@@ -74,13 +73,6 @@ public class FileStorageMetadata {
     @Column(name = "upload_at",
             columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '업로드 시각'")
     private LocalDateTime uploadAt;
-
-    // 연관관계 매핑 (선택적)
-    // 문서와의 다대일 관계
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_code", referencedColumnName = "document_code",
-                insertable = false, updatable = false)
-    private Documents documents;
 
     @PrePersist
     public void onPrePersist(){

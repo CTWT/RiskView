@@ -36,7 +36,6 @@ public class BoardDTOs {
         private int views;
         private int likes;
         private int comments;
-        private boolean hasAttachment;
     }
 
     /**
@@ -78,14 +77,18 @@ public class BoardDTOs {
         private String board;
         private String title;
         private String content;
+        private List<String> imageNames;
         private List<String> tags;
+        private String postType; // 질문, 후기, 정보
     }
 
     @Data
     public static class PostUpdateRequestDTO {
         private String title;
         private String content;
+        private List<String> imageNames;
         private List<String> tags;
+        private String postType; // 질문, 후기, 정보
     }
 
     @Data @Builder public static class CommentCreateRequestDTO { private String content; }

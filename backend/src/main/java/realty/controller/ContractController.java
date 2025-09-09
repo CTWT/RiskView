@@ -47,7 +47,6 @@ public class ContractController {
     private final MapComponent mapComponent;
     private final OcrComponent ocrComponent;
     private final FileComponent fileComponent;
-    private final JwtUtil jwtUtil;
     private final UserService userService;
 
     /**
@@ -57,7 +56,7 @@ public class ContractController {
     public ResponseEntity<String> insertData(@RequestBody ContractDTO.ContractInfo contractInfo,
             HttpSession session, HttpServletRequest request) {
 
-        User user = getCurrentUser(request);
+        User user = userService.getCurrentUser(request);
         if(user == null) {
            return ResponseEntity.internalServerError()
            .body("유저 정보를 확인할 수 없습니다");
@@ -117,35 +116,6 @@ public class ContractController {
                 .mapInfo(mapinfo)
                 .build();
         return ResponseEntity.ok(contractResponse);
-    }
-
-    private User getCurrentUser(HttpServletRequest request){
-         Map<String, Object> response = new HashMap<>();
-        // 쿠키에서 accessToken 추출
-        String accessToken = jwtUtil.extractTokenFromCookies(request, "accessToken");
-
-        // accessToken이 없으면
-        if (accessToken == null || accessToken.isEmpty()) {
-            // 응답에 실패 정보 담음
-            return null;
-        }
-
-        // accessToken에서 Claims 추출
-        Claims claims = jwtUtil.getClaims(accessToken);
-        // Claims가 유효하지 않으면
-        if (claims == null) {
-            return null;
-        }
-
-        // Claims에서 userId 추출
-        String userId = claims.get("userId", String.class);
-        if (userId == null) {
-            return null;
-        }
-
-        // 유저 정보 조회
-        User user = userService.findByUserId(userId);
-        return user;
     }
 
     private void DBDataToUserData(StructuredContractDataDTO dto){

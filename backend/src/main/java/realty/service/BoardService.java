@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import realty.apicommunication.FileComponent;
 import realty.domain.dto.BoardDTOs.*;
 import realty.domain.model.CommunityComment;
 import realty.domain.model.Post;
@@ -53,6 +55,7 @@ public class BoardService {
     private final CommunityCommentRepository commentRepository;
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
+    private final FileComponent fileComponent;
 
     /**
      * 게시글 목록을 조건에 따라 조회합니다.
@@ -62,7 +65,23 @@ public class BoardService {
         log.info("Searching for posts with condition: {} and pageable: {}", condition, pageable);
         Page<Post> postPage = postRepository.findAll(PostSpecifications.withCondition(condition), pageable);
         log.info("Found {} posts from DB for page {}", postPage.getNumberOfElements(), pageable.getPageNumber());
-        return postPage.map(this::mapToPostListDTO);
+        Page<PostListResponseDTO> dtoPage = postPage.map(post -> {
+                                            String postType = calculatePostType(post); // 조회 시점 계산
+                                            return mapToPostListDTO(post, postType);
+                                    });
+
+        return dtoPage;
+    }
+
+    private String calculatePostType(Post post) {
+        int likeWeight = post.getLikesCount() * 3;
+        int commentWeight = post.getCommentsCount() * 2;
+        int viewWeight = post.getViews();
+
+        int totalScore = likeWeight + commentWeight + viewWeight;
+
+        if(totalScore >= 1000) return "인기";
+        else return post.getPostType();
     }
 
     /**
@@ -89,11 +108,20 @@ public class BoardService {
 
         log.info("user_code: {}", author.getUserCode());
 
+        String saveHTML = requestDTO.getContent();
+        if(requestDTO.getImageNames() != null){
+
+            // TODO
+            // 클라우드 연동되면 활성화
+            //saveHTML = convertImgSourceToCloudURL(requestDTO.getContent(), requestDTO.getImageNames());
+        }
+
         Post post = Post.builder()
                 .postCode("not-set")
                 .boardType(Post.BoardType.valueOf(requestDTO.getBoard().toUpperCase()))
+                .postType(requestDTO.getPostType())
                 .title(requestDTO.getTitle())
-                .content(requestDTO.getContent())
+                .content(saveHTML)
                 .tags(requestDTO.getTags() != null ? String.join(",", requestDTO.getTags()) : null)
                 .author(author)
                 .build();
@@ -122,6 +150,7 @@ public class BoardService {
 
             post.setTitle(requestDTO.getTitle());
             post.setContent(requestDTO.getContent());
+            post.setPostType(requestDTO.getPostType());
             post.setTags(String.join(",", requestDTO.getTags()));
 
             boolean likedByMe = postLikeRepository.existsByPostCodeAndUserCode(postCode, currentUserCode);
@@ -216,18 +245,17 @@ public class BoardService {
     }
 
     // --- Mapper-like helper methods ---
-    private PostListResponseDTO mapToPostListDTO(Post post) {
+    private PostListResponseDTO mapToPostListDTO(Post post, String postType) {
         return new PostListResponseDTO(
                 post.getId(),
                 post.getBoardType().name().toLowerCase(),
-                post.getPostType(),
+                postType,
                 post.getTitle(),
                 post.getAuthor().getUserNickname(),
                 formatDate(post.getCreatedAt()),
                 post.getViews(),
                 post.getLikesCount(),
-                post.getCommentsCount(),
-                post.isHasAttachment()
+                post.getCommentsCount()
         );
     }
 
@@ -298,5 +326,31 @@ public class BoardService {
         );
 
         return communityComment;
+    }
+
+    public String convertImgSourceToCloudURL(String originalHTML, List<String> imageNames) {
+        String resultHTML = originalHTML;
+        int searchStartIndex = 0;
+
+        for (String imageName : imageNames) {
+            // src=" 또는 src=' 위치 찾기
+            int srcIndex = resultHTML.indexOf("src=", searchStartIndex);
+            if (srcIndex == -1) break;
+
+            char quoteChar = resultHTML.charAt(srcIndex + 4); // " 또는 '
+            int start = srcIndex + 5; // src=" 바로 뒤
+            int end = resultHTML.indexOf(quoteChar, start);
+            if (end == -1) break; // 종료 따옴표 없으면 종료
+
+            String replaceText = fileComponent.getStoredPath() + imageName;
+            StringBuilder sb = new StringBuilder(resultHTML);
+            sb.replace(start, end, replaceText);
+            resultHTML = sb.toString();
+
+            searchStartIndex = start + replaceText.length();
+        }
+
+        log.info("resultHTML : {}", resultHTML);
+        return resultHTML;
     }
 }

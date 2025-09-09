@@ -78,10 +78,6 @@ public class Post {
     @OrderBy("createdAt ASC")
     private List<CommunityComment> comments = new ArrayList<>();
 
-    @ColumnDefault("false")
-    @Column(name = "has_attachment", nullable = false)
-    private boolean hasAttachment;
-
     @CreatedDate
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

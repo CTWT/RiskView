@@ -304,52 +304,6 @@ const PG500042: React.FC = () => {
   }, [getPostId]);
 
 
-  /*
-  const addLocalComment = (content: string) => {
-    // 1) 현재 시각을 표시용 문자열로 구성 (YYYY.MM.DD HH:mm)
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, "0");
-    const d = String(now.getDate()).padStart(2, "0");
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mm = String(now.getMinutes()).padStart(2, "0");
-
-    // 2) 서버 미연동 시 표시할 작성자 이름(임시)
-    const authorName = currentUser?.name || "나";
-
-    // 3) 클라이언트에서 임시로 생성한 댓글 객체
-    const newC: Comment = {
-      id: Date.now(), // 로컬 임시 ID
-      authorId: currentUserId,
-      author: authorName,                // 작성자명
-      date: `${y}.${m}.${d} ${hh}:${mm}`,// 표시용 날짜
-      content,                           // 댓글 본문
-    };
-
-    // 4) 게시글 상태에 댓글을 추가
-    setPost((prev) => {
-      if (prev) {
-        // 기존 게시글 상태가 있으면 그 배열 뒤에 추가
-        return { ...prev, comments: [...prev.comments, newC] };
-      }
-      // prev가 null이면 임시 게시글을 만들어서 댓글을 붙임 (백엔드 미연결 대비)
-      return {
-        id: 0,
-        board: 'free',
-        title: "",
-        author: currentUser?.name || "나",
-        date: new Date().toISOString(),
-        content: "",
-        views: 0,
-        tags: [],
-        likes: 0,
-        comments: [newC],
-        __fromWrite: true,
-      } as PostDetailWithFlags;
-    });
-  };
-  */
-
   /**
    * 로컬 상태의 댓글 내용을 수정
    * @param {string} commentId 대상 댓글 ID
@@ -826,15 +780,10 @@ const PG500042: React.FC = () => {
         {/* 게시글 내용 영역 (수정모드/조회모드 분기) */}
         {!isPostEditing ? (
           <div className="post-content">
-            {post?.content ? (
-              post.__fromWrite ? (
-                <div dangerouslySetInnerHTML={{ __html: post.content }} />
-              ) : (
-                post.content
-                  .split("\n")
-                  .map((line, index) => <p key={index}>{line}</p>)
-              )
-            ) : isLoading ? (
+            {
+            post?.content ? 
+              <div dangerouslySetInnerHTML={{ __html: post.content }} />
+            : isLoading ? (
               <p>불러오는 중...</p>
             ) : (
               <p>내용이 없습니다.</p>

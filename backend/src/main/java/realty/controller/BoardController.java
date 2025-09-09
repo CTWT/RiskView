@@ -27,7 +27,6 @@ import realty.domain.dto.BoardDTOs.PostDetailResponseDTO;
 import realty.domain.dto.BoardDTOs.PostSearchCondition;
 import realty.domain.dto.BoardDTOs.PostCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.PostUpdateRequestDTO;
-import realty.domain.repository.CommunityCommentRepository;
 import realty.domain.dto.BoardDTOs.LikeResponseDTO;
 import realty.domain.dto.BoardDTOs.CommentCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.CommentUpdateRequestDTO;

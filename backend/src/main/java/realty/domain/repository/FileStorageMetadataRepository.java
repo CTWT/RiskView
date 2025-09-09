@@ -15,5 +15,4 @@ import realty.domain.model.FileStorageMetadata;
  */
 @Repository
 public interface FileStorageMetadataRepository extends JpaRepository<FileStorageMetadata, Long>{
-    FileStorageMetadata findByDocumentCode(String documentCode);
 }

@@ -52,8 +52,7 @@ public class Post {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "tags", length = 255)

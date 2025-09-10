@@ -3,7 +3,6 @@ package realty.domain.model;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -73,7 +72,6 @@ public class Post {
     // 댓글 엔티티 연관관계
     @Builder.Default
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Where(clause = "is_deleted = false")
     @OrderBy("createdAt ASC")
     private List<CommunityComment> comments = new ArrayList<>();
 

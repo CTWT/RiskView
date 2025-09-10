@@ -1,10 +1,6 @@
 package realty.service;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 
 import org.springframework.data.domain.Page;
 import org.slf4j.Logger;

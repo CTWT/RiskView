@@ -3,10 +3,7 @@ package realty.controller;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,8 +24,6 @@ import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
 import realty.domain.model.User;
 import realty.service.ContractService;
 import realty.service.UserService;
-import realty.support.JwtUtil;
-import io.jsonwebtoken.Claims;
 
 /*
  * 수업명 : 가비아 2회차

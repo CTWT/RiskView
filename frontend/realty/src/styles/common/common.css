@@ -915,7 +915,7 @@
 
 /* 우측 패널 공통 스타일  */
 .in01-right-panel {
-    flex: 2 1 600px;
+    width: 650px;
     min-width: 400px;
     /* 패널이 찌그러지는 것을 방지 */
     background-color: #fff;
@@ -1674,6 +1674,14 @@
         right: 12px;
         bottom: 12px;
     }
+}
+
+.stat-item {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: none !important;
+    margin: -8px;
 }
 
 /*  ------------------------------------------------------------ */

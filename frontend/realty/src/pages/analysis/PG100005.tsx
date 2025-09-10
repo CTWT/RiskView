@@ -142,165 +142,159 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     }
 
     return (
-        <div className="rv05-container">
-            <CommonContainerHeader
-                subtitle="계약서 위험도 분석 결과"
-                title="AI 분석 리포트"
-                description="현재 화면은 OCR로 저장된 값 확인용 임시 레이아웃입니다. AI 분석 파트가 합류되면 위험 점수/코멘트가 추가됩니다."
-            />
+      <div className="rv05-container">
+        <CommonContainerHeader
+          subtitle="계약서 위험도 분석 결과"
+          title="AI 분석 리포트"
+          description="현재 화면은 OCR로 저장된 값 확인용 임시 레이아웃입니다. AI 분석 파트가 합류되면 위험 점수/코멘트가 추가됩니다."
+        />
 
-            {/* 상단 요약칩 */}
-            <div className="rv05-chips">
-                <div className="rv05-chip">
-                    <span className="rv05-chip-dot ok" />
-                    <div>
-                        <div className="rv05-chip-title">분석 완료</div>
-                        <div className="rv05-chip-sub">
-                            {now.toISOString().slice(0, 10)}{" "}
-                            {now.toTimeString().slice(0, 5)}
-                        </div>
-                    </div>
-                </div>
-                <div className="rv05-chip">
-                    <span className="rv05-chip-dot info" />
-                    <div>
-                        <div className="rv05-chip-title">매물 주소</div>
-                        <div className="rv05-chip-sub">{location}</div>
-                    </div>
-                </div>
-                <div className="rv05-chip">
-                    <span className="rv05-chip-dot note" />
-                    <div>
-                        <div className="rv05-chip-title">계약 유형</div>
-                        <div className="rv05-chip-sub">{leaseType}</div>
-                    </div>
-                </div>
+        {/* 상단 요약칩 */}
+        <div className="rv05-chips">
+          <div className="rv05-chip">
+            <span className="rv05-chip-dot ok" />
+            <div>
+              <div className="rv05-chip-title">분석 완료</div>
+              <div className="rv05-chip-sub">
+                {now.toISOString().slice(0, 10)}{" "}
+                {now.toTimeString().slice(0, 5)}
+              </div>
             </div>
-
-            {/* 종합 위험 배너(임시) */}
-            <div className="rv05-banner">
-                <div>
-                    <div className="rv05-banner-title">종합 위험도 평가</div>
-                    <div className="rv05-banner-sub">
-                        AI 분석 준비 중입니다. 현재는 OCR 데이터만 반영합니다.
-                    </div>
-                </div>
-                <div className="rv05-badge warn">준비중</div>
+          </div>
+          <div className="rv05-chip">
+            <span className="rv05-chip-dot info" />
+            <div>
+              <div className="rv05-chip-title">매물 주소</div>
+              <div className="rv05-chip-sub">{location}</div>
             </div>
-
-            {/* 2열 카드 그리드 */}
-            <section className="rv05-grid">
-                <article className="rv05-card">
-                    <h3 className="rv05-sec-title">기본 정보</h3>
-                    <dl className="rv05-dl">
-                        <div>
-                            <dt>임대할 부분</dt>
-                            <dd>{data.leasePart ?? "-"}</dd>
-                        </div>
-                        <div>
-                            <dt>임대 기간</dt>
-                            <dd>
-                                {fmtDate(data.leasePeriodStart)} ~{" "}
-                                {fmtDate(data.leasePeriodEnd)}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt>중도금 지급일</dt>
-                            <dd>{fmtDate(data.middlePaymentDate)}</dd>
-                        </div>
-                        <div>
-                            <dt>잔금 지급일</dt>
-                            <dd>{fmtDate(data.balanceDate)}</dd>
-                        </div>
-                        <div>
-                            <dt>차임 지급일</dt>
-                            <dd>{fmtDate(data.rentDate)}</dd>
-                        </div>
-                        <div>
-                            <dt>면적(토지/건물/임대)</dt>
-                            <dd>
-                                {fmtNum(data.landArea)} /{" "}
-                                {fmtNum(data.buildingArea)} /{" "}
-                                {fmtNum(data.leaseArea)} ㎡
-                            </dd>
-                        </div>
-                    </dl>
-                </article>
-
-                <article className="rv05-card">
-                    <h3 className="rv05-sec-title">재무 분석(기초값)</h3>
-                    <dl className="rv05-dl">
-                        <div>
-                            <dt>보증금</dt>
-                            <dd>{fmtNum(data.deposit)} 원</dd>
-                        </div>
-                        <div>
-                            <dt>계약금</dt>
-                            <dd>{fmtNum(data.downPayment)} 원</dd>
-                        </div>
-                        <div>
-                            <dt>중도금</dt>
-                            <dd>{fmtNum(data.middlePayment)} 원</dd>
-                        </div>
-                        <div>
-                            <dt>잔금</dt>
-                            <dd>{fmtNum(data.balance)} 원</dd>
-                        </div>
-                        <div>
-                            <dt>차임</dt>
-                            <dd>
-                                {fmtNum(data.rentAmount)} 원 (
-                                {data.rentType ?? "-"})
-                            </dd>
-                        </div>
-                    </dl>
-                </article>
-
-                {/* 특약 */}
-                <article className="rv05-card rv05-wide">
-                    <h3 className="rv05-sec-title">특약</h3>
-                    <p className="rv05-special">
-                        {data.specialTerms?.trim() || "특약사항 없음"}
-                    </p>
-                </article>
-
-                {/* 주요 발견사항: 나머지 필드 전부 */}
-                <article className="rv05-card rv05-wide">
-                    <h3 className="rv05-sec-title">
-                        주요 발견사항(데이터 검증용)
-                    </h3>
-                    <ul className="rv05-kvlist">
-                        {restEntries.length === 0 ? (
-                            <li className="rv05-dim">
-                                추가로 표시할 값이 없습니다.
-                            </li>
-                        ) : (
-                            restEntries.map(({ label, value }, idx) => (
-                                <li key={idx}>
-                                    <span>{label}</span>
-                                    <em>{value}</em>
-                                </li>
-                            ))
-                        )}
-                    </ul>
-                </article>
-            </section>
-
-            <div className="rv05-actions">
-                <button
-                    className="an02-secondary-btn"
-                    onClick={() => window.history.back()}
-                >
-                    뒤로
-                </button>
-                <button
-                    className="an02-ai-analyze-start-btn"
-                    onClick={() => window.print()}
-                >
-                    인쇄
-                </button>
+          </div>
+          <div className="rv05-chip">
+            <span className="rv05-chip-dot note" />
+            <div>
+              <div className="rv05-chip-title">계약 유형</div>
+              <div className="rv05-chip-sub">{leaseType}</div>
             </div>
+          </div>
         </div>
+
+        {/* 종합 위험 배너(임시) */}
+        <div className="rv05-banner">
+          <div>
+            <div className="rv05-banner-title">종합 위험도 평가</div>
+            <div className="rv05-banner-sub">
+              AI 분석 준비 중입니다. 현재는 OCR 데이터만 반영합니다.
+            </div>
+          </div>
+          <div className="rv05-badge warn">준비중</div>
+        </div>
+
+        {/* 2열 카드 그리드 */}
+        <section className="rv05-grid">
+          <article className="rv05-card">
+            <h3 className="rv05-sec-title">기본 정보</h3>
+            <dl className="rv05-dl">
+              <div>
+                <dt>임대할 부분</dt>
+                <dd>{data.leasePart ?? "-"}</dd>
+              </div>
+              <div>
+                <dt>임대 기간</dt>
+                <dd>
+                  {fmtDate(data.leasePeriodStart)} ~{" "}
+                  {fmtDate(data.leasePeriodEnd)}
+                </dd>
+              </div>
+              <div>
+                <dt>중도금 지급일</dt>
+                <dd>{fmtDate(data.middlePaymentDate)}</dd>
+              </div>
+              <div>
+                <dt>잔금 지급일</dt>
+                <dd>{fmtDate(data.balanceDate)}</dd>
+              </div>
+              <div>
+                <dt>차임 지급일</dt>
+                <dd>{fmtDate(data.rentDate)}</dd>
+              </div>
+              <div>
+                <dt>면적(토지/건물/임대)</dt>
+                <dd>
+                  {fmtNum(data.landArea)} / {fmtNum(data.buildingArea)} /{" "}
+                  {fmtNum(data.leaseArea)} ㎡
+                </dd>
+              </div>
+            </dl>
+          </article>
+
+          <article className="rv05-card">
+            <h3 className="rv05-sec-title">재무 분석(기초값)</h3>
+            <dl className="rv05-dl">
+              <div>
+                <dt>보증금</dt>
+                <dd>{fmtNum(data.deposit)} 원</dd>
+              </div>
+              <div>
+                <dt>계약금</dt>
+                <dd>{fmtNum(data.downPayment)} 원</dd>
+              </div>
+              <div>
+                <dt>중도금</dt>
+                <dd>{fmtNum(data.middlePayment)} 원</dd>
+              </div>
+              <div>
+                <dt>잔금</dt>
+                <dd>{fmtNum(data.balance)} 원</dd>
+              </div>
+              <div>
+                <dt>차임</dt>
+                <dd>
+                  {fmtNum(data.rentAmount)} 원 ({data.rentType ?? "-"})
+                </dd>
+              </div>
+            </dl>
+          </article>
+
+          {/* 특약 */}
+          <article className="rv05-card rv05-wide">
+            <h3 className="rv05-sec-title">특약</h3>
+            <p className="rv05-special">
+              {data.specialTerms?.trim() || "특약사항 없음"}
+            </p>
+          </article>
+
+          {/* 주요 발견사항: 나머지 필드 전부 */}
+          <article className="rv05-card rv05-wide">
+            <h3 className="rv05-sec-title">주요 발견사항(데이터 검증용)</h3>
+            <ul className="rv05-kvlist">
+              {restEntries.length === 0 ? (
+                <li className="rv05-dim">추가로 표시할 값이 없습니다.</li>
+              ) : (
+                restEntries.map(({ label, value }, idx) => (
+                  <li key={idx}>
+                    <span>{label}</span>
+                    <em>{value}</em>
+                  </li>
+                ))
+              )}
+            </ul>
+          </article>
+        </section>
+
+        <div className="rv05-actions">
+          <button
+            className="an02-ai-analyze-start-btn"
+            onClick={() => window.history.back()}
+          >
+            뒤로
+          </button>
+          <button
+            className="an02-ai-analyze-start-btn"
+            onClick={() => window.print()}
+          >
+            인쇄
+          </button>
+        </div>
+      </div>
     );
 };
 

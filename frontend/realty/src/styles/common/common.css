@@ -293,7 +293,6 @@
     /* 최대 너비 설정 */
     margin: 0 auto;
     /* 중앙 정렬 */
-    background-color: #f9f9f9;
     /* 배경색 */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
@@ -326,12 +325,12 @@
     min-width: 300px;
     /* 최소 너비 설정하여 너무 줄어들지 않게 함 */
     background-color: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid #f0f0f0;;
     border-radius: 8px;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
 .an03-pane-title {
@@ -351,7 +350,7 @@
     object-fit: contain;
     /* 이미지 비율 유지하며 컨테이너에 맞춤 */
     border-radius: 4px;
-    border: 1px solid #eee;
+    border: 1px solid #f0f0f0;;
     display: block;
     /* 이미지 하단 여백 제거 */
     margin: 0 auto;
@@ -389,7 +388,7 @@
     overflow-y: auto;
     /* 세로 스크롤 허용 */
     padding: 15px;
-    border: 1px solid #ccc;
+    border: 1px solid #f0f0f0;;
     border-radius: 4px;
     font-size: 1em;
     line-height: 1.6;
@@ -432,10 +431,10 @@
 /* 지도 API 구역 */
 .an03-map-section {
     background-color: #fff;
-    border: 1px solid #ddd;
+    border: 1px solid #f0f0f0;
     border-radius: 8px;
     padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     text-align: center;
 }
 
@@ -459,7 +458,7 @@
     height: 350px;
     /* 지도 영역 높이 */
     background-color: #e0e0e0;
-    border: 1px dashed #aaa;
+    border: 1px solid #f0f0f0;;
     border-radius: 4px;
     display: flex;
     justify-content: center;
@@ -692,6 +691,7 @@
 .rv05-chips {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 12px;
     margin: 6px 0 16px;
 }
@@ -704,7 +704,7 @@
     border: 1px solid var(--rv05-border);
     padding: 12px 14px;
     border-radius: 12px;
-    min-width: 260px;
+    min-width: 320px;
 }
 
 .rv05-chip-title {

@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiHome } from "react-icons/fi";
-import { Link } from "react-router-dom";
 import "../../styles/common/common.css";
-import Breadcrumb from "../../components/breadcrumb/Breadcrumb";
 import PageContainer from "../../components/layout/PageContainer";
+// import wordCloudMask from "./word_cloud_mask_image.jpeg"; // @visx/wordcloud는 이미지 마스크를 직접 지원하지 않습니다.
 
 /*
  * 생성자 : 이주하
@@ -16,19 +14,12 @@ import PageContainer from "../../components/layout/PageContainer";
 
 // 뉴스 데이터 타입
 interface NewsItem {
-  id: number;
-  title: string;
+  articleId: number;
+  title: string; // 뉴스 제목
   publishedAt: string; // 날짜 필드
   content?: string; // 내용(선택적 속성)
   url?: string; // URL(선택적 속성)
   siteName?: string; // 사이트명(선택적 속성)
-}
-
-// 키워드 데이터 타입
-interface KeywordItem {
-  text: string;
-  weight: number;
-  color?: string; // 색상(선택적 속성)
 }
 
 // 페이지네이션 정보 타입
@@ -59,10 +50,12 @@ const PG400001: React.FC = () => {
   const [selectedSource, setSelectedSource] = useState<string>("전체");
   // 뉴스 목록 상태
   const [newsData, setNewsData] = useState<NewsItem[]>([]);
-  // 키워드 상태
-  const [keywords, setKeywords] = useState<KeywordItem[]>([]);
+  // 워드클라우드 이미지 URL 상태
+  const [wordCloudImage, setWordCloudImage] = useState<string | null>(null);
   // 로딩 상태
   const [loading, setLoading] = useState<boolean>(true);
+  // 키워드 로딩 상태 추가
+  const [keywordLoading, setKeywordLoading] = useState<boolean>(true);
   // 선택된 뉴스 상태
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   // 감성 분석 결과 상태
@@ -114,8 +107,8 @@ const PG400001: React.FC = () => {
   // 뉴스 선택 시 감성 분석 실행
   const handleNewsSelect = (news: NewsItem) => {
     setSelectedNews(news);
-    setSentimentAnalysis(null); // 이전 분석 결과 초기화
-    fetchSentimentAnalysis(news.id);
+    setSentimentAnalysis(null);
+    fetchSentimentAnalysis(news.articleId);
   };
 
   // 감성 분석 결과 렌더링 함수
@@ -141,39 +134,6 @@ const PG400001: React.FC = () => {
           return "부정적 시장 선호";
         default:
           return "중립적";
-      }
-    };
-
-    const getMarketImpactIcon = () => {
-      switch (sentimentAnalysis.marketImpact) {
-        case "bullish":
-          return "📈";
-        case "bearish":
-          return "📉";
-        default:
-          return "➡️";
-      }
-    };
-
-    const getMarketImpactText = () => {
-      switch (sentimentAnalysis.marketImpact) {
-        case "bullish":
-          return "시장 영향도\n보통";
-        case "bearish":
-          return "시장 영향도\n우려";
-        default:
-          return "거래 신호\n신중 접근";
-      }
-    };
-
-    const getMarketImpactColor = () => {
-      switch (sentimentAnalysis.marketImpact) {
-        case "bullish":
-          return "#4CAF50";
-        case "bearish":
-          return "#f44336";
-        default:
-          return "#f44336";
       }
     };
 
@@ -224,8 +184,8 @@ const PG400001: React.FC = () => {
 
           <div className="sentiment-keywords">
             <span className="keywords-label">핵심 키워드:</span>
-            {sentimentAnalysis.keywords.map((keyword, index) => (
-              <span key={index} className="keyword-tag">
+            {sentimentAnalysis.keywords.map((keyword) => (
+              <span key={keyword} className="keyword-tag">
                 {keyword}
               </span>
             ))}
@@ -342,8 +302,8 @@ const PG400001: React.FC = () => {
       .then((data) => {
         console.log("API 응답 데이터:", data);
         // 뉴스 데이터 설정
-        const formattedNews = data.content.map((item: any) => ({
-          id: item.id,
+        const formattedNews: NewsItem[] = data.content.map((item: any) => ({
+          articleId: item.articleId,
           title: item.title,
           publishedAt: item.publishedAt, // API 응답 필드명 확인
           content: item.content,
@@ -361,50 +321,54 @@ const PG400001: React.FC = () => {
           prevBlockStartPage: data.prevBlockStartPage,
           nextBlockStartPage: data.nextBlockStartPage,
         });
-        // 키워드 데이터 설정
-        setKeywords(mockKeywords);
         // 로딩 상태 false로 설정
-        setLoading(false);
       })
       .catch((error) => {
         console.error("뉴스 데이터 로딩 오류:", error);
         // 뉴스 데이터를 빈 배열로 설정
         setNewsData([]);
-        // 로딩 상태 false로 설정
+      })
+      .finally(() => {
+        // 뉴스 로딩이 끝나면 로딩 상태 false로 설정
         setLoading(false);
       });
   };
 
-  // 컴포넌트 마운트 시 또는 selectedSource가 변경될 때 API 호출
+  // 워드클라우드 키워드 데이터 가져오기
+  const fetchKeywords = async () => {
+    setKeywordLoading(true); // 키워드 로딩 시작
+    setWordCloudImage(null); // 기존 이미지 제거
+    try {
+      const response = await fetch("/api/board/news_articles/keywords");
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // 응답을 Blob으로 변환
+      const imageBlob = await response.blob();
+      // Blob을 가리키는 URL 생성
+      const imageUrl = URL.createObjectURL(imageBlob);
+      setWordCloudImage(imageUrl);
+
+    } catch (error) {
+      console.error("키워드 데이터 로딩 오류:", error);
+      setWordCloudImage(null); // 오류 발생 시 이미지 없음
+    } finally {
+        setKeywordLoading(false); // 키워드 로딩 완료
+    }
+  };
+
+  // 컴포넌트가 처음 마운트될 때만 워드클라우드 키워드 데이터를 호출합니다.
+  useEffect(() => {
+    fetchKeywords();
+  }, []);
+
+  // selectedSource가 변경될 때 뉴스 데이터를 호출합니다.
   useEffect(() => {
     // 선택된 소스로 뉴스 데이터의 첫 페이지를 불러옴
     fetchNewsData(1, selectedSource);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedSource]);
-
-  // 임시 키워드 데이터
-  const mockKeywords: KeywordItem[] = [
-    { text: "재개발", weight: 100, color: "#E91E63" },
-    { text: "대출", weight: 85, color: "#9C27B0" },
-    { text: "아파트", weight: 80, color: "#673AB7" },
-    { text: "부동산", weight: 75, color: "#3F51B5" },
-    { text: "주택", weight: 70, color: "#2196F3" },
-    { text: "금리", weight: 65, color: "#03A9F4" },
-    { text: "정책", weight: 60, color: "#00BCD4" },
-    { text: "시장", weight: 55, color: "#009688" },
-    { text: "투자", weight: 50, color: "#4CAF50" },
-    { text: "분양", weight: 48, color: "#8BC34A" },
-    { text: "매매", weight: 45, color: "#CDDC39" },
-    { text: "전세", weight: 42, color: "#FFEB3B" },
-    { text: "월세", weight: 40, color: "#FFC107" },
-    { text: "청약", weight: 38, color: "#FF9800" },
-    { text: "입주", weight: 35, color: "#FF5722" },
-    { text: "분석", weight: 32, color: "#795548" },
-    { text: "전망", weight: 30, color: "#607D8B" },
-    { text: "상승", weight: 28, color: "#E91E63" },
-    { text: "하락", weight: 25, color: "#9C27B0" },
-    { text: "안정", weight: 22, color: "#673AB7" },
-  ];
 
   // 탭 목록 데이터
   const tabs = ["전체", "코알라 뉴스", "비버 하우스", "수달 빌리지"];
@@ -466,46 +430,6 @@ const PG400001: React.FC = () => {
     return pages;
   };
 
-  // 워드클라우드 스타일 계산
-  const getWordCloudStyle = (keyword: KeywordItem, index: number) => {
-    const fontSize = Math.max(12, (keyword.weight / 100) * 48);
-    // 키워드 위치 배열
-    const positions = [
-      { top: "20%", left: "15%" },
-      { top: "35%", left: "45%" },
-      { top: "15%", left: "70%" },
-      { top: "50%", left: "25%" },
-      { top: "40%", left: "65%" },
-      { top: "65%", left: "15%" },
-      { top: "70%", left: "50%" },
-      { top: "25%", left: "35%" },
-      { top: "55%", left: "75%" },
-      { top: "80%", left: "30%" },
-      { top: "30%", left: "80%" },
-      { top: "75%", left: "65%" },
-      { top: "45%", left: "10%" },
-      { top: "60%", left: "40%" },
-      { top: "85%", left: "70%" },
-      { top: "10%", left: "50%" },
-      { top: "90%", left: "15%" },
-      { top: "35%", left: "90%" },
-      { top: "65%", left: "5%" },
-      { top: "20%", left: "25%" },
-    ];
-    const position = positions[index % positions.length];
-
-    return {
-      fontSize: `${fontSize}px`,
-      fontWeight: keyword.weight > 60 ? "bold" : "normal",
-      color: keyword.color || "#333",
-      position: "absolute" as const,
-      ...position,
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      userSelect: "none" as const,
-    };
-  };
-
   // 렌더링
   return (
     <PageContainer showBreadcrumb={true}>
@@ -539,10 +463,10 @@ const PG400001: React.FC = () => {
                 <p>뉴스를 불러오는 중...</p>
               </div>
             ) : (
-              <>
+              <div>
                 {/* 뉴스 기사 목록 렌더링 */}
                 {newsData.map((news) => (
-                  <article key={news.id} className="news-item">
+                  <article key={news.articleId} className="news-item">
                     {/* 클릭 시 상세 보기 */}
                     <div
                       className="news-item-click-area"
@@ -624,7 +548,7 @@ const PG400001: React.FC = () => {
                     </button>
                   </div>
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
@@ -657,38 +581,18 @@ const PG400001: React.FC = () => {
               <>
                 <h2 className="keyword-title">연관 키워드</h2>
                 {/* 로딩 중 로딩 스피너 표시 */}
-                {loading ? (
+                {keywordLoading ? (
                   <div className="keyword-loading">
                     <div className="spinner"></div>
                     <p>키워드 분석 중...</p>
                   </div>
                 ) : (
                   <>
-                    {/* 워드클라우드 컨테이너 */}
-                    <div className="wordcloud-container">
-                      {keywords.map((keyword, index) => (
-                        <span
-                          key={`${keyword.text}-${index}`}
-                          className="keyword-item"
-                          // 동적 스타일 적용
-                          style={getWordCloudStyle(keyword, index)}
-                          onClick={() =>
-                            console.log(`키워드 클릭: ${keyword.text}`)
-                          }
-                          // 마우스 호버 효과
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "scale(1.1)";
-                            e.currentTarget.style.opacity = "0.8";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "scale(1)";
-                            e.currentTarget.style.opacity = "1";
-                          }}
-                        >
-                          {keyword.text}
-                        </span>
-                      ))}
-                    </div>
+                    {wordCloudImage ? (
+                      <img src={wordCloudImage} alt="연관 키워드 워드클라우드" style={{ width: '100%', height: 'auto' }} />
+                    ) : (
+                      <p>워드클라우드를 표시할 수 없습니다.</p>
+                    )}
                     <p className="keyword-description">
                       최근 1달간 수집된 부동산 뉴스 키워드에서 추출한 주요
                       키워드입니다.

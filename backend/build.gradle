@@ -41,6 +41,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5' // JWT 관련 의존성
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5' // JWT 관련 의존성
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5' // JWT 관련 의존성
+	implementation 'org.openkoreantext:open-korean-text:2.1.0' // 형태소 분석을 위한 의존성
 }
 
 tasks.named('test') {

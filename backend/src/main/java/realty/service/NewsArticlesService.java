@@ -1,15 +1,22 @@
 package realty.service;
 
 import realty.domain.dto.NewsArticlesDTO;
-import realty.domain.repository.NewsArticlesRepository;
+import realty.domain.model.NewsArticles;
 import lombok.extern.slf4j.Slf4j;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpMethod;
+import realty.domain.repository.NewsArticlesRepository;
+import org.springframework.http.ResponseEntity;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /*
  * 수업명 : 가비아 2회차
@@ -22,9 +29,21 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class NewsArticlesService {
-    
+
     @Autowired
     private NewsArticlesRepository newsArticlesRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    private final String wordCloudApiUrl = "http://localhost:5002/generate-wordcloud"; // 워드클라우드 엔드포인트 URL
+
+    // @Autowired를 사용한 생성자 주입
+    public NewsArticlesService(NewsArticlesRepository newsArticlesRepository, RestTemplate restTemplate) {
+        this.newsArticlesRepository = newsArticlesRepository;
+        this.restTemplate = restTemplate;
+    }
+
 
     /**
      * 현재 페이지에 표시할 뉴스 기사 항목들을 가져오는 메서드
@@ -37,7 +56,7 @@ public class NewsArticlesService {
         log.info("뉴스 페이지 데이터 조회 시작: pageNum={}, size={}, source={}", pageNum, size, source);
         // 가져올 페이지의 번호(pageNum)와 한 페이지당 항목수(size)를 지정
         // 유저가 제출한 페이지 번호는 1부터 시작하지만, Spring Data JPA는 0부터 시작하므로 -1
-        Pageable pageable = PageRequest.of(pageNum - 1, size);
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNum - 1, size);
 
         Page<realty.domain.model.NewsArticles> newsArticlesPage;
 
@@ -103,6 +122,45 @@ public class NewsArticlesService {
             hasPrevBlock, // 이전 블록 존재 여부
             hasNextBlock // 다음 블록 존재 여부
         );
+    }
+
+    /**
+     * 모든 뉴스 기사의 내용(content)에서 단어 빈도를 계산하는 메서드
+     * @return 워드클라우드 이미지의 byte 배열
+     */
+    public byte[] getWordFrequencies() {
+        log.info("워드클라우드 데이터 생성을 위해 AI API 호출 시작");
+
+        List<NewsArticles> allArticles = newsArticlesRepository.findAll(); // 모든 뉴스 기사 조회
+        List<String> contents = allArticles.stream()
+                                           .map(NewsArticles::getContent)
+                                           .collect(Collectors.toList()); // 모든 뉴스 기사의 내용을 리스트로 변환
+    
+        // HTTP 요청 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+    
+        // HTTP 요청 바디 설정
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("texts", contents); // 요청 바디에 텍스트 리스트 추가
+    
+        // HTTP 요청 엔티티 생성
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+    
+        try {
+            // Python API로부터 이미지 데이터를 byte 배열로 직접 받음
+            ResponseEntity<byte[]> response = restTemplate.exchange(
+                    wordCloudApiUrl, // 워드클라우드 엔드포인트 주소
+                    HttpMethod.POST, // HTTP 메소드
+                    requestEntity, // HTTP 요청 엔티티
+                    byte[].class // 응답 데이터 타입
+            );
+            log.info("워드클라우드 이미지 수신 완료");
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("워드클라우드 데이터 생성 AI API 호출 중 오류 발생", e);
+            return new byte[0]; // 오류 발생 시 빈 byte 배열 반환
+        }
     }
 
     /**

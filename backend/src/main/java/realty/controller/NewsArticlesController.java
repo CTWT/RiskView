@@ -2,10 +2,13 @@ package realty.controller;
 
 import realty.service.NewsArticlesService;
 import realty.service.NewsArticlesService.NewsArticlesPage;
+
 import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,5 +66,23 @@ public class NewsArticlesController {
         response.put("nextBlockStartPage", articlesData.getNextBlockStartPage()); // 다음 블록의 시작 페이지
 
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 워드클라우드에 사용할 키워드와 빈도를 반환하는 메서드
+     * @return 워드클라우드 이미지 (image/png)
+     */
+    @GetMapping(value = "/keywords")
+    public ResponseEntity<byte[]> getNewsKeywords() {
+        log.info("워드클라우드 키워드 요청 수신");
+        byte[] imageBytes = newsArticlesService.getWordFrequencies();
+        log.info("워드클라우드 이미지 응답 생성: {} bytes", imageBytes.length);
+
+        // HTTP 응답 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG); // 이미지 타입 설정
+        headers.setContentLength(imageBytes.length); // 이미지 크기 설정
+
+        return ResponseEntity.ok().headers(headers).body(imageBytes); // 이미지 반환
     }
 }

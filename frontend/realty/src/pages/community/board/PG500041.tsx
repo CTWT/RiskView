@@ -342,17 +342,6 @@ const PG500041: React.FC = () => {
           </div>
         </div>
 
-        {/* 배너(임시) */}
-        <div className="rv05-banner">
-          <div>
-            <div className="rv05-banner-title"></div>
-            <div className="rv05-banner-sub">
-              게시판 페이지는 아직 개발 단계입니다.
-            </div>
-          </div>
-          <div className="rv05-badge warn">준비중</div>
-        </div>
-
         {/* 게시물 목록 */}
         <section className="board-list">
           {isLoading ? (

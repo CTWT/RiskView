@@ -30,8 +30,8 @@ import type {
  * 생성자 : 문원주
  * 생성일 : 25.07.29
  * 파일명 : PG100002.tsx
- * 수정자 :
- * 수정일 :
+ * 수정자 : 이주하
+ * 수정일 : 25.09.10
  * 설명 : 계약서 분석을 시작하기 전, 문서 업로드 및 준비 과정등을 담당하는 페이지입니다.
  */
 
@@ -227,8 +227,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
             formData.append("file", selectedFile);
 
             try {
-                // progress 이벤트 추적을 위해 axios 옵션에 onUploadProgress를 추가할 수 있지만,
-                // 여기서는 단순화하여 요청이 시작되면 모달을 열고, 완료되면 닫는 방식으로 구현.
+                // progress 이벤트 추적을 위해 axios 옵션에 onUploadProgress를 추가
                 const response = await axios.post(
                     `http://localhost:8080/upload`,
                     formData,
@@ -237,6 +236,14 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                             "Content-Type": "multipart/form-data",
                         },
                         withCredentials: true,
+                        onUploadProgress: (progressEvent) => {
+                            if (progressEvent.total) {
+                                const percentCompleted = Math.round(
+                                    (progressEvent.loaded * 100) / progressEvent.total
+                                );
+                                setProgress(percentCompleted);
+                            }
+                        },
                     }
                 );
 

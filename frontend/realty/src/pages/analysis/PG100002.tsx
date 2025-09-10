@@ -296,7 +296,11 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
     }, [selectedFile, previewImage, onStartAnalysis, showToast]);
 
     const cancelUpload = useCallback(() => {
+        setSelectedFile(null);
         setPreviewImage(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
     }, []);
 
     return (

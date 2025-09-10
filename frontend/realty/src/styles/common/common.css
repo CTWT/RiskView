@@ -4907,12 +4907,7 @@
 
 /* PG600001.tsx -> 하단 */
 .cta-banner {
-    background: linear-gradient(90deg,
-            #cdebff 14%,
-            #b7caff 34%,
-            #bcbbff 56%,
-            #b2a1ff 79%,
-            #a290ff 100%);
+    background: linear-gradient(to right, #c4e5fb, #c3b5fb);
     color: white;
     text-align: center;
     padding: 48px 24px;

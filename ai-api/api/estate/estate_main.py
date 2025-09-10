@@ -13,13 +13,15 @@ from remove_address_details import clean_address
 from building_ledger import get_building_info_from_ledger
 import math
 from datetime import datetime
+from estate import runEstate
+from z_score import calculate_contract_price, compute_z_scores, classify_z_score
 
 # ============================================
 #  수업명 : 가비아 2회차
 #  작성자 : 박윤성
 #  수정자 : 박윤성
 #  작성일 : 25.09.09
-#  수정일 : 25.09.09
+#  수정일 : 25.09.10
 #  파일명 : estate_main.py
 #  설명  : 이상치 분석 메인 파일
 # ============================================
@@ -143,7 +145,7 @@ sido = words[0]
 sigungu = words[1]
 hospital_count=0
 normal_hospital_count=0
-hospitals = get_hospital_data(Q0=sido, Q1=sigungu, numOfRows=60000)
+hospitals = get_hospital_data(Q0=sido, Q1=sigungu, numOfRows=60000) # 시군구별 필터링하여 API 호출
 for hospital in hospitals:
     lat = hospital['lat']
     lon = hospital['lon']
@@ -265,7 +267,8 @@ print(f"1km 이내 공공체육시설 개수: {facility_count}개\n")
 # 건물 특성 요소
 # ============================================
 
-def calculate_additional_points(building_info: dict) -> float:
+# 건물 특성 점수 계산
+def calculate_building_related_additional_points(building_info: dict) -> float:
     points = 0.0
 
     # 1. 건물 연식 점수
@@ -315,11 +318,45 @@ def calculate_additional_points(building_info: dict) -> float:
 
     return points
 
-building_ledger = get_building_info_from_ledger()
-score = calculate_additional_points(building_ledger)
+building_ledger = get_building_info_from_ledger() # 건물 특성 정보 가져오기
+score = calculate_building_related_additional_points(building_ledger) # 건물 특성 점수 계산
 additional_points += score
 
 print("추가점수: ", additional_points)
+
+# ============================================
+# 실거래가 이상치 탐지
+# ============================================
+# 실거래가 API 호출
+"""
+@params start_index(시작 인덱스): 1
+@params cgg_nm(자치구명): sigungu
+@params ctrt_day(계약일): 20250801
+@params bldg_usg(건물용도): 아파트
+"""
+data = runEstate("1", sigungu, "20250801", "아파트")
+rows = data["rows"]
+
+# 계약금액 계산
+for row in rows:
+    row["contract_price"] = calculate_contract_price(row)
+
+# 유효한 계약금액만 필터링
+valid_rows = [r for r in rows if r["contract_price"] is not None]
+prices = [r["contract_price"] for r in valid_rows]
+
+# Z-score 계산
+z_scores = compute_z_scores(prices)
+
+# 분류 라벨링
+for i, row in enumerate(valid_rows):
+    row["z_score"] = round(z_scores[i], 2)
+    row["label"] = classify_z_score(z_scores[i])
+
+# 결과 확인
+for row in valid_rows:
+    print(f"{row['stdg_nm']} | 계약가: {row['contract_price']} | Z: {row['z_score']} | {row['label']}")
+
 
 # ============================================
 # 임시 제외 API

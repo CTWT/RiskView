@@ -156,7 +156,7 @@
 }
 
 .an02-upload-area {
-    border: 1px dashed #ccc;
+    border: 1px solid #f0f0f0;
     border-radius: 12px;
     padding: 32px;
     background-color: #fff;
@@ -174,7 +174,6 @@
 .an02-upload-area:hover {
     transform: scale(1.03);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    border-color: #6d50ff;
     /* 강조 색상 */
 }
 
@@ -2659,7 +2658,8 @@
     grid-template-columns: 1fr 400px;
     gap: 40px;
     min-height: 600px;
-    margin-top: -40px;
+    margin-top: -10px;
+    margin-bottom: 50px;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
@@ -4907,12 +4907,7 @@
 
 /* PG600001.tsx -> 하단 */
 .cta-banner {
-    background: linear-gradient(90deg,
-            #cdebff 14%,
-            #b7caff 34%,
-            #bcbbff 56%,
-            #b2a1ff 79%,
-            #a290ff 100%);
+    background: linear-gradient(to right, #c4e5fb, #c3b5fb);
     color: white;
     text-align: center;
     padding: 48px 24px;

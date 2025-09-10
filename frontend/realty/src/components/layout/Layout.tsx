@@ -2,6 +2,7 @@ import React from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./Header";
+import Footer from "./Footer";
 import "../../styles/common/common.css";
 
 interface LayoutProps {
@@ -33,6 +34,7 @@ const Layout = ({ children }: LayoutProps) => {
             <main className={mainContentClass}>
                 {children}
             </main>
+            <Footer />
         </div>
     );
 };

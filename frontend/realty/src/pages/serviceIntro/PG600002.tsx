@@ -275,9 +275,9 @@ const PG600002: React.FC<FeatureDetailProps> = ({ selectedFeature }) => {
                     <span className="tip-label"></span>
                     <span className="tip-text">{content.tip}</span>
                 </div>
-            )}
-
-
+            )}  
+            
+            
         </div>
     );
 };

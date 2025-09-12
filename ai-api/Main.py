@@ -6,6 +6,8 @@ from api.ocr.Server import search_address
 from api.news_scraper.app.crawler.News_114 import News_114_Save
 from api.news_scraper.app.crawler.News_Yeonhap import News_Yeonhap_Save
 from api.news_scraper.app.crawler.News_Chosun import News_Chosun_Save
+from api.estate.estate_main import analyze_estate
+from api.ocr.data.LeaseContract import LeaseContract
 from api.estate.Estate import runEstate
 import uvicorn 
 import sys, os
@@ -26,6 +28,7 @@ event_flags : Dict[str, bool] = {
     "news_yeonhap" : False, # 연합뉴스
     "news_chosun" : False,  # 뉴스 조선
     "estate" : False,   # 전월세 실거래데이터
+    "analyze_estate": False, # 부동산 종합 분석
 }
 
 class EventTrigger(BaseModel) :
@@ -103,6 +106,16 @@ async def run_estate(end_index : str, cgg_nm : str, ctrt_day: str, bldg_usg : st
     data = runEstate(end_index, cgg_nm, ctrt_day, bldg_usg)
     result = {"message " : "실거래데이터 호출 성공"}
     return result
+
+# 부동산 종합 분석
+@app.post("/analyze_estate")
+async def analyzeRisks(contract_data: LeaseContract):
+    if not event_flags["analyze_estate"]:
+        raise HTTPException(status_code=403, detail="부동산 종합 분석 실행이 허용되지 않았습니다.")
+    event_flags["analyze_estate"] = False  # 사용 후 플래그 리셋
+
+    analysis_result = analyze_estate(contract_data)
+    return analysis_result
 
 if __name__ == "__main__" :
     uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)

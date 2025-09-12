@@ -151,21 +151,23 @@ def get_building_info_from_ledger(**kwargs) -> dict:
     # URL 구성
     query_string = urlencode(filtered_params, encoding='utf-8')
     full_url = f"{building_ledger_api_base_url}&{query_string}"
+    print(full_url)
 
     try:
         response = requests.get(full_url) # API 호출
         response.raise_for_status() # HTTP 에러 체크
         data = response.json() # JSON 응답
-    except Exception as e:
-        print("API 요청 오류:", e)
-        return {}
+    except requests.exceptions.RequestException as e:
+        print(f"건축물대장 API 요청 오류: {e}")
+        return None
 
     # 데이터 파싱
     try:
         item = data['response']['body']['items']['item'][0] # 응답 데이터에서 첫 번째 아이템 추출
 
         # 사용 승인일 (건물 연식 판단)
-        use_approval_date = item.get('useAprDay')  # 예: "20080512"
+        use_approval_date = item.get('useAprDay') or None # 키가 없거나 값이 비어있으면 None으로 처리
+        print("사용승인일: ", use_approval_date)
         
         # 층수
         ground_floors = int(item.get('grndFlrCnt', 0))  # 지상층수
@@ -191,8 +193,8 @@ def get_building_info_from_ledger(**kwargs) -> dict:
         }
 
     except (KeyError, IndexError, TypeError) as e:
-        print("응답 데이터 파싱 오류:", e)
-        return {}
+        print(f"건축물대장 응답 데이터 파싱 오류: {e}")
+        return None
     except Exception as e:
-        print("기타 오류:", e)
-        return {}
+        print(f"건축물대장 정보 처리 중 기타 오류: {e}")
+        return None

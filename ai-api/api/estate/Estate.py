@@ -18,14 +18,13 @@ from datetime import datetime
 load_dotenv()
 estate_url = os.getenv('ESTATE_API_URL')  # 실거래 API의 기본 URL
 
-def build_url(base_url: str, end_index: str, cgg_nm: str, ctrt_day: str, bldg_usg: str) -> str:
+def build_url(base_url: str, end_index: str, cgg_nm: str, bldg_usg: str) -> str:
     """
     URL을 구성하는 함수
     ============================================
     @param base_url: API의 기본 URL (환경 변수 estate_url)
     @param end_index: 조회 종료 인덱스
     @param cgg_nm: 자치구명 (예: 영등포구)
-    @param ctrt_day: 계약일 (YYYYMMDD 형식)
     @param bldg_usg: 건물용도 (예: 아파트)
     @return: API 호출에 필요한 완전한 URL 문자열
     ============================================
@@ -40,25 +39,25 @@ def build_url(base_url: str, end_index: str, cgg_nm: str, ctrt_day: str, bldg_us
         " ",               # LOTNO_SE (지번 구분)
         " ",               # MNO (본번)
         " ",               # SNO (부번)
-        ctrt_day,          # CTRT_DAY (계약일)
+        " ",               # CTRT_DAY (계약일)
         " ",               # BLDG_NM (건물명)
         quote(bldg_usg)    # BLDG_USG (건물용도, URL 인코딩)
     ]
     return f"{base_url}/" + "/".join(params)
 
 
-def runEstate(end_index: str, cgg_nm: str, ctrt_day: str, bldg_usg: str):
+def runEstate(end_index: str, cgg_nm: str, bldg_usg: str):
     """
     실거래가 API 호출 함수
     ============================================
     @param end_index: 조회 종료 인덱스
     @param cgg_nm: 자치구명 (예: 영등포구)
-    @param ctrt_day: 계약일 (YYYYMMDD 형식)
     @param bldg_usg: 건물용도 (예: 아파트)
     @return: 필터링된 실거래 API 응답 JSON
     ============================================
     """
-    url = build_url(estate_url, end_index, cgg_nm, ctrt_day, bldg_usg)
+    url = build_url(estate_url, end_index, cgg_nm, bldg_usg)
+    print(url)
 
     try:
         
@@ -120,7 +119,6 @@ def runEstate(end_index: str, cgg_nm: str, ctrt_day: str, bldg_usg: str):
 if __name__ == "__main__":
     end_index = input("종료순서: ")
     cgg_nm = input("자치구명을 입력하세요 (예: 영등포구): ")
-    ctrt_day = input("계약일을 입력하세요 (YYYYMMDD): ")
     bldg_usg = input("건물용도를 입력하세요 (예: 아파트): ")
 
-    runEstate(end_index, cgg_nm, ctrt_day, bldg_usg)
+    runEstate(end_index, cgg_nm, bldg_usg)

@@ -353,7 +353,7 @@
     border: 1px solid #f0f0f0;;
     display: block;
     /* 이미지 하단 여백 제거 */
-    margin: 0 auto;
+    margin: 0px;
 }
 
 .an03-no-preview {
@@ -1441,9 +1441,9 @@
 .chatpanel {
     /* 테마 변수: 이 블록 내부에서만 사용됨(:root X) */
     --bg: #ffffff;
-    --border: #e7e9f2;
+    --border: #f0f0f0;
     --accent: #7b68ee;
-    --shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
+    --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     --bubble-user: #e8f1ff;
     --bubble-user-border: #cfe0ff;
     --bubble-assistant: #ffffff;
@@ -1492,6 +1492,7 @@
     justify-content: space-between;
     padding: 12px 14px;
     border-bottom: 1px solid var(--border);
+    background-color: b2a1ff;
 }
 
 .chatpanel-title {
@@ -1558,7 +1559,7 @@
     border-radius: 8px;
     display: grid;
     place-items: center;
-    background: #eef2ff;
+    background: #b2a1ff;
     border: 1px solid var(--border);
     color: #5b6bff;
 }
@@ -4042,7 +4043,8 @@
 
 .score-number {
     font-size: 13px;
-    color: #666;
+    color: #474747;
+    font: bold;
 }
 
 .analysis-footer {
@@ -4954,4 +4956,337 @@
 
 .cta-button.primary:hover {
     background-color: #f2f2f2;
+}
+
+/* PG200002.tsx */
+
+/* 3D 캐러셀 컨테이너 스타일 */
+.carousel-container {
+    width: 100%;
+    height: 100%;
+    perspective: 1000px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.carousel-wrapper {
+    width: 350px;
+    height: 500px;
+    position: relative;
+    transform-style: preserve-3d;
+}
+
+.carousel-inner {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 개별 카드 스타일 */
+.carousel-card {
+    position: absolute;
+    width: 330px;
+    height: 480px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    backface-visibility: hidden;
+}
+
+.carousel-card:hover {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.carousel-card.active {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* 카드 내용 스타일 */
+.card-content {
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    color: white;
+    position: relative;
+    z-index: 2;
+    cursor: default;
+
+    /* 텍스트 선명도 개선 */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    -webkit-text-stroke: 0.1px transparent;
+}
+
+.card-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    border-radius: 16px;
+}
+
+/* 카드 헤더 */
+.card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+    gap: 8px;
+}
+
+.card-icon {
+    font-size: 20px;
+}
+
+.card-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+/* 카드 바디 */
+.card-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 정보 섹션 공통 스타일 */
+.building-info,
+.risk-section,
+.real-estate-section {
+    border-radius: 8px;
+    padding: 12px;
+}
+
+/* 건물 정보 */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.info-row:last-child {
+    margin-bottom: 0;
+}
+
+.label {
+    font-size: 11px;
+}
+
+.value {
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* 위험 섹션 */
+.risk-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.warning-icon {
+    font-size: 14px;
+}
+
+.risk-title {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.risk-warnings {
+    font-size: 10px;
+    line-height: 1.3;
+}
+
+.warning-item {
+    margin-bottom: 4px;
+}
+
+/* 부동산 정보 섹션 */
+.section-title {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.price-info {
+    font-size: 10px;
+    line-height: 1.4;
+}
+
+.price-item {
+    margin-bottom: 3px;
+}
+
+/* 카드 푸터 - 큰 카드에 맞춘 버튼 크기 */
+.card-footer {
+    margin-top: auto;
+    text-align: center;
+}
+
+.analysis-button {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 25px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.analysis-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+/* 인디케이터 - 큰 영역에 맞춘 크기 */
+.carousel-indicators {
+    display: flex;
+    gap: 12px;
+    margin-top: 90px;
+    z-index: 10;
+}
+
+.indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.indicator.active {
+    background: white;
+    transform: scale(1.3);
+}
+
+.indicator:hover {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1200px) {
+    .carousel-wrapper {
+        width: 240px;
+        height: 360px;
+    }
+
+    .carousel-card {
+        width: 220px;
+        height: 340px;
+    }
+
+    .card-content {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .carousel-wrapper {
+        width: 260px;
+        height: 380px;
+    }
+
+    .carousel-card {
+        width: 240px;
+        height: 360px;
+    }
+}
+
+@media (max-width: 480px) {
+    .carousel-wrapper {
+        width: 220px;
+        height: 320px;
+    }
+
+    .carousel-card {
+        width: 200px;
+        height: 300px;
+    }
+
+    .card-content {
+        padding: 12px;
+    }
+
+    .card-title {
+        font-size: 14px;
+    }
+
+    .building-info,
+    .risk-section,
+    .real-estate-section {
+        padding: 10px;
+    }
+}
+
+.warning-icon,
+.status-icon {
+    color : white;
+    margin-right: 6px;
+}
+
+.ai-status-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+.ai-status-badge {
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 500;
+    color: white;
+    border: 1px solid ;
+    mask-composite: exclude;
+}
+
+.white-divider {
+    width: 100%;
+    height: 1px;
+    background-color: white;
+    margin: 8px 0;
+}
+
+.findings-title {
+    font-weight: bold;
+}
+
+.carousel-inner {
+    transform-style: preserve-3d;
+}
+
+.carousel-card {
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+}
+
+.carousel-card:not(.active) {
+    pointer-events: none;
+}
+
+.finding-text {
+    font-size: 14px;
 }

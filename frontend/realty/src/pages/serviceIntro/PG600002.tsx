@@ -3,13 +3,13 @@ import "../../styles/common/common.css"; // 공통 스타일 임포트
 import { FaCheckCircle, FaFileContract, FaChartBar, FaLightbulb, FaGlobeAmericas, FaCommentDots, FaBook } from "react-icons/fa";
 
 /*
- * 생성자 : 이주하
- * 생성일 : 25.09.09
- * 파일명 : PG600002.tsx
- * 수정자 : 
- * 수정일 : 
- * 설명 : 서비스 소개 페이지 내 기능별 상세 설명을 렌더링하는 컴포넌트.
- */
+* 수업명 : 가비아 2회차
+* 이름 : 이주하
+* 작성자 : 이주하
+* 수정자 : 
+* 작성일 : 25.09.09
+* 파일명 : PG600002.tsx
+*/
 
 // 선택된 기능을 나타내는 문자열 ID를 props로 받음
 interface FeatureDetailProps {

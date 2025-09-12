@@ -51,7 +51,7 @@ const Header: React.FC = () => {
                 <Link to="/" onClick={handleLogout} className="headerLogout">
                     로그아웃
                 </Link>
-                <Link to="/mypage" className="headerMypage">
+                <Link to="/PG700001" className="headerMypage">
                     마이페이지
                 </Link>
             </>

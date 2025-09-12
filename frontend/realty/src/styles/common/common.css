@@ -2961,7 +2961,6 @@
     justify-content: space-between;
     font-size: 12px;
     color: #888;
-    border-top: 1px solid #f2bcbc;
     padding-top: 12px;
     margin-top: 16px;
 }
@@ -5289,4 +5288,507 @@
 
 .finding-text {
     font-size: 14px;
+}
+
+/* PG700001.tsx */
+
+/* 정확한 마이페이지 디자인 CSS - Common.css에 교체 */
+
+/* 기본 컨테이너 */
+.mypage-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.mypage-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 페이지 헤더 */
+.page-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.page-category {
+    color: #8b5cf6;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.page-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0 0 12px 0;
+}
+
+.page-subtitle {
+    color: #6b7280;
+    font-size: 16px;
+    margin: 0 0 60px 0;
+}
+
+/* 프로필 카드 */
+.profile-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px 32px;
+    margin-bottom: 50px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 805px;
+}
+
+.profile-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px 0;
+}
+
+.profile-email {
+    color: #6b7280;
+    font-size: 14px;
+    margin: 0;
+}
+
+.profile-edit-btn {
+    background: #8b5cf6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* 통계 카드 그리드 - 2x2 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+}
+
+.stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    min-height: 140px;
+    width: 350px;
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 28px;
+    flex-shrink: 0;
+}
+
+.stat-icon.blue {
+    background: #3b82f6;
+}
+
+.stat-icon.red {
+    background: #ef4444;
+}
+
+.stat-icon.green {
+    background: #22c55e;
+}
+
+.stat-icon.yellow {
+    background: #f59e0b;
+}
+
+.stat-content {
+    flex: 1;
+    text-align: right;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1f2937;
+    margin-bottom: 4px;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.stat-change {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+/* 차트 그리드 */
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+}
+
+.chart-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 350px;
+}
+
+.chart-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+}
+
+.chart-subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 0 0 32px 0;
+}
+
+/* 월별 차트 */
+/* 기존 월별 차트 스타일 수정 */
+.monthly-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* 기존 20px에서 증가 */
+}
+
+.chart-row {
+    display: flex;
+    grid-template-columns: 80px 1fr 40px;
+        /* 고정된 그리드 레이아웃 */
+    align-items: center;
+    gap: 20px;
+}
+
+.chart-month {
+    width: 80px;
+    font-size: 17px;
+    color: #6b7280;
+    text-align: left;
+    font-weight: 500;
+    flex-shrink: 0;
+    /* 추가: 월 표시 영역이 줄어들지 않도록 */
+}
+
+.chart-bar-container {
+    flex: 2;
+    /* 기존 flex: 1에서 flex: 2로 변경하여 2배 넓게 */
+    height: 14px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    overflow: hidden;
+    min-width: 200px;
+    /* 추가: 최소 넓이 보장 */
+}
+
+.chart-bar {
+    height: 100%;
+    background: #8b5cf6;
+    border-radius: 10px;
+    /* 기존 4px에서 증가 */
+}
+
+.chart-value {
+    width: 60px;
+    font-size: 17px;
+    font-weight: 600;
+    color: #1f2937;
+    text-align: left;
+    flex-shrink: 0;
+    /* 추가: 숫자 영역이 줄어들지 않도록 */
+}
+
+/* 위험도 분포 */
+.risk-distribution {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.risk-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.risk-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.risk-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.risk-label {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.risk-percentage {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* 최근 분석 기록 */
+.section-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 805px;
+    margin-bottom: 80px;
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1f2937;
+    margin: 0 0 32px 0;
+}
+
+/* 테이블 스타일 */
+.analysis-table {
+    width: 100%;
+}
+
+.table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.table-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 14px;
+}
+
+.table-row:last-child {
+    border-bottom: none;
+}
+
+.col-location,
+.col-amount,
+.col-risk {
+    color: #1f2937;
+    font-weight: 500;
+    font-size: 16px;
+}
+
+.risk-badge {
+    font-weight: 600;
+    text-align: center;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .mypage-container {
+        padding: 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+
+    .profile-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+
+    .stat-card {
+        padding: 24px;
+        min-height: 120px;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 24px;
+    }
+
+    .stat-number {
+        font-size: 28px;
+    }
+}
+
+/* 위험도 분포 도넛 차트 스타일 */
+.risk-donut-chart {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+}
+
+.risk-chart-container {
+    position: relative;
+}
+
+.risk-chart-svg {
+    transform: rotate(-90deg);
+}
+
+.risk-chart-background {
+    fill: none;
+    stroke: #f3f4f6;
+}
+
+.risk-chart-segment {
+    fill: none;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.6s ease;
+}
+
+.risk-segment-0 {
+    animation: drawSegment0 1s ease-out forwards;
+}
+
+.risk-segment-1 {
+    animation: drawSegment1 1s ease-out forwards;
+}
+
+.risk-segment-2 {
+    animation: drawSegment2 1s ease-out forwards;
+}
+
+.risk-chart-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+}
+
+.risk-chart-percentage {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1f2937;
+}
+
+.risk-chart-label {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.risk-chart-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+}
+
+.risk-legend-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.risk-legend-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.risk-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.risk-legend-label {
+    font-size: 14px;
+    color: #374151;
+    font-weight: 500;
+}
+
+.risk-legend-percentage {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* 애니메이션 키프레임 */
+@keyframes drawSegment0 {
+    from {
+        stroke-dasharray: 0 534;
+    }
+
+    to {
+        stroke-dasharray: 208 534;
+    }
+}
+
+@keyframes drawSegment1 {
+    from {
+        stroke-dasharray: 0 534;
+    }
+
+    to {
+        stroke-dasharray: 256 534;
+    }
+}
+
+@keyframes drawSegment2 {
+    from {
+        stroke-dasharray: 0 534;
+    }
+
+    to {
+        stroke-dasharray: 69 534;
+    }
 }

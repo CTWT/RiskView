@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -12,6 +14,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+import realty.controller.BoardController;
+import realty.domain.dto.AnalysisResultDTO;
 import realty.domain.dto.ContractDTO;
 /*
  * 수업명 : 가비아 2회차
@@ -29,6 +33,8 @@ import realty.domain.dto.ContractDTO;
 @Component
 @RequiredArgsConstructor
 public class OcrComponent {
+    private static final Logger log = LoggerFactory.getLogger(OcrComponent.class);
+    
     private final RestTemplate restTemplate;
     private final FileComponent fileComponent;
 
@@ -75,6 +81,42 @@ public class OcrComponent {
         return contractInfo;
     }
 
+    /**
+     * 
+     * @param structuredContractDataDTO 계약서 정보
+     * @return
+     */
+    public AnalysisResultDTO analyzeContractRisks(ContractDTO.StructuredContractDataDTO structuredContractDataDTO){
+
+        triggerFastApiAnalysis();
+
+        // post
+        ResponseEntity<AnalysisResultDTO> response = restTemplate.postForEntity(
+                "http://localhost:8000/analyze_estate",
+                structuredContractDataDTO,
+                AnalysisResultDTO.class);
+
+        return response.getBody();
+    }
+
+    /**
+     * ocr결과를 이상치분석 api 요청
+     */
+
+    private void triggerFastApiAnalysis() {
+        Map<String, String> triggerBody = new HashMap<>();
+        triggerBody.put("api_name", "analyze_estate");
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "http://localhost:8000/trigger",
+                triggerBody,
+                Map.class);
+
+        if (response.getBody() != null) {
+            String message = (String) response.getBody().get("message");
+            System.out.println("FastAPI 응답: " + message);
+        }
+    }
 
     /**
      * FastAPI 서버 쪽의 ocr 트리거 활성화

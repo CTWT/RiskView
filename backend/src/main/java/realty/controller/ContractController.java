@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import realty.apicommunication.FileComponent;
 import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
+import realty.domain.dto.AnalysisResultDTO;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.MapInfo;
 import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
@@ -37,6 +40,7 @@ import realty.service.UserService;
 @RestController
 @RequiredArgsConstructor
 public class ContractController {
+    private static final Logger log = LoggerFactory.getLogger(ContractController.class);
 
     private final ContractService contractService;
     private final MapComponent mapComponent;
@@ -69,6 +73,11 @@ public class ContractController {
         fileComponent.saveFile(file, fileName, session);
 
         UserDataToDBData(contractInfo.getStructuredContractDataDTO());
+
+        // TODO 위험분석 요청 완성되면 활성화
+        // log.info("위험 분석을 실행합니다.");
+        // AnalysisResultDTO analysisResultDTO = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
+        // log.info("위험 분석 결과 : {}", analysisResultDTO.toString());
 
         String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity

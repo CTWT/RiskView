@@ -16,12 +16,6 @@ interface AnalysisCard {
     id: number;
     title: string;
     content: string;
-    details: {
-        date: string;
-        building: string;
-        floor: string;
-        period: string;
-    };
     riskLevel: string;
     riskCount: number;
     warningCount: number;
@@ -51,12 +45,6 @@ const PG200002: React.FC = () => {
         id: 1,
         title: "AI 분석 리포트",
         content: "계약서 위험도 분석 결과",
-        details: {
-        date: "2025.09.10",
-        building: "서울 강남구 대치동 123-45",
-        floor: "12층",
-        period: "2025.10.02 ~ 2026.10.01",
-        },
         riskLevel: "중위험",
         riskCount: 52,
         warningCount: 14,
@@ -75,12 +63,6 @@ const PG200002: React.FC = () => {
         id: 2,
         title: "AI 분석 리포트",
         content: "계약서 위험도 분석 결과",
-        details: {
-        date: "2025.09.09",
-        building: "서울 서초구 반포동 456-78",
-        floor: "25층",
-        period: "2025.11.01 ~ 2026.11.01",
-        },
         riskLevel: "저위험",
         riskCount: 8,
         warningCount: 3,
@@ -99,12 +81,6 @@ const PG200002: React.FC = () => {
         id: 3,
         title: "AI 분석 리포트",
         content: "계약서 위험도 분석 결과",
-        details: {
-        date: "2025.09.10",
-        building: "경기 성남시 분당구 정자동",
-        floor: "15층",
-        period: "2025.12.01 ~ 2026.12.01",
-        },
         riskLevel: "고위험",
         riskCount: 85,
         warningCount: 28,

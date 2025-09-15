@@ -36,7 +36,7 @@ public class NewsArticlesService {
     @Autowired
     private RestTemplate restTemplate;
 
-    private final String wordCloudApiUrl = "http://localhost:5002/generate-wordcloud"; // 워드클라우드 엔드포인트 URL
+    private final String wordCloudApiUrl = "http://localhost:8000/wordcloud/generate-wordcloud"; // 워드클라우드 엔드포인트 URL
 
     // @Autowired를 사용한 생성자 주입
     public NewsArticlesService(NewsArticlesRepository newsArticlesRepository, RestTemplate restTemplate) {

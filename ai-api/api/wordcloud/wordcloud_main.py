@@ -1,5 +1,5 @@
 from wordcloud import WordCloud
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.concurrency import run_in_threadpool
 from collections import Counter
 from konlpy.tag import Okt
@@ -9,7 +9,6 @@ from pydantic import BaseModel, Field
 from typing import List
 import io
 import os
-import uvicorn
 
 # ============================================
 #  수업명 : 가비아 2회차
@@ -22,12 +21,7 @@ import uvicorn
 #  - Fast API 사용
 # ============================================
 
-# FastAPI 인스턴스 생성
-app = FastAPI(
-    title="Word Cloud API",
-    description="Python wordcloud 라이브러리를 사용하여 워드클라우드 이미지를 생성합니다.",
-    version="1.0.0",
-)
+router = APIRouter()
 
 # 경로 설정
 BASE_DIR = os.path.dirname(os.path.abspath(__file__)) # 현재 파일의 경로
@@ -56,7 +50,12 @@ def generate_wordcloud_image(text_data: str) -> bytes:
         print(f"[WORDCLOUD] 단어 빈도 수 계산 완료: {len(word_counts)}개 단어")
 
         print(f"[WORDCLOUD] 마스크 이미지 로드 시도: {MASK_PATH}")
-        mask = np.array(Image.open(MASK_PATH).convert("L"))
+        mask_image = Image.open(MASK_PATH).convert("L")
+        mask = np.array(mask_image)
+        
+        # --- 마스크 이미지 이진화(Binarization) 처리 ---
+        # 임계값(128)을 기준으로 픽셀 값을 0(검정) 또는 255(흰색)으로 변환
+        mask = np.where(mask > 128, 255, 0).astype('uint8')
         print("[WORDCLOUD] 마스크 이미지 로드 성공")
 
         print(f"[WORDCLOUD] WordCloud 객체 생성 시도: 폰트={FONT_PATH}")
@@ -98,7 +97,7 @@ def generate_wordcloud_image(text_data: str) -> bytes:
         raise
 
 # 워드클라우드 이미지 생성 API
-@app.post("/generate-wordcloud", summary="원 모양 워드클라우드 시각화(PNG) 반환", response_class=Response)
+@router.post("/generate-wordcloud", summary="원 모양 워드클라우드 시각화(PNG) 반환", response_class=Response)
 async def generate_wordcloud(request: WordCloudRequest):
     print("[API] /generate-wordcloud 요청 수신")
     if not request.texts:
@@ -116,8 +115,3 @@ async def generate_wordcloud(request: WordCloudRequest):
         raise HTTPException(status_code=500, detail="워드클라우드 생성 중 오류 발생")
 
     return Response(content=image_bytes, media_type="image/png")
-
-# FastAPI 서버 실행
-if __name__ == "__main__":
-    print("[SERVER] FastAPI 서버 실행 시작")
-    uvicorn.run(app, host="0.0.0.0", port=5002)

@@ -1,12 +1,15 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import Dict
+
 from api.ocr.Server import process_file
 from api.ocr.Server import search_address
 from api.news_scraper.app.crawler.News_114 import News_114_Save
 from api.news_scraper.app.crawler.News_Yeonhap import News_Yeonhap_Save
 from api.news_scraper.app.crawler.News_Chosun import News_Chosun_Save
 from api.estate.estate_main import analyze_estate
+from api.wordcloud import wordcloud_main as wordcloud_router
+from api.wordcloud.okt_analyzer import router as okt_analyzer_router
 from api.ocr.data.LeaseContract import LeaseContract
 from api.estate.Estate import runEstate
 import uvicorn 
@@ -19,6 +22,10 @@ if base_path not in sys.path:
     
     
 app = FastAPI()
+
+# 라우터 등록
+app.include_router(wordcloud_router.router, prefix="/wordcloud", tags=["wordcloud"])
+app.include_router(okt_analyzer_router, prefix="/okt", tags=["okt_analyzer"])
 
 # 이벤트 상태 저장
 event_flags : Dict[str, bool] = {
@@ -60,41 +67,41 @@ async def search_map(req:AddressRequest) :
     event_flags["kakao_map"] = False
     return await search_address(req.address)  
 
-# # 뉴스114 크롤링 호출
-# @app.post("/news_114")
-# async def run_news_114() :
-#     if not event_flags["news_114"] :
-#         raise HTTPException(status_code=403, detail="뉴스 114 실행 실패")
-#     event_flags["news_114"] = False
+# 뉴스114 크롤링 호출
+@app.post("/news_114")
+async def run_news_114() :
+    if not event_flags["news_114"] :
+        raise HTTPException(status_code=403, detail="뉴스 114 실행 실패")
+    event_flags["news_114"] = False
     
-#     News_114_Save()
+    News_114_Save()
     
-#     result = {"message " : " 뉴스 114 데이터 수집 완료"}
-#     return result
+    result = {"message " : " 뉴스 114 데이터 수집 완료"}
+    return result
     
-# # 연합뉴스 크롤링 호출
-# @app.post("/news_yeonhap")
-# async def run_news_yeonhap() :
-#     if not event_flags["news_yeonhap"] :
-#         raise HTTPException(status_code=403, detail="연합 뉴스 실행 실패")
-#     event_flags["news_yeonhap"] = False
+ # 연합뉴스 크롤링 호출
+@app.post("/news_yeonhap")
+async def run_news_yeonhap() :
+    if not event_flags["news_yeonhap"] :
+        raise HTTPException(status_code=403, detail="연합 뉴스 실행 실패")
+    event_flags["news_yeonhap"] = False
     
-#     News_Yeonhap_Save()
+    News_Yeonhap_Save()
     
-#     result = {"message " : " 연합 뉴스 데이터 수집 완료"}
-#     return result
+    result = {"message " : " 연합 뉴스 데이터 수집 완료"}
+    return result
 
-# # 뉴스 조선 크롤링 호출
-# @app.post("/news_chosun")
-# async def run_new_chosun() :
-#     if not event_flags["news_chosun"] :
-#         raise HTTPException(status_code=403, detail="뉴스 조선 실행 실패")
-#     event_flags["news_chosun"] = False
+ # 뉴스 조선 크롤링 호출
+@app.post("/news_chosun")
+async def run_new_chosun() :
+    if not event_flags["news_chosun"] :
+        raise HTTPException(status_code=403, detail="뉴스 조선 실행 실패")
+    event_flags["news_chosun"] = False
     
-#     News_Chosun_Save()
+    News_Chosun_Save()
     
-#     result = {"message " : " 뉴스 조선 데이터 수집 완료"}
-#     return result
+    result = {"message " : " 뉴스 조선 데이터 수집 완료"}
+    return result
     
 # 실거래 데이터 호출
 @app.post("/estate")

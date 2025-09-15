@@ -1,8 +1,7 @@
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from konlpy.tag import Okt
 from typing import List
-import uvicorn
 
 # ============================================
 #  수업명 : 가비아 2회차
@@ -15,12 +14,7 @@ import uvicorn
 #  - Fast API 사용
 # ============================================
 
-# FastAPI 인스턴스 생성
-app = FastAPI(
-    title="Okt 형태소 분석 API",
-    description="Okt를 사용하여 입력된 텍스트에서 명사를 추출합니다.",
-    version="1.0.0"
-)
+router = APIRouter()
 
 # Okt 객체 생성
 okt = Okt()
@@ -30,7 +24,7 @@ class TextRequest(BaseModel):
     text: str
 
 # API 엔드포인트 정의
-@app.post("/analyze", summary="입력된 텍스트에서 명사 추출")
+@router.post("/analyze", summary="입력된 텍스트에서 명사 추출")
 async def analyze_text(
     request: TextRequest, # 요청 바디
     min_length: int = Query(2, description="추출할 명사의 최소 길이") # 쿼리 파라미터
@@ -52,8 +46,3 @@ async def analyze_text(
         raise HTTPException(status_code=500, detail="형태소 분석 중 오류 발생")
 
     return {"nouns": nouns}
-
-# FastAPI 서버 실행
-if __name__ == "__main__":
-    print("[SERVER] FastAPI 서버 실행 시작")
-    uvicorn.run(app, host="0.0.0.0", port=5001)

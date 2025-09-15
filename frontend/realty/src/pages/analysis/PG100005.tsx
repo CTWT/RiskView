@@ -272,7 +272,13 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                 restEntries.map(({ label, value }, idx) => (
                   <li key={idx}>
                     <span>{label}</span>
-                    <em>{value}</em>
+                    <em>
+                      {value === true || value === "true"
+                        ? "예"
+                        : value === false || value === "false"
+                        ? "아니오"
+                        : value}
+                    </em>
                   </li>
                 ))
               )}

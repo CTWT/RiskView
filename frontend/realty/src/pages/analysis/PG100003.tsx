@@ -298,8 +298,7 @@ const PG100003: React.FC<PG100003Props> = ({
                     </div>
                     );
                 } 
-                else // 날짜 필드 처리
-                        if (dateFields.includes(fieldKey)) {
+                else if (dateFields.includes(fieldKey)) {
                         return (
                         <div key={fieldKey} className="an03-form-field">
                             <label htmlFor={fieldKey}>{label}</label>

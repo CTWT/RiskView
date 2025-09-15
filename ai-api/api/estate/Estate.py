@@ -46,17 +46,17 @@ def build_url(base_url: str, end_index: str, rcpt_yr: str, cgg_nm: str, bldg_usg
     return f"{base_url}/" + "/".join(params)
 
 
-def runEstate(end_index: str, cgg_nm: str, bldg_usg: str):
+def runEstate(end_index: str, rcpt_yr: str, cgg_nm: str, bldg_usg: str):
     """
     실거래가 API 호출 함수
     ============================================
     @param end_index: 조회 종료 인덱스
-    @param cgg_nm: 자치구명 (예: 영등포구)
+    @param rcpt_yr: 접수 연도
     @param bldg_usg: 건물용도 (예: 아파트)
     @return: 필터링된 실거래 API 응답 JSON
     ============================================
     """
-    url = build_url(estate_url, end_index, cgg_nm, bldg_usg)
+    url = build_url(estate_url, end_index, rcpt_yr, cgg_nm, bldg_usg)
     print(url)
 
     try:

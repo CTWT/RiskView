@@ -1,26 +1,42 @@
 import requests
 import json
 import re
-from dotenv import load_dotenv
 from urllib import parse
 from urllib.parse import urlencode
 import os, sys
 import math
 from datetime import datetime, date
-from .components.addr_to_coord import address_to_coord
-from .components.extract_sigungudong import extract_sigungudong
-from .components.remove_address_details import clean_address
-from .components.building_ledger import get_building_info_from_ledger
-from .Estate import runEstate
-from .components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
-from .components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
-from .components.calc_distance import haversine_distance
-from api.ocr.data.LeaseContract import LeaseContract
 
-# --- 상대 경로 임포트 오류 해결을 위한 경로 추가 ---
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
-sys.path.append(project_root)
+# --- 실행 환경에 따른 동적 임포트 처리 ---
+# 스크립트가 패키지의 일부로 실행되지 않았을 경우 (즉, 단독 실행 시)
+if __package__ is None or __package__ == '':
+    # 프로젝트 루트 경로를 sys.path에 추가
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(current_dir, '..', '..'))
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    # 절대 경로로 임포트
+    from api.estate.components.addr_to_coord import address_to_coord
+    from api.estate.components.extract_sigungudong import extract_sigungudong
+    from api.estate.components.remove_address_details import clean_address
+    from api.estate.components.building_ledger import get_building_info_from_ledger
+    from api.estate.Estate import runEstate
+    from api.estate.components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
+    from api.estate.components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
+    from api.estate.components.calc_distance import haversine_distance
+    from api.ocr.data.LeaseContract import LeaseContract
+else:
+    # Main.py 등 다른 모듈에서 임포트될 때 (상대 경로 임포트)
+    from .components.addr_to_coord import address_to_coord
+    from .components.extract_sigungudong import extract_sigungudong
+    from .components.remove_address_details import clean_address
+    from .components.building_ledger import get_building_info_from_ledger
+    from .Estate import runEstate
+    from .components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
+    from .components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
+    from .components.calc_distance import haversine_distance
+    from api.ocr.data.LeaseContract import LeaseContract
 
 # ============================================
 #  수업명 : 가비아 2회차
@@ -312,56 +328,56 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # print(f"✅ 병원 위치 점수: {hospital_location_points}")
     # additional_points += hospital_location_points
 
-    # ============================================
-    # 1km 이내 대형 쇼핑시설 목록 가져오기 (2번에 나누어서)
-    # - 1km 이내 대형 쇼핑시설이 있으면: +2
-    # ============================================
-    shop_count=0
-    min_shop_dist = float('inf') # 가장 가까운 쇼핑시설의 거리를 저장할 변수
-    shopping_location_points = 0 # 쇼핑시설 위치 점수
-    shops = get_large_shopping_data(start_index=1, end_index=1000)
-    for shop in shops:
-        lat = shop['lat']
-        lon = shop['lon']
-        name = shop['name']
+    # # ============================================
+    # # 1km 이내 대형 쇼핑시설 목록 가져오기 (2번에 나누어서)
+    # # - 1km 이내 대형 쇼핑시설이 있으면: +2
+    # # ============================================
+    # shop_count=0
+    # min_shop_dist = float('inf') # 가장 가까운 쇼핑시설의 거리를 저장할 변수
+    # shopping_location_points = 0 # 쇼핑시설 위치 점수
+    # shops = get_large_shopping_data(start_index=1, end_index=1000)
+    # for shop in shops:
+    #     lat = shop['lat']
+    #     lon = shop['lon']
+    #     name = shop['name']
 
-        # 위도, 경도 유효성 체크
-        if lat is None or lon is None:
-            print(f"{name}의 좌표 정보가 없습니다.")
-            continue
+    #     # 위도, 경도 유효성 체크
+    #     if lat is None or lon is None:
+    #         print(f"{name}의 좌표 정보가 없습니다.")
+    #         continue
 
-        # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-        dist = haversine_distance(x, y, lat, lon)
+    #     # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
+    #     dist = haversine_distance(x, y, lat, lon)
 
-        if dist <= 1000:  # 1km 이내
-            print(f"{name}까지 거리: {dist:.2f}m")
-            shop_count += 1
-            if dist < min_shop_dist:
-                min_shop_dist = dist
-    shops2 = get_large_shopping_data(start_index=1001, end_index=1200)
-    for shop in shops2:
-        lat = shop['lat']
-        lon = shop['lon']
-        name = shop['name']
+    #     if dist <= 1000:  # 1km 이내
+    #         print(f"{name}까지 거리: {dist:.2f}m")
+    #         shop_count += 1
+    #         if dist < min_shop_dist:
+    #             min_shop_dist = dist
+    # shops2 = get_large_shopping_data(start_index=1001, end_index=1200)
+    # for shop in shops2:
+    #     lat = shop['lat']
+    #     lon = shop['lon']
+    #     name = shop['name']
 
-        # 위도, 경도 유효성 체크
-        if lat is None or lon is None:
-            print(f"{name}의 좌표 정보가 없습니다.")
-            continue
+    #     # 위도, 경도 유효성 체크
+    #     if lat is None or lon is None:
+    #         print(f"{name}의 좌표 정보가 없습니다.")
+    #         continue
 
-        # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-        dist = haversine_distance(x, y, lat, lon)
+    #     # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
+    #     dist = haversine_distance(x, y, lat, lon)
 
-        if dist <= 1000:  # 1km 이내
-            print(f"{name}까지 거리: {dist:.2f}m")
-            shop_count += 1
-            if dist < min_shop_dist:
-                min_shop_dist = dist
-    print(f"1km 이내 대형 쇼핑시설 개수: {shop_count}개")
-    if min_shop_dist <= 1000:
-        shopping_location_points += 2
-    print(f"✅ 쇼핑시설 위치 점수: {shopping_location_points}\n")
-    additional_points += shopping_location_points
+    #     if dist <= 1000:  # 1km 이내
+    #         print(f"{name}까지 거리: {dist:.2f}m")
+    #         shop_count += 1
+    #         if dist < min_shop_dist:
+    #             min_shop_dist = dist
+    # print(f"1km 이내 대형 쇼핑시설 개수: {shop_count}개")
+    # if min_shop_dist <= 1000:
+    #     shopping_location_points += 2
+    # print(f"✅ 쇼핑시설 위치 점수: {shopping_location_points}\n")
+    # additional_points += shopping_location_points
 
     # ============================================
     # 1km 이내 문화시설 목록 가져오기
@@ -457,6 +473,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # 실거래가 API 호출
     """
     @params end_index(종료 인덱스): 1000
+    @params rcpt_yr(접수 연도): 2025
     @params cgg_nm(자치구명): sigungu
     @params bldg_usg(건물용도): user_bldg_usg
     """

@@ -3,6 +3,7 @@ from fastapi import APIRouter, HTTPException, Response
 from fastapi.concurrency import run_in_threadpool
 from collections import Counter
 from konlpy.tag import Okt
+import jpype
 import numpy as np
 from PIL import Image
 from pydantic import BaseModel, Field
@@ -33,7 +34,28 @@ print(f"[INIT] MASK_PATH: {MASK_PATH}")
 print(f"[INIT] FONT_PATH: {FONT_PATH}")
 
 # Okt 객체 생성
-okt = Okt()
+# okt 객체 선언은 하되, 바로 초기화하지 않습니다.
+okt: Okt | None = None
+
+# @router.on_event("startup") 데코레이터 아래에 모든 초기화 로직을 넣습니다.
+@router.on_event("startup")
+def init_okt():
+    global okt
+    print("[INIT] JVM 시작 및 Okt 객체 생성 시작")
+    if not jpype.isJVMStarted():
+        try:
+            # 명시적인 JVM 경로를 사용해 JVM 시작
+            jvm_path = r"C:\Program Files\Java\jdk-17\bin\server\jvm.dll"
+            jpype.startJVM(jvm_path, "-Xmx512m")
+            print("[INIT] JVM 시작 완료")
+        except Exception as e:
+            print(f"[ERROR] JVM 시작 실패: {e}")
+            # JVM 시작 실패 시 애플리케이션 종료
+            raise RuntimeError("JVM을 시작할 수 없습니다.")
+    
+    # JVM이 시작된 후에 Okt 객체를 생성합니다.
+    okt = Okt()
+    print("[INIT] Okt 객체 생성 완료")
 
 # 요청 바디 모델 정의
 class WordCloudRequest(BaseModel):

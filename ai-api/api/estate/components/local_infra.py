@@ -7,13 +7,13 @@ import json
 from typing import Optional, Dict, Any, List
 from urllib import parse
 from urllib.parse import urlencode
-from xml_to_json import get_xml_api_and_convert_to_json
+from .xml_to_json import get_xml_api_and_convert_to_json
 from pyproj import Transformer
-from addr_to_coord import address_to_coord
+from .addr_to_coord import address_to_coord
 import xmltodict
 import xml.etree.ElementTree as ET
 from io import BytesIO
-from remove_address_details import clean_address
+from .remove_address_details import clean_address
 
 # ============================================
 #  수업명 : 가비아 2회차
@@ -498,4 +498,3 @@ def get_facilities_data(target_gu_name: str, **kwargs) -> list:
 #         })
 
 #     return cvs_list
-

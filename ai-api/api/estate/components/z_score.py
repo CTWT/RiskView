@@ -1,5 +1,5 @@
 import math
-from Estate import runEstate
+from ..Estate import runEstate
 
 # ============================================
 #  수업명 : 가비아 2회차

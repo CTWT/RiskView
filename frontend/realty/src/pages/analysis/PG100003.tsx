@@ -62,6 +62,8 @@ const PG100003: React.FC<PG100003Props> = ({
     // Kakao 지도 객체를 저장할 ref
     const mapRef = useRef<kakao.maps.Map | null>(null);
 
+    const dateFields = ["middlePaymentDate", "balanceDate", "rentDate","leasePeriodStart","leasePeriodEnd"];
+
     /**
      * Kakao 지도 초기화 useEffect
      * - API 로드 완료 & mapInfo 존재 시 지도 생성
@@ -242,35 +244,103 @@ const PG100003: React.FC<PG100003Props> = ({
             )}
         </div>
 
-          {/* 오른쪽: OCR 분석된 데이터 폼 */}
-        <div className="an03-pane an03-ocr-text-pane">
+        <div className="an03-pane an03-ocr-text-pane">                    
             <h3 className="an03-pane-title">OCR 분석 결과</h3>
             <div className="an03-structured-data-form">
-            {Object.entries(contractFieldLabels).map(([fieldKey, label]) => {
+                {Object.entries(contractFieldLabels).map(([fieldKey, label]) => {
                 const value =
-                currentOcrData.structuredContractDataDTO?.[
+                    currentOcrData.structuredContractDataDTO?.[
                     fieldKey as keyof StructuredContractDataDTO
-                ];
+                    ];
 
-                return (
-                <div key={fieldKey} className="an03-form-field">
-                    <label htmlFor={fieldKey}>{label}</label>
-                    <input
-                    id={fieldKey}
-                    type="text"
-                    value={value != null ? value.toString() : ""}
-                    onChange={(e) =>
-                        handleDataChange(
-                        fieldKey as keyof StructuredContractDataDTO,
-                        e.target.value
-                        )
+                // 특정 필드만 select 처리
+                if (fieldKey === "leaseType") {
+                    return (
+                    <div key={fieldKey} className="an03-form-field">
+                        <label>{label}</label>
+                        <select
+                        value={value || ""}
+                        onChange={(e) =>
+                            setCurrentOcrData((prev) => ({
+                            ...prev,
+                            structuredContractDataDTO: {
+                                ...prev.structuredContractDataDTO,
+                                [fieldKey]: e.target.value,
+                            },
+                            }))
+                        }
+                        >
+                        <option value="">선택</option>
+                        <option value="JEONSE">전세</option>
+                        <option value="MONTHLY">월세</option>
+                        </select>
+                    </div>
+                    );
+                }else if (fieldKey === "downPaymentSigned") {
+                    return (
+                    <div key={fieldKey} className="an03-form-field">
+                        <label>{label}</label>
+                        <select
+                        value={value || false}
+                        onChange={(e) =>
+                            setCurrentOcrData((prev) => ({
+                            ...prev,
+                            structuredContractDataDTO: {
+                                ...prev.structuredContractDataDTO,
+                                [fieldKey]: e.target.value,
+                            },
+                            }))
+                        }
+                        >
+                        <option value={true}>예</option>
+                        <option value={false}>아니오</option>
+                        </select>
+                    </div>
+                    );
+                } 
+                else // 날짜 필드 처리
+                        if (dateFields.includes(fieldKey)) {
+                        return (
+                        <div key={fieldKey} className="an03-form-field">
+                            <label htmlFor={fieldKey}>{label}</label>
+                            <input
+                            id={fieldKey}
+                            type="date" // 👈 date picker로 하면 더 직관적
+                            value={
+                                value ? new Date(value).toISOString().split("T")[0] : ""
+                            }
+                            onChange={(e) =>
+                                handleDataChange(
+                                fieldKey as keyof StructuredContractDataDTO,
+                                e.target.value
+                                )
+                            }
+                            />
+                        </div>
+                        );
                     }
-                    />
-                </div>
-                );
-            })}
+                    else {
+                    // 나머지 필드 input 처리
+                    return (
+                    <div key={fieldKey} className="an03-form-field">
+                        <label htmlFor={fieldKey}>{label}</label>
+                        <input
+                        id={fieldKey}
+                        type="text"
+                        value={value != null ? value.toString() : ""}
+                        onChange={(e) =>
+                            handleDataChange(
+                            fieldKey as keyof StructuredContractDataDTO,
+                            e.target.value
+                            )
+                        }
+                        />
+                    </div>
+                    );
+                }
+                })}
             </div>
-        </div>
+            </div>
         </div>
 
         {/* Kakao 지도 섹션 */}

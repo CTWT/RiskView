@@ -395,5 +395,59 @@ contracts = [
         realtorLicensePhone2='1234-서울-67890 / 02-700-0002',
         realtorAgentSignature1='남공인',
         realtorAgentSignature2='백공인'
-    )
+    ),
+    LeaseContract(
+    leaseType='JEONSE',  # 전세
+    location='서울특별시 송파구 올림픽로 300',
+    landType='대지',
+    landArea=120.0,
+    buildingStructureUse='철근콘크리트 / 아파트',
+    buildingArea=85.0,
+    leasePart='아파트 전체',
+    leaseArea=85.0,
+    deposit=500000000,  # 전세보증금 5억
+    downPayment=100000000,
+    downPaymentSigned=True,
+    middlePayment=200000000,
+    middlePaymentDate=date(2025, 10, 15),
+    balance=200000000,
+    balanceDate=date(2025, 11, 1),
+    rentAmount=0,  # 전세라 월세 없음
+    rentType="없음",
+    rentDate=date(2025, 11, 1),
+    leasePeriodStart=date(2025, 11, 10),
+    leasePeriodEnd=date(2028, 11, 9),
+    commissionAmount=50,  # 중개보수 예시
+    specialTerms='주차 가능 / 공동 관리비 별도 부담',
+    
+    # Lessor (임대인)
+    lessorAddress='서울특별시 송파구 올림픽로 300',
+    lessorIdNumber='650101-1234567',
+    lessorPhone='010-3333-4444',
+    lessorName='홍임대',
+    lessorAgentAddress='서울특별시 송파구 올림픽로 300',
+    lessorAgentIdNumber='650101-1234567',
+    lessorAgentName='김대리',
+
+    # Lessee (임차인)
+    lesseeAddress='서울특별시 강남구 테헤란로 88',
+    lesseeIdNumber='900101-7654321',
+    lesseePhone='010-5555-6666',
+    lesseeName='이임차',
+    lesseeAgentAddress='서울특별시 강남구 테헤란로 88',
+    lesseeAgentIdNumber='900101-7654321',
+    lesseeAgentName='박대리',
+
+    # Realtor (공인중개사)
+    realtorOfficeAddress1='서울특별시 송파구 올림픽로 300',
+    realtorOfficeAddress2='서울특별시 송파구 올림픽로 302',
+    realtorOfficeName1='송파부동산',
+    realtorOfficeName2='송파부동산 분점',
+    realtorSignature1='최중개',
+    realtorSignature2='정중개',
+    realtorLicensePhone1='5678-서울-12345 / 02-600-0001',
+    realtorLicensePhone2='5678-서울-67890 / 02-600-0002',
+    realtorAgentSignature1='강공인',
+    realtorAgentSignature2='이공인'
+)
 ]

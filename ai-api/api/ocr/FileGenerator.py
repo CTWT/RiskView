@@ -1,6 +1,6 @@
-from api.ocr.function.PDFFunction import *
-from api.ocr.function.OCRFunction import *
-from api.ocr.tools.Testcase import *
+from .function.PDFFunction import *
+from .function.OCRFunction import *
+from .tools.Testcase import *
 from dotenv import load_dotenv
 
 #  수업명 : 가비아 2회차

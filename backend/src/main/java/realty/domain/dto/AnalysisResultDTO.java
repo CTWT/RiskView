@@ -4,18 +4,19 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.util.List;
-import java.util.Map;
+import lombok.ToString;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class AnalysisResultDTO {
-    private String address; // address
-    private Long userContractPrice; // user_contract_price
-    private Object additionalPoints; // additional_points
-    private List<Map<String, Object>> surroundingTransactions; // surrounding_transactions
-    private UserZScoreAnalysisDTO userZScoreAnalysis; // user_z_score_analysis
+    private String address;
+    private Long userContractPrice;
+    private Long totalRiskScore;
+    private Long averagePrice;
+    private Boolean isAnomaly;
+    private RiskAssessment riskAssessment;
+    private UserZScoreAnalysis userZScoreAnalysis;
 }

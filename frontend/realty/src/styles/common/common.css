@@ -407,6 +407,19 @@
     margin-bottom: 15px;
 }
 
+.an03-form-field select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 1em;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  background-color: #fff;
+  appearance: none; /* 기본 화살표 제거 */
+  -webkit-appearance: none; /* Safari */
+  -moz-appearance: none; /* Firefox */
+}
+
 .an03-form-field label {
     display: block;
     font-weight: bold;

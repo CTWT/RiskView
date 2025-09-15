@@ -72,9 +72,8 @@ public class ContractController {
         // 불러온 임시파일 저장
         fileComponent.saveFile(file, fileName, session);
 
-        UserDataToDBData(contractInfo.getStructuredContractDataDTO());
+        formatAddress(contractInfo.getStructuredContractDataDTO());
 
-        // TODO 위험분석 요청 완성되면 활성화
         // log.info("위험 분석을 실행합니다.");
         // AnalysisResultDTO analysisResultDTO = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
         // log.info("위험 분석 결과 : {}", analysisResultDTO.toString());
@@ -92,7 +91,7 @@ public class ContractController {
         ContractDTO.StructuredContractDataDTO dto = ContractDTO.StructuredContractDataDTO.from(
                 contractService.findStructuredContractDataByDocumentcode(documentCode));
 
-        DBDataToUserData(dto);
+        formatAddress(dto);
 
         return ResponseEntity
                 .ok()
@@ -113,7 +112,7 @@ public class ContractController {
         String address = contractInfo.getStructuredContractDataDTO().getLocation();
         MapInfo mapinfo = mapComponent.localSearch(address);
 
-        DBDataToUserData(contractInfo.getStructuredContractDataDTO());
+        formatAddress(contractInfo.getStructuredContractDataDTO());
 
         ContractDTO.ContractResponse contractResponse = ContractDTO.ContractResponse.builder()
                 .contractInfo(contractInfo)
@@ -122,22 +121,40 @@ public class ContractController {
         return ResponseEntity.ok(contractResponse);
     }
 
-    private void DBDataToUserData(StructuredContractDataDTO dto){
-        if(dto.getLeaseType().equals("JEONSE"))
-        {
-            dto.setLeaseType("전세");
-        }
-        else if(dto.getLeaseType().equals("MONTHLY")){
-            dto.setLeaseType("월세");
-        }
+    /**
+     * 계약서 주소들을 보기 쉬운 주소들로 변환
+     * @param dto
+     */
+    private void formatAddress(StructuredContractDataDTO dto) {
+        dto.setLocation(formatAddress(dto.getLocation()));
+        dto.setLesseeAddress(formatAddress(dto.getLesseeAddress()));
+        dto.setLessorAddress(formatAddress(dto.getLessorAddress()));
+        dto.setRealtorOfficeAddress1(formatAddress(dto.getRealtorOfficeAddress1()));
+        dto.setRealtorOfficeAddress2(formatAddress(dto.getRealtorOfficeAddress2()));
+        dto.setLessorAgentAddress(formatAddress(dto.getLessorAgentAddress()));
+        dto.setLesseeAgentAddress(formatAddress(dto.getLesseeAgentAddress()));
     }
 
-    private void UserDataToDBData(StructuredContractDataDTO dto) {
-        if(dto.getLeaseType().equals("전세")){
-            dto.setLeaseType("JEONSE");
+    private String formatAddress(String raw) {
+        if (raw == null || raw.isEmpty()) {
+            return raw;
         }
-        else if(dto.getLeaseType().equals("월세")){
-            dto.setLeaseType("MONTHLY");
-        }
+
+        String result = raw;
+
+        // 1. 시/도/구/군/동/읍/면/리 뒤에 공백
+        result = result.replaceAll("(시|도|구|군|동|읍|면|리)", "$1 ");
+
+        // 2. 로/길 뒤에 공백
+        result = result.replaceAll("(로|길)", "$1 ");
+
+        // 3. 숫자 앞뒤에 공백 (예: "테헤란로123길45" → "테헤란로 123 길 45")
+        result = result.replaceAll("(?<=\\D)(\\d+)", " $1"); // 숫자 앞에 한글 있으면 공백 삽입
+        result = result.replaceAll("(\\d+)(?=\\D)", "$1 "); // 숫자 뒤에 한글 있으면 공백 삽입
+
+        // 4. 여러 공백 하나로 정리
+        result = result.replaceAll("\\s+", " ").trim();
+        //log.info("주소 변경! {} -> {}", raw, result);
+        return result;
     }
 }

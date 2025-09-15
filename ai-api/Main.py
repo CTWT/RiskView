@@ -67,42 +67,42 @@ async def search_map(req:AddressRequest) :
     event_flags["kakao_map"] = False
     return await search_address(req.address)  
 
-# 뉴스114 크롤링 호출
-@app.post("/news_114")
-async def run_news_114() :
-    if not event_flags["news_114"] :
-        raise HTTPException(status_code=403, detail="뉴스 114 실행 실패")
-    event_flags["news_114"] = False
+# # 뉴스114 크롤링 호출
+# @app.post("/news_114")
+# async def run_news_114() :
+#     if not event_flags["news_114"] :
+#         raise HTTPException(status_code=403, detail="뉴스 114 실행 실패")
+#     event_flags["news_114"] = False
     
-    News_114_Save()
+#     News_114_Save()
     
-    result = {"message " : " 뉴스 114 데이터 수집 완료"}
-    return result
+#     result = {"message " : " 뉴스 114 데이터 수집 완료"}
+#     return result
     
- # 연합뉴스 크롤링 호출
-@app.post("/news_yeonhap")
-async def run_news_yeonhap() :
-    if not event_flags["news_yeonhap"] :
-        raise HTTPException(status_code=403, detail="연합 뉴스 실행 실패")
-    event_flags["news_yeonhap"] = False
+# # 연합뉴스 크롤링 호출
+# @app.post("/news_yeonhap")
+# async def run_news_yeonhap() :
+#     if not event_flags["news_yeonhap"] :
+#         raise HTTPException(status_code=403, detail="연합 뉴스 실행 실패")
+#     event_flags["news_yeonhap"] = False
     
-    News_Yeonhap_Save()
+#     News_Yeonhap_Save()
     
-    result = {"message " : " 연합 뉴스 데이터 수집 완료"}
-    return result
+#     result = {"message " : " 연합 뉴스 데이터 수집 완료"}
+#     return result
 
- # 뉴스 조선 크롤링 호출
-@app.post("/news_chosun")
-async def run_new_chosun() :
-    if not event_flags["news_chosun"] :
-        raise HTTPException(status_code=403, detail="뉴스 조선 실행 실패")
-    event_flags["news_chosun"] = False
+# # 뉴스 조선 크롤링 호출
+# @app.post("/news_chosun")
+# async def run_new_chosun() :
+#     if not event_flags["news_chosun"] :
+#         raise HTTPException(status_code=403, detail="뉴스 조선 실행 실패")
+#     event_flags["news_chosun"] = False
     
-    News_Chosun_Save()
+#     News_Chosun_Save()
     
-    result = {"message " : " 뉴스 조선 데이터 수집 완료"}
-    return result
-    
+#     result = {"message " : " 뉴스 조선 데이터 수집 완료"}
+#     return result
+
 # 실거래 데이터 호출
 @app.post("/estate")
 async def run_estate(end_index : str, cgg_nm : str, ctrt_day: str, bldg_usg : str) :

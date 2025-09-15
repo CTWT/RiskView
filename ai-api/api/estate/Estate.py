@@ -32,7 +32,7 @@ def build_url(base_url: str, end_index: str, rcpt_yr: str, cgg_nm: str, bldg_usg
     params = [
         "1",               # START_INDEX (조회 시작 인덱스, 기본값 1)
         end_index,         # END_INDEX (조회 종료 인덱스)
-        rcpt_yr,           # RCPT_YR (접수 연도)
+        "2025",              # RCPT_YR (접수 연도)
         " ",               # CGG_CD (자치구 코드, 공백 처리)
         quote(cgg_nm),     # CGG_NM (자치구명, URL 인코딩)
         " ",               # STDG_CD (법정동 코드)

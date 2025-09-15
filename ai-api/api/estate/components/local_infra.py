@@ -1,6 +1,7 @@
 from tkinter.constants import LAST
 import requests
 import os
+import time
 import re
 from dotenv import load_dotenv
 import json
@@ -20,9 +21,9 @@ from .remove_address_details import clean_address
 #  작성자 : 박윤성
 #  수정자 : 박윤성
 #  작성일 : 25.09.08
-#  수정일 : 25.09.10
+#  수정일 : 25.09.15
 #  파일명 : local_infra.py
-#  설명  : 주변시설의 위도/경도를 반환
+#  설명  : 주변시설의 위도/경도 반환
 # ============================================
 
 # .env 파일에서 환경 변수 로드
@@ -64,35 +65,42 @@ def get_xml_api_and_convert_to_json(url):
 # API 호출 메서드
 # ============================================
 
-def fetch_api_data(url: str, response_type: str = "json") -> dict:
+def fetch_api_data(url: str, response_type: str = "json", retries: int = 1, delay: float = 0.5) -> dict:
     """
     공통 API 호출 함수
     ======================================
     @param url: 호출할 API URL
     @param response_type: 'json' 또는 'xml'
+    @param retries: 재시도 횟수
+    @param delay: 재시도 간격 (초)
     @return: 응답 데이터를 JSON(dict) 형태로 반환
     ======================================
     """
-    try:
-        response = requests.get(url, timeout=None) # 타임아웃 제거
-        response.raise_for_status()
-        
-        if response_type == "json":
-            return response.json()
-        elif response_type == "xml":
-            data = get_xml_api_and_convert_to_json(url)
-            if not isinstance(data, dict):
-                print(f"[ERROR] XML 파싱 결과가 dict 아님 → type: {type(data)}")
-                return None
-            return data
-        else:
-            raise ValueError(f"지원하지 않는 응답 타입: {response_type}")
+    for attempt in range(retries + 1):
+        try:
+            response = requests.get(url, timeout=None)
+            response.raise_for_status()
+            
+            if response_type == "json":
+                return response.json()
+            elif response_type == "xml":
+                data = get_xml_api_and_convert_to_json(url)
+                if not isinstance(data, dict):
+                    print(f"[ERROR] XML 파싱 결과가 dict 아님 → type: {type(data)}")
+                    return None
+                return data
+            else:
+                raise ValueError(f"지원하지 않는 응답 타입: {response_type}")
 
-    except requests.exceptions.RequestException as e:
-        print(f"[ERROR] API 요청 실패: {url}")
-        print(f"→ {e}")
-    except Exception as e:
-        print(f"[ERROR] API 응답 처리 실패: {e}")
+        except requests.exceptions.RequestException as e:
+            print(f"[ERROR] API 요청 실패: {url}")
+            print(f"→ {e}")
+            if attempt < retries:
+                time.sleep(delay) # 재시도 전 잠시 대기
+        except Exception as e:
+            print(f"[ERROR] API 응답 처리 실패: {e}")
+            break # 요청 외 다른 에러는 재시도하지 않음
+    return None # 모든 재시도 실패 시 None 반환
 
 # ============================================
 # 역세권 API
@@ -220,34 +228,6 @@ def get_school_data(**kwargs) -> dict:
         })
     return school_list
 
-# # 초중고 관련 정보 API 호출 메서드
-# # 공공데이터포탈 : 전국초중등학교위치표준데이터
-# # https://www.data.go.kr/data/15021148/standard.do
-# def get_odp_school_data(**kwargs) -> dict:
-#     url = f"{odp_school_api_base_url}&pageNo={kwargs.get('pageNo', '1')}&numOfRows={kwargs.get('numOfRows', '150000')}&type={kwargs.get('type', 'json')}"
-#     print(url)
-#     data = fetch_api_data(url, response_type="json")
-#     schools = data.get("body", {}).get("items", {}).get("item", [])
-#     school_list = []
-#     for school in schools:
-#         name = school.get('schoolNm')
-#         lat = school.get('latitude')
-#         lon = school.get('longitude')
-
-#         # 위도, 경도 숫자 변환
-#         try:
-#             lat = float(lat)
-#             lon = float(lon)
-#         except (TypeError, ValueError):
-#             lat, lon = None, None
-
-#         school_list.append({
-#             'name': name,
-#             'lat': lat,
-#             'lon': lon
-#         })
-#     return school_list
-
 # ============================================
 # 병원 API (시군구별 필터링)
 # ============================================
@@ -321,6 +301,10 @@ def get_large_shopping_data(**kwargs) -> list:
     for shop in shops:
         # 필터링: 영업중 상태만
         if shop.get("TRDSTATEGBN") != "01" and shop.get("DTLSTATEGBN") != "1":
+            continue
+
+        # 필터링: 대규모점포만
+        if shop.get("JPSENM") != "대규모점포": # 준대규모점포는 규모가 너무 작으므로 제외하는 것.
             continue
 
         # 필터링: 시장 제외

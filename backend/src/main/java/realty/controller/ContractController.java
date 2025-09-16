@@ -22,7 +22,9 @@ import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
 import realty.domain.dto.AiRiskAnalysisRequest;
 import realty.domain.dto.AnomalyDetectResult;
+import realty.domain.dto.ContractClauseDTO;
 import realty.domain.dto.ContractDTO;
+import realty.domain.dto.FinalCommitRequest;
 import realty.domain.dto.MapInfo;
 import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
 import realty.domain.model.User;
@@ -57,16 +59,16 @@ public class ContractController {
             HttpSession session, HttpServletRequest request) {
 
         User user = userService.getCurrentUser(request);
-        if(user == null) {
-           return ResponseEntity.internalServerError()
-           .body("유저 정보를 확인할 수 없습니다");
+        if (user == null) {
+            return ResponseEntity.internalServerError()
+                    .body("유저 정보를 확인할 수 없습니다");
         }
         String userCode = user.getUserCode();
-        
+
         String fileName = contractInfo.getFileStorageMetadataDTO().getOriginalName();
-        
-        //세션에 저장된 임시 파일경로를 가져와서 불러옴
-        String tempFilePath = (String)session.getAttribute("tempFilePath");
+
+        // 세션에 저장된 임시 파일경로를 가져와서 불러옴
+        String tempFilePath = (String) session.getAttribute("tempFilePath");
         Path filePath = Path.of(tempFilePath);
         File file = filePath.toFile();
 
@@ -74,11 +76,6 @@ public class ContractController {
         fileComponent.saveFile(file, fileName, session);
 
         formatAddress(contractInfo.getStructuredContractDataDTO());
-
-        log.info("위험 분석을 실행합니다.");
-        AnomalyDetectResult analysisResultDTO = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
-        log.info("위험 분석 결과 : {}", analysisResultDTO.toString());
-
         String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity
                 .ok()
@@ -103,7 +100,8 @@ public class ContractController {
      * 파일 업로드 후 OCR 실행
      */
     @PostMapping("/upload")
-    public ResponseEntity<ContractDTO.ContractResponse> handleFileUpload(@RequestParam("file") MultipartFile file, HttpSession session)
+    public ResponseEntity<ContractDTO.ContractResponse> handleFileUpload(@RequestParam("file") MultipartFile file,
+            HttpSession session)
             throws IOException {
         // 계약서 정보
         fileComponent.saveTmpFile(file, session);
@@ -122,23 +120,37 @@ public class ContractController {
         return ResponseEntity.ok(contractResponse);
     }
 
-     /**
+    /**
      * 이상치 분석
      */
     @PostMapping("/contracts/anomalyDetect")
-    public ResponseEntity<AnomalyDetectResult> anomalyDetect(@RequestBody ContractDTO.ContractInfo contractInfo) {
+    public ResponseEntity<AnomalyDetectResult> anomalyDetect(
+                 @RequestBody ContractDTO.ContractInfo contractInfo) {
         log.info("이상치 분석을 실행합니다.");
-        AnomalyDetectResult analysisResult = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
+        AnomalyDetectResult analysisResult = contractService
+                .analyzeAnomaly(contractInfo.getStructuredContractDataDTO());
         log.info("이상치 분석 결과 : {}", analysisResult.toString());
 
-        
+        analysisResult.getUserZScoreAnalysis().setZScore(0.0);
 
         return ResponseEntity
                 .ok()
                 .body(analysisResult);
     }
 
-     /**
+    @PostMapping("/contracts/clauseAnalysis")
+    public ResponseEntity<ContractClauseDTO> analyzeClause(
+             @RequestBody String contractCaluse) {
+        log.info("특약사항 분석을 실행합니다.");
+        ContractClauseDTO contractClauseDTO = contractService.analyzeClause(contractCaluse);
+        log.info("특약사항 분석 결과 : {}", contractClauseDTO.toString());
+
+        return ResponseEntity
+                .ok()
+                .body(contractClauseDTO);
+    }
+
+    /**
      * AI 위험 분석
      */
     @PostMapping("/contracts/aiRiskAnalysis")
@@ -152,8 +164,18 @@ public class ContractController {
         return ResponseEntity.ok("AI 위험분석 완료");
     }
 
+    @PostMapping("/contracts/finalCommit")
+    public ResponseEntity<String> finalCommit(
+        @RequestBody FinalCommitRequest finalCommitRequest
+    ){
+        log.info("데이터 저장");
+        contractService.save(finalCommitRequest);
+        return ResponseEntity.ok().build();
+    }
+
     /**
      * 계약서 주소들을 보기 쉬운 주소들로 변환
+     * 
      * @param dto
      */
     private void formatAddress(StructuredContractDataDTO dto) {
@@ -185,7 +207,7 @@ public class ContractController {
 
         // 4. 여러 공백 하나로 정리
         result = result.replaceAll("\\s+", " ").trim();
-        //log.info("주소 변경! {} -> {}", raw, result);
+        // log.info("주소 변경! {} -> {}", raw, result);
         return result;
     }
 }

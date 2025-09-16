@@ -13,13 +13,16 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@Builder
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "contract_clauses")
 public class ContractClause {
@@ -46,7 +49,7 @@ public class ContractClause {
     private String clauseValue; // 조항 내용
 
     @Column(name = "is_risky", nullable = false)
-    private Boolean isRisky = false; // 위험 여부
+    private Boolean isRisky; // 위험 여부
 
     @Column(name = "risk_reason")
     private String riskReason; // 위험 판단 근거
@@ -61,5 +64,10 @@ public class ContractClause {
     // Enum 정의
     public enum ClauseType {
         계약금, 중도금, 잔금, 특약, 기타
+    }
+
+    @PostPersist
+    public void generateCode() {
+        this.clauseCode = "CCL" + String.format("%08d", clauseId);
     }
 }

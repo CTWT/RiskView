@@ -1,16 +1,37 @@
 package realty.service;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import realty.domain.dto.AnalysisReportsDTO;
+import realty.domain.dto.AnomalyDetectResult;
+import realty.domain.dto.ContractClauseDTO;
 import realty.domain.dto.ContractDTO;
+import realty.domain.dto.FinalCommitRequest;
+import realty.domain.model.AnalysisReport;
+import realty.domain.model.ContractClause;
+import realty.domain.model.ContractClause.ClauseType;
 import realty.domain.model.Documents;
 import realty.domain.model.FileStorageMetadata;
 import realty.domain.model.StructuredContractData;
+import realty.domain.model.TransactionAnomaly;
+import realty.domain.model.AnalysisReport.SentimentCategory;
+import realty.domain.repository.AnalysisReportRepository;
+import realty.domain.repository.ContractClauseRepository;
 import realty.domain.repository.DocumentsRepository;
 import realty.domain.repository.FileStorageMetadataRepository;
 import realty.domain.repository.StructuredContractDataRepository;
+import realty.domain.repository.TransactionAnomalyRepository;
 
 /*
  * 수업명 : 가비아 2회차
@@ -33,6 +54,10 @@ public class ContractService {
     private final DocumentsRepository documentsRepository;
     private final StructuredContractDataRepository contractRepository;
     private final FileStorageMetadataRepository fileStorageMetadataRepository;
+    private final ContractClauseRepository contractClauseRepository;
+    private final AnalysisReportRepository analysisReportRepository;
+    private final TransactionAnomalyRepository transactionAnomalyRepository;
+    private final RestTemplate restTemplate;
 
     public StructuredContractData findStructuredContractDataByDocumentcode(String documentcode) {
         return contractRepository.findByDocumentcode(documentcode);
@@ -82,6 +107,137 @@ public class ContractService {
 
         System.out.println("계약서 저장 완료!");
         return documentsCode;
+    }
+
+    @Transactional
+    public void save(FinalCommitRequest finalCommitRequest) {
+        ContractClauseDTO contractClauseDTO = finalCommitRequest.getContractClauseDTO();
+        contractClauseSave(contractClauseDTO, finalCommitRequest.getDocumentCode());
+        
+        AnalysisReportsDTO analysisReportsDTO = finalCommitRequest.getAnalysisReportsDTO();
+        String reportCode = analysisReportSave(analysisReportsDTO, finalCommitRequest.getDocumentCode());
+
+        AnomalyDetectResult anomalyDetectResult = finalCommitRequest.getAnomalyDetectResult();
+        anomalyDetectSave(anomalyDetectResult, reportCode);
+    }
+
+    private void contractClauseSave(ContractClauseDTO contractClauseDTO, String documentCode) {
+        // 문자열 → Enum 변환
+        ClauseType clauseTypeEnum;
+        try {
+            clauseTypeEnum = ClauseType.valueOf(contractClauseDTO.getClauseType()); // 대문자 변환 필수
+        } catch (IllegalArgumentException e) {
+            clauseTypeEnum = ClauseType.기타; // 기본값 지정
+        }
+
+        ContractClause contractClause = ContractClause.builder()
+                                                        .documentCode(documentCode)
+                                                        .clauseCode("not-set")
+                                                        .clauseTitle(contractClauseDTO.getClauseTitle())
+                                                        .clauseType(clauseTypeEnum)
+                                                        .clauseValue(contractClauseDTO.getClauseValue())
+                                                        .isRisky(contractClauseDTO.getIsRisky())
+                                                        .build();
+        
+        contractClauseRepository.save(contractClause);
+        contractClauseRepository.flush();
+        
+    }
+
+    private String analysisReportSave(AnalysisReportsDTO analysisReportsDTO, String documentCode) {
+        AnalysisReport analysisReport = AnalysisReport.builder()
+                                                        .documentCode(documentCode)
+                                                        .reportCode("not-set")
+                                                        .riskLevel("not-set")
+                                                        .sentimentCategory(SentimentCategory.긍정)
+                                                        .sentimentEmoji("!")
+                                                        .sentimentScore(new BigDecimal(100))
+                                                        .sentimentSummary("not-set")
+                                                        .build();
+
+        AnalysisReport savedEntity = analysisReportRepository.save(analysisReport);
+        analysisReportRepository.flush();
+        return savedEntity.getReportCode();
+                                                        
+    }
+
+    private void anomalyDetectSave(AnomalyDetectResult anomalyDetectResult, String reportCode) {
+        TransactionAnomaly transactionAnomaly = TransactionAnomaly.builder()
+                                                                    .reportCode(reportCode)
+                                                                    .anomalyCode("not-set")
+                                                                    .averagePrice(anomalyDetectResult.getAveragePrice())
+                                                                    .deviationPercent(new BigDecimal(100))
+                                                                    .isAnomaly(anomalyDetectResult.getIsAnomaly())
+                                                                    .price(anomalyDetectResult.getUserContractPrice())
+                                                                    .build();
+
+        transactionAnomalyRepository.save(transactionAnomaly);                                   
+    }
+
+
+
+    /**
+     * 이상치 분석로직
+     * @param structuredContractDataDTO 계약서 정보
+     * @return
+     */
+    public AnomalyDetectResult analyzeAnomaly(ContractDTO.StructuredContractDataDTO structuredContractDataDTO){
+
+        triggerFastApiAnalysis("analyze_estate");
+
+        // post
+        ResponseEntity<AnomalyDetectResult> response = restTemplate.postForEntity(
+                "http://localhost:8000/analyze_estate",
+                structuredContractDataDTO,
+                AnomalyDetectResult.class);
+
+        return response.getBody();
+    }
+
+    /**
+     * 특약사항 분석 로직
+     * @param contractClause
+     * @return
+     */
+    public ContractClauseDTO analyzeClause(String contractClause){
+        triggerFastApiAnalysis("analyze_clause");
+
+        Map<String, String> body = new HashMap<>();
+        body.put("contract_clause", contractClause);
+
+        // 헤더 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // HttpEntity로 body + headers 감싸기
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
+
+        // POST 요청
+        ResponseEntity<ContractClauseDTO> response = restTemplate.postForEntity(
+                "http://localhost:8000/analyze_clause",
+                request,
+                ContractClauseDTO.class
+        );
+
+        return response.getBody();
+    }
+
+     /**
+     * ocr결과를 이상치분석 api 요청
+     */
+    private void triggerFastApiAnalysis(String apiName) {
+        Map<String, String> triggerBody = new HashMap<>();
+        triggerBody.put("api_name", apiName);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "http://localhost:8000/trigger",
+                triggerBody,
+                Map.class);
+
+        if (response.getBody() != null) {
+            String message = (String) response.getBody().get("message");
+            System.out.println("FastAPI 응답: " + message);
+        }
     }
 
 }

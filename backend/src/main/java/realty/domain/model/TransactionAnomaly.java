@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -48,4 +49,9 @@ public class TransactionAnomaly {
 
     @Column(name = "created_by", length = 20)
     private String createdBy; // 레코드 생성자
+
+    @PostPersist
+    public void generateCode() {
+        this.anomalyCode = "TA" + String.format("%08d", anomalyId);
+    }
 }

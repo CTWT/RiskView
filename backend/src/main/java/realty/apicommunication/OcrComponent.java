@@ -81,43 +81,6 @@ public class OcrComponent {
     }
 
     /**
-     * 
-     * @param structuredContractDataDTO 계약서 정보
-     * @return
-     */
-    public AnomalyDetectResult analyzeContractRisks(ContractDTO.StructuredContractDataDTO structuredContractDataDTO){
-
-        triggerFastApiAnalysis();
-
-        // post
-        ResponseEntity<AnomalyDetectResult> response = restTemplate.postForEntity(
-                "http://localhost:8000/analyze_estate",
-                structuredContractDataDTO,
-                AnomalyDetectResult.class);
-
-        return response.getBody();
-    }
-
-    /**
-     * ocr결과를 이상치분석 api 요청
-     */
-
-    private void triggerFastApiAnalysis() {
-        Map<String, String> triggerBody = new HashMap<>();
-        triggerBody.put("api_name", "analyze_estate");
-
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                "http://localhost:8000/trigger",
-                triggerBody,
-                Map.class);
-
-        if (response.getBody() != null) {
-            String message = (String) response.getBody().get("message");
-            System.out.println("FastAPI 응답: " + message);
-        }
-    }
-
-    /**
      * FastAPI 서버 쪽의 ocr 트리거 활성화
      */
     private void triggerFastApiOcr() {

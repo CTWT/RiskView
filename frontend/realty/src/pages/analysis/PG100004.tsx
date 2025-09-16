@@ -1,47 +1,19 @@
 // src/pages/analysis/PG100004.tsx
-
 import React, { useState, useEffect } from "react";
-import "../../styles/common/common.css"; // ⭐ common.css만 임포트 ⭐
-import ProgressBar from "../../components/ui/ProgressBar"; // ProgressBar 컴포넌트 임포트 경로 확인 및 수정
+import "../../styles/common/common.css";
+import ProgressBar from "../../components/ui/ProgressBar";
 import type { OcrDataType } from "./PG100003";
 import axios from "axios";
 
-/**
- * @file PG100004.tsx
- * @description AI 분석의 결과가 오래걸리니 사용자 UX적으로 실제로 어느정도 작업이 되었다 라는걸 시각화
- * 하기 위하여 제작된 로딩 페이지 입니다.
- */
-
-/*
- * 생성자 : 문원주
- * 생성일 : 25.07.30
- * 파일명 : PG100004.tsx
- * 수정자 :
- * 수정일 :
- * 설명 : 계약서의 AI 분석 중 어느정도 진행되었나 진행도를 확인할 수 있는 로딩창 입니다.
- */
-
 interface PG100004Props {
   ocrData: OcrDataType | null;
-  onAnalysisComplete?: (documentCode: string | null) => void; // 모든 분석이 완료되면 호출될 콜백
+  onAnalysisComplete?: (documentCode: string | null) => void;
 }
 
-export interface AiRiskAnalysisRequest {
-  ocrData: OcrDataType;
-  anomalyDetectResult: AnomalyDetectResult | null;
-}
+export type SentimentCategory = "긍정" | "부정" | "중립";
 
-// 응답 바디
-export interface RiskAssessment {
-  level: string;
-  comment: string;
-}
-
-export interface UserZScoreAnalysis {
-  zScore: number;
-  label: string;
-}
-
+export interface RiskAssessment { level: string; comment: string; }
+export interface UserZScoreAnalysis { zScore: number | null; label: string; }
 export interface AnomalyDetectResult {
   userContractPrice: number;
   totalRiskScore: number;
@@ -50,183 +22,213 @@ export interface AnomalyDetectResult {
   riskAssessment: RiskAssessment;
   userZScoreAnalysis: UserZScoreAnalysis;
 }
-
+export interface ContractClauseDTO {
+  clauseType: "계약금" | "중도금" | "잔금" | "특약" | "기타";
+  clauseTitle: string;
+  clauseValue: string;
+  isRisky: boolean;
+  riskReason: string;
+}
+export interface AnalysisReportsDTO {
+  summary: string;
+  riskLevel: string;
+  sentimentSummary: string;
+  sentimentScore: number;
+  sentimentCategory: SentimentCategory;
+  sentimentEmoji: string;
+}
+export interface AiRiskAnalysisRequest {
+  ocrData: OcrDataType;
+  anomalyDetectResult: AnomalyDetectResult;
+}
+export interface FinalCommitRequest {
+  documentCode: string;
+  contractClauseDTO: ContractClauseDTO;
+  anomalyDetectResult: AnomalyDetectResult;
+  analysisReportsDTO: AnalysisReportsDTO;
+}
 interface AnalysisStep {
   label: string;
-  action?: () => Promise<string | void>; // 첫 스텝은 string, 나머지는 void
+  action?: () => Promise<string | void>;
 }
 
 const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
-    const [progress, setProgress] = useState(0);
-    const [currentStep, setCurrentStep] = useState(0);
-    const [currentOcrData, setCurrentOcrData] = useState<OcrDataType>(ocrData);
-    const [documentCode, setDocumentCode] = useState<string | null>(null);
-    const [anomalyDetectResult, setAnomalyDetectResult] =
-        useState<AnomalyDetectResult | null>(null);
-    const [aiRiskAnalysis, setAiRiskAnalysis] = useState<string | null>(null);
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
 
-    const analysisSteps: AnalysisStep[] = [
-        {
-            label: "문서 업로드 완료",
-            action: async (): Promise<string> => {
-            return await uploadDocument() ?? "";
-            },
-        },
-        {
-            label: "계약 내용 이상치 분석 완료",
-            action: async () => {
-            await anomalyDetect(currentOcrData);
-            },
-        },
-        {
-            label: "AI 위험 요소 탐지 완료",
-            action: async () => {
-            await aiRiskAnalyze(currentOcrData, anomalyDetectResult);
-            },
-        },
-        {
-            label: "분석 리포트 생성 완료",
-            action: async () => {
-            await generateReport();
-            },
-        },
-        ];
+  const [documentCode, setDocumentCode] = useState<string | null>(null);
+  const [clauseAnalysis, setClauseAnalysis] = useState<ContractClauseDTO | null>(null);
+  const [anomalyDetectResult, setAnomalyDetectResult] = useState<AnomalyDetectResult | null>(null);
+  const [analysisReport, setAnalysisReport] = useState<AnalysisReportsDTO | null>(null);
 
-    const uploadDocument = async (): Promise<string | null> => {
-        try {
-            const { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO } = currentOcrData!;
-            const payload = { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO };
+  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-            const response = await axios.post<string>(
-                "http://localhost:8080/contracts",
-                payload,
-                {
-                    headers: { "Content-Type": "application/json" },
-                    withCredentials: true,
-                }
-            );
+  const uploadDocument = async (): Promise<string | null> => {
+    try {
+      const { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO } = ocrData!;
+      const payload = { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO };
+      const response = await axios.post<string>("http://localhost:8080/contracts", payload, {
+        headers: { "Content-Type": "application/json" },
+        withCredentials: true,
+      });
+      console.log("전송 성공", response.data);
+      sessionStorage.setItem("rv_documentCode", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("전송 실패", error);
+      alert("서버 전송 중 오류가 발생했습니다.");
+      return null;
+    }
+  };
 
-            console.log("전송 성공", response.data);
-
-            // sessionStorage에 저장 (PG100005에서도 안전하게 가져오기 위해)
-            sessionStorage.setItem("rv_documentCode", response.data);
-
-            return response.data; // ✅ 여기가 이제 string으로 반환됨
-        } catch (error) {
-            console.error("전송 실패", error);
-            alert("서버 전송 중 오류가 발생했습니다.");
-            return null;
-        }
-    };
-
-    const anomalyDetect = async (ocrData: OcrDataType) => {
-        const response = await axios.post<AnomalyDetectResult>(
-        "http://localhost:8080/contracts/anomalyDetect",
-        ocrData
-        );
-        setAnomalyDetectResult(response.data);
-    };
-
-    const aiRiskAnalyze = async (
-        ocrData: OcrDataType,
-        anomalyDetectResult: AnomalyDetectResult | null
-    ) => {
-        const payload: AiRiskAnalysisRequest = { ocrData, anomalyDetectResult };
-
-        const response = await axios.post<string>(
-        "http://localhost:8080/contracts/aiRiskAnalysis",
-        payload,
-        {
-            headers: {
-            "Content-Type": "application/json",
-            },
-        }
-        );
-
-        setAiRiskAnalysis(response.data); // state 반영
-    };
-
-    const generateReport = async () => {};
-
-   const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-    useEffect(() => {
-        const runSteps = async () => {
-            let accumulatedProgress = 0;
-            let uploadedDocumentCode: string | null = null;
-
-            for (let stepIndex = 0; stepIndex < analysisSteps.length; stepIndex++) {
-                const step = analysisSteps[stepIndex];
-
-                if (step.action) {
-                    if (step.label === "문서 업로드 완료") {
-                        uploadedDocumentCode = await step.action() as string;
-                    } else {
-                        await step.action();
-                    }
-                }
-
-                // 진행도 업데이트
-                accumulatedProgress += 100 / analysisSteps.length;
-                setProgress(Math.min(accumulatedProgress, 100));
-                setCurrentStep(stepIndex + 1);
-
-                // 🔹 각 단계 후 1초 딜레이
-                await delay(1000);
-            }
-
-            if (onAnalysisComplete) {
-                console.log("PG100004 uploadedDocumentCode:", uploadedDocumentCode);
-                onAnalysisComplete(uploadedDocumentCode);
-            }
-        };
-
-        runSteps();
-    }, []);
-
-    return (
-        <div className="an04-container">
-        <div className="an04-header">
-            <h2 className="an02-subtitle">계약 분석</h2>
-            <h1 className="an02-title">계약서 분석</h1>
-            <p className="an02-description">
-            부동산 계약서를 업로드하여 자동으로 내용을 분석해보세요
-            </p>
-        </div>
-
-        <div className="an04-loading-card">
-            <div className="an04-spinner-wrapper">
-            <div className="an04-spinner"></div>
-            </div>
-            <h2 className="an04-main-message">AI가 계약서를 분석하고 있습니다</h2>
-            <p className="an04-sub-message">
-            문서를 스캔하고 위험 요소를 분석하는 중입니다.
-            <br />
-            잠시만 기다려주세요.
-            </p>
-
-            <ProgressBar progress={progress} />
-
-            <div className="an04-steps-list">
-            {analysisSteps.map((step, index) => (
-                <div
-                key={index}
-                className={`an04-step-item ${
-                    index < currentStep ? "an04-step-completed" : ""
-                }`}
-                >
-                {index < currentStep ? (
-                    <span className="an04-check-icon">✔</span>
-                ) : (
-                    <span className="an04-pending-icon"></span>
-                )}
-                {step.label}
-                </div>
-            ))}
-            </div>
-        </div>
-        </div>
+  const anomalyDetect = async (ocrData: OcrDataType) => {
+    const response = await axios.post<AnomalyDetectResult>(
+      "http://localhost:8080/contracts/anomalyDetect",
+      ocrData
     );
+    console.log("이상치 분석 결과 ==>", response.data);
+    return response.data;
+  };
+
+  const clauseAnalyze = async (clause: string | null) => {
+    const response = await axios.post<ContractClauseDTO>(
+      "http://localhost:8080/contracts/clauseAnalysis",
+      clause
+    );
+    console.log("특약사항 분석결과 ==>", response.data);
+    return response.data;
+  };
+
+  const aiRiskAnalyze = async (
+    ocrData: OcrDataType,
+    anomalyDetectResult: AnomalyDetectResult
+  ) => {
+    const payload: AiRiskAnalysisRequest = { ocrData, anomalyDetectResult };
+    const response = await axios.post<AnalysisReportsDTO>(
+      "http://localhost:8080/contracts/aiRiskAnalysis",
+      payload,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    console.log("리포트 분석결과 ==>", response.data);
+    return response.data;
+  };
+
+  const generateReport = async (
+    documentCode: string,
+    clauseAnalysis: ContractClauseDTO,
+    anomalyDetectResult: AnomalyDetectResult,
+    analysisReport: AnalysisReportsDTO
+  ) => {
+    const payload: FinalCommitRequest = {
+      documentCode,
+      contractClauseDTO: clauseAnalysis,
+      anomalyDetectResult,
+      analysisReportsDTO: analysisReport
+    };
+    const response = await axios.post<string>(
+      "http://localhost:8080/contracts/finalCommit",
+      payload,
+      { headers: { "Content-Type": "application/json" } }
+    );
+    return response.data;
+  };
+
+  const dummyAnalysisReport: AnalysisReportsDTO = {
+  summary: "AI 위험분석 완료",
+  riskLevel: "LOW",                     // 예시: HIGH, MEDIUM, LOW
+  sentimentSummary: "긍정적",            // 예시 텍스트
+  sentimentScore: 0.85,                 // 예시 점수 (0~1)
+  sentimentCategory: "긍정",        // SentimentCategory enum 값 중 하나
+  sentimentEmoji: "😊"                  // 감정 표현 이모지
+};
+
+  useEffect(() => {
+    const runAnalysis = async () => {
+      let accumulatedProgress = 0;
+
+      // 1️⃣ 문서 업로드
+      const uploadedDocumentCode = await uploadDocument();
+      setDocumentCode(uploadedDocumentCode ?? "");
+      accumulatedProgress += 20;
+      setProgress(accumulatedProgress);
+      setCurrentStep(1);
+
+      // 2️⃣ 이상치 분석
+      const rAnomalyDetectResult = await anomalyDetect(ocrData!);
+      setAnomalyDetectResult(rAnomalyDetectResult);
+      accumulatedProgress += 20;
+      setProgress(accumulatedProgress);
+      setCurrentStep(2);
+
+      // 3️⃣ 특약사항 분석
+      let rClauseAnalysis: ContractClauseDTO | null = null;
+      const specialTerms = ocrData?.structuredContractDataDTO?.specialTerms?.trim();
+      if (specialTerms) {
+        rClauseAnalysis = await clauseAnalyze(specialTerms);
+        setClauseAnalysis(rClauseAnalysis);
+      }
+      accumulatedProgress += 20;
+      setProgress(accumulatedProgress);
+      setCurrentStep(3);
+
+      // 4️⃣ AI 위험 요소 분석
+      const rAnalysisReport = dummyAnalysisReport//await aiRiskAnalyze(ocrData!, rAnomalyDetectResult);
+      setAnalysisReport(rAnalysisReport);
+      accumulatedProgress += 20;
+      setProgress(accumulatedProgress);
+      setCurrentStep(4);
+
+      // 5️⃣ 최종 리포트 생성
+      if (uploadedDocumentCode && rClauseAnalysis && rAnomalyDetectResult && rAnalysisReport) {
+        await generateReport(uploadedDocumentCode, rClauseAnalysis, rAnomalyDetectResult, rAnalysisReport);
+      }
+      accumulatedProgress = 100;
+      setProgress(accumulatedProgress);
+      setCurrentStep(5);
+
+      if (onAnalysisComplete) onAnalysisComplete(uploadedDocumentCode);
+    };
+
+    runAnalysis();
+  }, [ocrData, onAnalysisComplete]);
+
+  return (
+    <div className="an04-container">
+      <div className="an04-header">
+        <h2 className="an02-subtitle">계약 분석</h2>
+        <h1 className="an02-title">계약서 분석</h1>
+        <p className="an02-description">
+          부동산 계약서를 업로드하여 자동으로 내용을 분석해보세요
+        </p>
+      </div>
+
+      <div className="an04-loading-card">
+        <div className="an04-spinner-wrapper">
+          <div className="an04-spinner"></div>
+        </div>
+        <h2 className="an04-main-message">AI가 계약서를 분석하고 있습니다</h2>
+        <p className="an04-sub-message">
+          문서를 스캔하고 위험 요소를 분석하는 중입니다.
+          <br />
+          잠시만 기다려주세요.
+        </p>
+
+        <ProgressBar progress={progress} />
+
+        <div className="an04-steps-list">
+          {["문서 업로드 완료","계약 내용 이상치 분석 완료","특약 사항 위험 분석 완료","AI 위험 요소 탐지 완료","분석 리포트 생성 완료"].map((stepLabel, index) => (
+            <div
+              key={index}
+              className={`an04-step-item ${index < currentStep ? "an04-step-completed" : ""}`}
+            >
+              {index < currentStep ? <span className="an04-check-icon">✔</span> : <span className="an04-pending-icon"></span>}
+              {stepLabel}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default PG100004;

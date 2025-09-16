@@ -12,9 +12,9 @@ from api.wordcloud import wordcloud_main as wordcloud_router
 from api.wordcloud.okt_analyzer import router as okt_analyzer_router
 from api.ocr.data.LeaseContract import LeaseContract
 from api.estate.Estate import runEstate
+from ai.contract_analysis.contract_clause import analyze_clause
 import uvicorn 
 import sys, os
-
 
 base_path = os.path.dirname(os.path.abspath(__file__))
 if base_path not in sys.path:
@@ -36,6 +36,7 @@ event_flags : Dict[str, bool] = {
     "news_chosun" : False,  # 뉴스 조선
     "estate" : False,   # 전월세 실거래데이터
     "analyze_estate": False, # 부동산 종합 분석
+    "analyze_clause": False, # 특약사항 위험 분석
 }
 
 class EventTrigger(BaseModel) :
@@ -116,7 +117,7 @@ async def run_estate(end_index : str, cgg_nm : str, ctrt_day: str, bldg_usg : st
 
 # 부동산 종합 분석
 @app.post("/analyze_estate")
-async def analyzeRisks(contract_data: LeaseContract):
+async def analyzeAnomaly(contract_data: LeaseContract):
     if not event_flags["analyze_estate"]:
         raise HTTPException(status_code=403, detail="부동산 종합 분석 실행이 허용되지 않았습니다.")
     event_flags["analyze_estate"] = False  # 사용 후 플래그 리셋
@@ -124,5 +125,19 @@ async def analyzeRisks(contract_data: LeaseContract):
     analysis_result = analyze_estate(contract_data)
     return analysis_result
 
+
+class ClauseRequest(BaseModel):
+    contract_clause: str
+
+@app.post("/analyze_clause")
+async def analyzeClause(req: ClauseRequest):
+    if not event_flags["analyze_clause"]:
+        raise HTTPException(status_code=403, detail="특약사항 위험 분석 실행이 허용되지 않았습니다.")
+    event_flags["analyze_clause"] = False
+
+    analysis_result = analyze_clause(req.contract_clause)
+    return analysis_result
+
 if __name__ == "__main__" :
     uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)
+

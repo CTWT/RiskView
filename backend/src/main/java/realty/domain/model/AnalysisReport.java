@@ -2,6 +2,7 @@ package realty.domain.model;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 
@@ -19,11 +20,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "analysis_reports")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class) // 생성/수정 시각 자동 관리
@@ -72,5 +75,10 @@ public class AnalysisReport {
         긍정, // Positive
         부정, // Negative
         중립  // Neutral
+    }
+
+    @PostPersist
+    public void generateCode() {
+        this.reportCode = "AR" + String.format("%08d", reportId);
     }
 }

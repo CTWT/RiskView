@@ -405,7 +405,7 @@ def get_facilities_data(target_gu_name: str, **kwargs) -> list:
     url = f"{data_seoul_api_base_url}/json/facilities/{kwargs.get('start_index', '1')}/{kwargs.get('end_index', '1000')}"
     print(url)
     data = fetch_api_data(url, response_type="json")
-    facilities = data.get("facilities", {}).get("row", [])
+    facilities = (data or {}).get("facilities", {}).get("row", [])
 
     facility_list = []
     for facility in facilities:

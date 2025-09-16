@@ -23,8 +23,8 @@ import PageContainer from "../../../../components/layout/PageContainer";
  * @param {function} onLogin - 재설정 완료 후 로그인 페이지로 이동하는 콜백 함수
  */
 interface PG300011Props {
-  userId: string;
-  onLogin: () => void;
+    userId: string;
+    onLogin: () => void;
 }
 
 /**
@@ -40,250 +40,276 @@ interface PG300011Props {
  * @returns {JSX.Element} - 새 비밀번호 설정 폼 UI 컴포넌트
  */
 const PG300011: React.FC<PG300011Props> = ({ userId, onLogin }) => {
+    // 커스텀 훅 초기화
+    const { toast, showToast } = useToast();
 
-  // 커스텀 훅 초기화
-  const { toast, showToast } = useToast();
+    // 컴포넌트 상태 관리
+    /** 새 비밀번호 상태 */
+    const [newPassword, setNewPassword] = useState<string>("");
 
+    /** 비밀번호 확인 상태 */
+    const [confirmPassword, setConfirmPassword] = useState<string>("");
 
-  // 컴포넌트 상태 관리
-  /** 새 비밀번호 상태 */
-  const [newPassword, setNewPassword] = useState<string>("");
+    /** 새 비밀번호 표시/숨김 상태 */
+    const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
 
-  /** 비밀번호 확인 상태 */
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
+    /** 비밀번호 확인 표시/숨김 상태 */
+    const [showConfirmPassword, setShowConfirmPassword] =
+        useState<boolean>(false);
 
-  /** 새 비밀번호 표시/숨김 상태 */
-  const [showNewPassword, setShowNewPassword] = useState<boolean>(false);
+    /** 로딩 상태 관리 */
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  /** 비밀번호 확인 표시/숨김 상태 */
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
+    // 유효성 검사 함수들
+    /**
+     * 비밀번호 강도 검증 함수
+     * 최소 6자 이상, 영문+숫자 조합 권장
+     *
+     * @param {string} password - 검사할 비밀번호
+     * @returns {boolean} - 유효한 비밀번호면 true
+     */
+    const validatePassword = (password: string): boolean => {
+        if (password.length < 6) {
+            showToast("비밀번호는 최소 6자 이상이어야 합니다.", {
+                type: "error",
+            });
+            return false;
+        }
 
-  /** 로딩 상태 관리 */
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+        // 추가 보안 규칙 (필요시 활성화)
+        // const hasLetter = /[a-zA-Z]/.test(password);
+        // const hasNumber = /\d/.test(password);
+        // if (!hasLetter || !hasNumber) {
+        //   showToast("비밀번호는 영문과 숫자를 모두 포함해야 합니다.", { type: "error" });
+        //   return false;
+        // }
 
+        return true;
+    };
 
-  // 유효성 검사 함수들
-  /**
-   * 비밀번호 강도 검증 함수
-   * 최소 6자 이상, 영문+숫자 조합 권장
-   *
-   * @param {string} password - 검사할 비밀번호
-   * @returns {boolean} - 유효한 비밀번호면 true
-   */
-  const validatePassword = (password: string): boolean => {
-    if (password.length < 6) {
-      showToast("비밀번호는 최소 6자 이상이어야 합니다.", { type: "error" });
-      return false;
-    }
+    /**
+     * 비밀번호 일치 검증 함수
+     *
+     * @returns {boolean} - 비밀번호가 일치하면 true
+     */
+    const validatePasswordMatch = (): boolean => {
+        if (newPassword !== confirmPassword) {
+            showToast("비밀번호가 일치하지 않습니다.", { type: "error" });
+            return false;
+        }
+        return true;
+    };
 
-    // 추가 보안 규칙 (필요시 활성화)
-    // const hasLetter = /[a-zA-Z]/.test(password);
-    // const hasNumber = /\d/.test(password);
-    // if (!hasLetter || !hasNumber) {
-    //   showToast("비밀번호는 영문과 숫자를 모두 포함해야 합니다.", { type: "error" });
-    //   return false;
-    // }
+    // 이벤트 핸들러 함수들
+    /**
+     * 비밀번호 재설정 처리 함수
+     * 새 비밀번호를 서버에 전송하여 업데이트
+     */
+    const handlePasswordReset = async () => {
+        // 입력값 검증
+        if (!newPassword.trim()) {
+            showToast("새 비밀번호를 입력해주세요.", { type: "error" });
+            return;
+        }
 
-    return true;
-  };
+        if (!confirmPassword.trim()) {
+            showToast("비밀번호 확인을 입력해주세요.", { type: "error" });
+            return;
+        }
 
-  /**
-   * 비밀번호 일치 검증 함수
-   *
-   * @returns {boolean} - 비밀번호가 일치하면 true
-   */
-  const validatePasswordMatch = (): boolean => {
-    if (newPassword !== confirmPassword) {
-      showToast("비밀번호가 일치하지 않습니다.", { type: "error" });
-      return false;
-    }
-    return true;
-  };
+        // 비밀번호 강도 검증
+        if (!validatePassword(newPassword)) {
+            return;
+        }
 
-  // 이벤트 핸들러 함수들
-  /**
-   * 비밀번호 재설정 처리 함수
-   * 새 비밀번호를 서버에 전송하여 업데이트
-   */
-  const handlePasswordReset = async () => {
-    // 입력값 검증
-    if (!newPassword.trim()) {
-      showToast("새 비밀번호를 입력해주세요.", { type: "error" });
-      return;
-    }
+        // 비밀번호 일치 검증
+        if (!validatePasswordMatch()) {
+            return;
+        }
 
-    if (!confirmPassword.trim()) {
-      showToast("비밀번호 확인을 입력해주세요.", { type: "error" });
-      return;
-    }
+        setIsLoading(true);
 
-    // 비밀번호 강도 검증
-    if (!validatePassword(newPassword)) {
-      return;
-    }
+        try {
+            // 서버에 비밀번호 재설정 요청
+            const response = await fetch("/api/user/reset-pass", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                // JSON 데이터로 요청 본문 전송
+                body: JSON.stringify({
+                    userId: userId,
+                    newPassword: newPassword.trim(),
+                    confirmNewPassword: confirmPassword.trim(),
+                }),
+            });
 
-    // 비밀번호 일치 검증
-    if (!validatePasswordMatch()) {
-      return;
-    }
+            const data = await response.json();
 
-    setIsLoading(true);
+            if (response.ok) {
+                showToast("비밀번호가 성공적으로 변경되었습니다.", {
+                    type: "success",
+                });
+                setTimeout(() => {
+                    // 로그인 페이지로 이동
+                    onLogin();
+                }, 1000);
+            } else {
+                showToast(data.message || "비밀번호 재설정에 실패했습니다.", {
+                    type: "error",
+                });
+            }
+        } catch (error) {
+            console.error("비밀번호 재설정 오류:", error);
+            showToast("오류가 발생했습니다. 다시 시도해주세요.", {
+                type: "error",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    try {
-      // 서버에 비밀번호 재설정 요청
-      const response = await fetch("/api/user/reset-pass", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // JSON 데이터로 요청 본문 전송
-        body: JSON.stringify({ 
-          userId: userId,
-          newPassword: newPassword.trim(),
-          confirmNewPassword: confirmPassword.trim(),
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (response.ok) {
-        showToast("비밀번호가 성공적으로 변경되었습니다.", { type: "success" });
-        setTimeout(() => {
-          // 로그인 페이지로 이동
-          onLogin();
-        }, 1000);
-      } else {
-        showToast(data.message || "비밀번호 재설정에 실패했습니다.", { type: "error" });
-      }
-    } catch (error) {
-      console.error("비밀번호 재설정 오류:", error);
-      showToast("오류가 발생했습니다. 다시 시도해주세요.", { type: "error" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    /**
+     * 폼 제출 핸들러
+     *
+     * @param {React.FormEvent} e - 폼 제출 이벤트
+     */
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // 비밀번호 재설정 처리
+        handlePasswordReset();
+    };
 
-  /**
-   * 폼 제출 핸들러
-   *
-   * @param {React.FormEvent} e - 폼 제출 이벤트
-   */
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 비밀번호 재설정 처리
-    handlePasswordReset();
-  };
+    // JSX 렌더링
+    return (
+        <PageContainer showBreadcrumb={false} centerContent={true}>
+            <div className="authWrapper">
+                <div className="authContainer">
+                    {/* 로그인으로 돌아가기 버튼 */}
+                    <p onClick={onLogin} className="backToLogin">
+                        <FiChevronLeft />
+                        로그인으로 돌아가기
+                    </p>
 
-  // JSX 렌더링
-  return (
-    <PageContainer showBreadcrumb={false} centerContent={true}>
-      <div className="authWrapper">
-        <div className="authContainer">
+                    {/* 단계 표시 아이콘 */}
+                    <div className="progressContainer">
+                        {/* 1단계 완료 아이콘 */}
+                        <div className="progressCompleted">
+                            <FiCheck />
+                        </div>
 
-          {/* 로그인으로 돌아가기 버튼 */}
-          <p onClick={onLogin} className="backToLogin">
-            <FiChevronLeft />
-            로그인으로 돌아가기
-          </p>
+                        {/* 연결선 */}
+                        <div className="progressConnector"></div>
 
-          {/* 단계 표시 아이콘 */}
-          <div className="progressContainer">
-            {/* 1단계 완료 아이콘 */}
-            <div className="progressCompleted">
-              <FiCheck />
+                        {/* 2단계 완료 아이콘 */}
+                        <div className="progressCompleted">
+                            <FiCheck />
+                        </div>
+                    </div>
+
+                    {/* 페이지 제목 */}
+                    <h1 className="authTitle">새 비밀번호 설정</h1>
+
+                    {/* 설명 텍스트 */}
+                    <p className="authDescription">
+                        새로운 비밀번호를 입력해주세요.
+                    </p>
+
+                    <form onSubmit={handleSubmit}>
+                        {/* 새 비밀번호 입력 필드 */}
+                        <div className="authFormRow">
+                            <div className="passwordWrapper">
+                                <input
+                                    type={showNewPassword ? "text" : "password"}
+                                    value={newPassword}
+                                    onChange={(e) =>
+                                        setNewPassword(e.target.value)
+                                    }
+                                    placeholder="새 비밀번호"
+                                    className="authInput"
+                                    disabled={isLoading}
+                                />
+                                <span
+                                    className="passwordIcon"
+                                    onClick={() =>
+                                        setShowNewPassword((prev) => !prev)
+                                    }
+                                >
+                                    {showNewPassword ? <FiEyeOff /> : <FiEye />}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* 새 비밀번호 확인 입력 필드 */}
+                        <div className="authFormRow">
+                            <div className="passwordWrapper">
+                                <input
+                                    type={
+                                        showConfirmPassword
+                                            ? "text"
+                                            : "password"
+                                    }
+                                    value={confirmPassword}
+                                    onChange={(e) =>
+                                        setConfirmPassword(e.target.value)
+                                    }
+                                    placeholder="새 비밀번호 확인"
+                                    className="authInput"
+                                    disabled={isLoading}
+                                />
+                                <span
+                                    className="passwordIcon"
+                                    onClick={() =>
+                                        setShowConfirmPassword((prev) => !prev)
+                                    }
+                                >
+                                    {showConfirmPassword ? (
+                                        <FiEyeOff />
+                                    ) : (
+                                        <FiEye />
+                                    )}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* 비밀번호 안내 텍스트 */}
+                        <p
+                            style={{
+                                fontSize: "12px",
+                                color: "#666",
+                                marginBottom: "20px",
+                                lineHeight: "1.4",
+                                textAlign: "center",
+                            }}
+                        >
+                            비밀번호는 최소 6자 이상으로 설정해주세요.
+                        </p>
+
+                        {/* 비밀번호 재설정 완료 버튼 */}
+                        <button
+                            type="submit"
+                            className="authButton"
+                            disabled={
+                                isLoading || !newPassword || !confirmPassword
+                            }
+                        >
+                            {isLoading
+                                ? "재설정 중..."
+                                : "비밀번호 재설정 완료"}
+                        </button>
+                    </form>
+
+                    {/* 토스트 메시지 컴포넌트 */}
+
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        isVisible={toast.isVisible}
+                    />
+                </div>
             </div>
-
-            {/* 연결선 */}
-            <div className="progressConnector"></div>
-
-            {/* 2단계 완료 아이콘 */}
-            <div className="progressCompleted">
-              <FiCheck />
-            </div>
-          </div>
-
-          {/* 페이지 제목 */}
-          <h1 className="authTitle">새 비밀번호 설정</h1>
-
-          {/* 설명 텍스트 */}
-          <p className="authDescription">새로운 비밀번호를 입력해주세요.</p>
-
-          <form onSubmit={handleSubmit}>
-            {/* 새 비밀번호 입력 필드 */}
-            <div className="authFormRow">
-              <div className="passwordWrapper">
-                <input
-                  type={showNewPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="새 비밀번호"
-                  className="authInput"
-                  disabled={isLoading}
-                />
-                <span
-                  className="passwordIcon"
-                  onClick={() => setShowNewPassword((prev) => !prev)}
-                >
-                  {showNewPassword ? <FiEyeOff /> : <FiEye />}
-                </span>
-              </div>
-            </div>
-
-            {/* 새 비밀번호 확인 입력 필드 */}
-            <div className="authFormRow">
-              <div className="passwordWrapper">
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="새 비밀번호 확인"
-                  className="authInput"
-                  disabled={isLoading}
-                />
-                <span
-                  className="passwordIcon"
-                  onClick={() => setShowConfirmPassword((prev) => !prev)}
-                >
-                  {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
-                </span>
-              </div>
-            </div>
-
-            {/* 비밀번호 안내 텍스트 */}
-            <p
-              style={{
-                fontSize: "12px",
-                color: "#666",
-                marginBottom: "20px",
-                lineHeight: "1.4",
-                textAlign: "center",
-              }}
-            >
-              비밀번호는 최소 6자 이상으로 설정해주세요.
-            </p>
-
-            {/* 비밀번호 재설정 완료 버튼 */}
-            <button
-              type="submit"
-              className="authButton"
-              disabled={isLoading || !newPassword || !confirmPassword}
-            >
-              {isLoading ? "재설정 중..." : "비밀번호 재설정 완료"}
-            </button>
-          </form>
-
-          {/* 토스트 메시지 컴포넌트 */}
-
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            isVisible={toast.isVisible}
-          />
-        </div>
-      </div>
-    </PageContainer>
-  );
+        </PageContainer>
+    );
 };
 
 export default PG300011;

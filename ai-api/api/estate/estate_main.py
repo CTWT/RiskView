@@ -22,7 +22,7 @@ if __package__ is None or __package__ == '':
     from api.estate.components.remove_address_details import clean_address
     from api.estate.components.building_ledger import get_building_info_from_ledger
     from api.estate.Estate import runEstate
-    from api.estate.components.zScore import calculate_contract_price, compute_zScores, classify_zScore, calculate_userZScore
+    from api.estate.components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
     from api.estate.components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
     from api.estate.components.calc_distance import haversine_distance
     from api.ocr.data.LeaseContract import LeaseContract
@@ -33,7 +33,7 @@ else:
     from .components.remove_address_details import clean_address
     from .components.building_ledger import get_building_info_from_ledger
     from .Estate import runEstate
-    from .components.zScore import calculate_contract_price, compute_zScores, classify_zScore, calculate_userZScore
+    from .components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
     from .components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
     from .components.calc_distance import haversine_distance
     from api.ocr.data.LeaseContract import LeaseContract
@@ -177,7 +177,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # LeaseContract 객체에서 정보 추출
     address = contract_data.location
     userContractPrice = contract_data.deposit + (contract_data.rentAmount * 100) # 환산전세가 계산
-    user_bldg_usg = contract_data.buildingStructureUse
+    user_bldg_usg = normalize_building_usage(contract_data.buildingStructureUse)
 
     print("입력한 주소: ", address)
     print(f"입력한 계약 정보: 계약금액 {userContractPrice}, 건물용도 {user_bldg_usg}")
@@ -309,87 +309,87 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # 500m 이내 초중고 학교 목록 가져오기
     # - 500m 이내 학교가 있으면: +2
     # ============================================
-    school_count=0
-    min_school_dist = float('inf') # 가장 가까운 학교의 거리를 저장할 변수
-    school_location_points = 0 # 학교 위치 점수
-    schools = get_school_data(pageNm=1, numOfRows=60000)
-    if schools:
-        max_additional_points += 2 # 학교 점수 최대 2점
-        print(f"☑️ 중간 최대 점수 (학교 추가): {max_additional_points}")
-        for school in schools:
-            lat = school['lat']
-            lon = school['lon']
-            name = school['name']
+    # school_count=0
+    # min_school_dist = float('inf') # 가장 가까운 학교의 거리를 저장할 변수
+    # school_location_points = 0 # 학교 위치 점수
+    # schools = get_school_data(pageNm=1, numOfRows=60000)
+    # if schools:
+    #     max_additional_points += 2 # 학교 점수 최대 2점
+    #     print(f"☑️ 중간 최대 점수 (학교 추가): {max_additional_points}")
+    #     for school in schools:
+    #         lat = school['lat']
+    #         lon = school['lon']
+    #         name = school['name']
 
-            # 위도, 경도 유효성 체크
-            if lat is None or lon is None:
-                print(f"{name}의 좌표 정보가 없습니다.")
-                continue
+    #         # 위도, 경도 유효성 체크
+    #         if lat is None or lon is None:
+    #             print(f"{name}의 좌표 정보가 없습니다.")
+    #             continue
 
-            # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-            dist = haversine_distance(x, y, lat, lon)
+    #         # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
+    #         dist = haversine_distance(x, y, lat, lon)
 
-            if dist <= 500:  # 500m 이내
-                print(f"{name}까지 거리: {dist:.2f}m")
-                school_count += 1
-                if dist < min_school_dist:
-                    min_school_dist = dist
-        print(f"500m 이내 초중고 개수: {school_count}개")
+    #         if dist <= 500:  # 500m 이내
+    #             print(f"{name}까지 거리: {dist:.2f}m")
+    #             school_count += 1
+    #             if dist < min_school_dist:
+    #                 min_school_dist = dist
+    #     print(f"500m 이내 초중고 개수: {school_count}개")
 
-        if min_school_dist <= 500:
-            school_location_points += 2
-        print(f"✅ 학교 위치 점수: {school_location_points}\n")
-        additional_points += school_location_points
-    else:
-        print("❌ 학교 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+    #     if min_school_dist <= 500:
+    #         school_location_points += 2
+    #     print(f"✅ 학교 위치 점수: {school_location_points}\n")
+    #     additional_points += school_location_points
+    # else:
+    #     print("❌ 학교 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
 
-    # ============================================
-    # 1km 이내 병원 목록 가져오기
-    # - 최대점: +2.5
-    # - 종합병원이나 지역응급의료센터는 +1.5
-    # - 일반 병원의 경우 10개마다 +0.2씩 추가(소수점 둘째 자리 버림)
-    # - 일반 병원 개수로 얻을 수 있는 최대점은 +1(병원 50개까지만)
-    # ============================================
-    # 공백 기준으로 단어 분리
-    words = address.split()
-    # 첫 번째와 두 번째 단어를 변수에 저장
-    sido = words[0]
-    sigungu = words[1]
-    hospital_count=0
-    normal_hospital_count=0
-    hospitals = get_hospital_data(Q0=sido, Q1=sigungu, numOfRows=60000) # 시군구별 필터링하여 API 호출
-    if hospitals:
-        max_additional_points += 2.5 # 병원 점수 최대 2.5점
-        print(f"☑️ 중간 최대 점수 (병원 추가): {max_additional_points}")
-        for hospital in hospitals:
-            lat = hospital['lat']
-            lon = hospital['lon']
-            name = hospital['name']
+    # # ============================================
+    # # 1km 이내 병원 목록 가져오기
+    # # - 최대점: +2.5
+    # # - 종합병원이나 지역응급의료센터는 +1.5
+    # # - 일반 병원의 경우 10개마다 +0.2씩 추가(소수점 둘째 자리 버림)
+    # # - 일반 병원 개수로 얻을 수 있는 최대점은 +1(병원 50개까지만)
+    # # ============================================
+    # # 공백 기준으로 단어 분리
+    # words = address.split()
+    # # 첫 번째와 두 번째 단어를 변수에 저장
+    # sido = words[0]
+    # sigungu = words[1]
+    # hospital_count=0
+    # normal_hospital_count=0
+    # hospitals = get_hospital_data(Q0=sido, Q1=sigungu, numOfRows=60000) # 시군구별 필터링하여 API 호출
+    # if hospitals:
+    #     max_additional_points += 2.5 # 병원 점수 최대 2.5점
+    #     print(f"☑️ 중간 최대 점수 (병원 추가): {max_additional_points}")
+    #     for hospital in hospitals:
+    #         lat = hospital['lat']
+    #         lon = hospital['lon']
+    #         name = hospital['name']
 
-            # 위도, 경도 유효성 체크
-            if lat is None or lon is None:
-                print(f"{name}의 좌표 정보가 없습니다.")
-                continue
+    #         # 위도, 경도 유효성 체크
+    #         if lat is None or lon is None:
+    #             print(f"{name}의 좌표 정보가 없습니다.")
+    #             continue
 
-            # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-            dist = haversine_distance(x, y, lat, lon)
+    #         # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
+    #         dist = haversine_distance(x, y, lat, lon)
 
-            if dist <= 1000:  # 1km 이내
-                if hospital['dutyDivNam'] == "종합병원" or hospital['dutyEmclsName'] == "지역응급의료센터":
-                    print(f"종합병원이나 지역응급의료센터 {name}까지 거리: {dist:.2f}m")
-                    additional_points += 1.5 # 종합병원이나 지역응급의료센터는 1.5점
-                    hospital_count += 1
-                else:
-                    print(f"일반 병원 {name}까지 거리: {dist:.2f}m")
-                    normal_hospital_count += 1
-                    hospital_count += 1
+    #         if dist <= 1000:  # 1km 이내
+    #             if hospital['dutyDivNam'] == "종합병원" or hospital['dutyEmclsName'] == "지역응급의료센터":
+    #                 print(f"종합병원이나 지역응급의료센터 {name}까지 거리: {dist:.2f}m")
+    #                 additional_points += 1.5 # 종합병원이나 지역응급의료센터는 1.5점
+    #                 hospital_count += 1
+    #             else:
+    #                 print(f"일반 병원 {name}까지 거리: {dist:.2f}m")
+    #                 normal_hospital_count += 1
+    #                 hospital_count += 1
 
-        hospital_location_points = math.floor(normal_hospital_count * 0.02 * 10) / 10 # 일반 병원의 경우 10개마다 0.2점씩 추가(소수점 둘째 자리 버림)
-        print(f"1km 이내 병원 개수: {hospital_count}개")
-        print(f"✅ 병원 위치 점수: {hospital_location_points}\n")
-        additional_points += hospital_location_points
-    else:
-        print("❌ 병원 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+    #     hospital_location_points = math.floor(normal_hospital_count * 0.02 * 10) / 10 # 일반 병원의 경우 10개마다 0.2점씩 추가(소수점 둘째 자리 버림)
+    #     print(f"1km 이내 병원 개수: {hospital_count}개")
+    #     print(f"✅ 병원 위치 점수: {hospital_location_points}\n")
+    #     additional_points += hospital_location_points
+    # else:
+    #     print("❌ 병원 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
 
     # ============================================
     # 1km 이내 대형 쇼핑시설 목록 가져오기 (2번에 나누어서)
@@ -585,31 +585,35 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     prices = [r["contract_price"] for r in valid_rows]
 
     # Z-score 계산
-    zScores = compute_zScores(prices)
+    z_scores = compute_z_scores(prices)
 
     # 분류 라벨링
     for i, row in enumerate(valid_rows):
-        row["zScore"] = round(zScores[i], 2)
-        row["label"] = classify_zScore(zScores[i])
+        row["z_score"] = round(z_scores[i], 2)
+        row["label"] = classify_z_score(z_scores[i])
 
     # # 주변 실거래가 분석 결과 출력
     # print(f"\n--- [{sigungu}] 실거래가 이상치 분석 결과 ---")
     # for row in valid_rows:
-    #     print(f"{row['stdg_nm']} | 계약가: {row['contract_price']} | Z: {row['zScore']} | {row['label']}")
+    #     print(f"{row['stdg_nm']} | 계약가: {row['contract_price']} | Z: {row['z_score']} | {row['label']}")
 
     # 사용자 입력 계약금액의 Z-score 계산 및 결과 출력
     print("\n--- 입력 주소 분석 결과 ---")
-    userZScore = calculate_userZScore(userContractPrice, prices)
+
+    #단위맞춤(만)
+    userContractPrice /= 10000
+
+    user_z_score = calculate_user_z_score(userContractPrice, prices)
     userLabel = "계산 불가"
     price_stability_score = 0 # 시세 안정성 점수 (80점 만점)
 
-    if userZScore is not None:
-        userLabel = classify_zScore(userZScore)
-        print(f"입력하신 계약금액({userContractPrice})의 Z-score는 {userZScore:.2f}이며, '{userLabel}' 수준입니다.")
+    if user_z_score is not None:
+        userLabel = classify_z_score(user_z_score)
+        print(f"입력하신 계약금액({userContractPrice})의 Z-score는 {user_z_score:.2f}이며, '{userLabel}' 수준입니다.")
         
         # Z-score를 80점 만점의 '시세 안정성 점수'로 변환 (비선형)
         # 0~0.5: 안전(70~80), 0.5~1.0: 양호(50~70), 1.0~1.5: 주의(30~50), 1.5~2.0: 경계(10~30), 2.0~: 위험(0~10)
-        z = abs(userZScore)
+        z = abs(user_z_score)
         if z < 0.5:
             # 0.5일 때 70점, 0일 때 80점
             price_stability_score = int(80 - 20 * z)
@@ -679,7 +683,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
         },
         "surroundingTransactions": valid_rows,
         "userZScoreAnalysis": {
-            "zScore": round(userZScore, 2) if userZScore is not None else None,
+            "zScore": round(user_z_score, 2) if user_z_score is not None else None,
             "label": userLabel
         }
     }

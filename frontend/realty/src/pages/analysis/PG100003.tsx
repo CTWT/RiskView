@@ -6,7 +6,6 @@ import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
 import contractFieldLabels from "../../contracts/contractFieldLabels";
 import { useKakaoMap } from "../../hooks/useKakaoMap";
-import axios from "axios";
 
 import type {
     DocumentsDTO,
@@ -36,7 +35,7 @@ interface PG100003Props {
     scannedFile: string; // 업로드된 파일명
     ocrData: OcrDataType; // OCR 분석 결과 데이터
     uploadedFilePreview: string | null; // 파일 미리보기 이미지 URL
-    onAnalysisComplete?: (result: string) => void; // 분석 완료 콜백
+    onAnalysisComplete?: (result: OcrDataType) => void; // 분석 완료 콜백
     onBackToPreviousPhase?: () => void; // 이전 단계로 돌아가는 콜백
 }
 
@@ -178,35 +177,8 @@ const PG100003: React.FC<PG100003Props> = ({
      */
     const handleProcessResult = async () => {
         try {
-            const {
-                documentsDTO,
-                fileStorageMetadataDTO,
-                structuredContractDataDTO,
-            } = currentOcrData;
-
-            const payload = {
-                documentsDTO,
-                fileStorageMetadataDTO,
-                structuredContractDataDTO,
-            };
-
-            // 서버 POST 요청
-            const response = await axios.post(
-                "http://localhost:8080/contracts",
-                payload,
-                {
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    withCredentials: true,
-                }
-            );
-
-            console.log("전송 성공", response.data);
-            alert("계약 정보가 정상적으로 전송되었습니다.");
-
             if (onAnalysisComplete) {
-                 onAnalysisComplete(response.data); // documentCode 전달
+                 onAnalysisComplete(currentOcrData); // ocr 데이터 전달
             }
 
         } catch (error) {
@@ -244,102 +216,110 @@ const PG100003: React.FC<PG100003Props> = ({
             )}
         </div>
 
-        <div className="an03-pane an03-ocr-text-pane">                    
+        <div className="an03-pane an03-ocr-text-pane">
             <h3 className="an03-pane-title">OCR 분석 결과</h3>
             <div className="an03-structured-data-form">
                 {Object.entries(contractFieldLabels).map(([fieldKey, label]) => {
-                const value =
-                    currentOcrData.structuredContractDataDTO?.[
-                    fieldKey as keyof StructuredContractDataDTO
-                    ];
+                    const value =
+                        currentOcrData.structuredContractDataDTO?.[
+                        fieldKey as keyof StructuredContractDataDTO
+                        ];
 
-                // 특정 필드만 select 처리
-                if (fieldKey === "leaseType") {
-                    return (
-                    <div key={fieldKey} className="an03-form-field">
-                        <label>{label}</label>
-                        <select
-                        value={value || ""}
-                        onChange={(e) =>
-                            setCurrentOcrData((prev) => ({
-                            ...prev,
-                            structuredContractDataDTO: {
-                                ...prev.structuredContractDataDTO,
-                                [fieldKey]: e.target.value,
-                            },
-                            }))
-                        }
-                        >
-                        <option value="">선택</option>
-                        <option value="JEONSE">전세</option>
-                        <option value="MONTHLY">월세</option>
-                        </select>
-                    </div>
-                    );
-                }else if (fieldKey === "downPaymentSigned") {
-                    return (
-                    <div key={fieldKey} className="an03-form-field">
-                        <label>{label}</label>
-                        <select
-                        value={value || false}
-                        onChange={(e) =>
-                            setCurrentOcrData((prev) => ({
-                            ...prev,
-                            structuredContractDataDTO: {
-                                ...prev.structuredContractDataDTO,
-                                [fieldKey]: e.target.value,
-                            },
-                            }))
-                        }
-                        >
-                        <option value={true}>예</option>
-                        <option value={false}>아니오</option>
-                        </select>
-                    </div>
-                    );
-                } 
-                else if (dateFields.includes(fieldKey)) {
+                    if (fieldKey === "leaseType") {
                         return (
-                        <div key={fieldKey} className="an03-form-field">
-                            <label htmlFor={fieldKey}>{label}</label>
-                            <input
-                            id={fieldKey}
-                            type="date" // 👈 date picker로 하면 더 직관적
-                            value={
-                                value ? new Date(value).toISOString().split("T")[0] : ""
-                            }
-                            onChange={(e) =>
-                                handleDataChange(
-                                fieldKey as keyof StructuredContractDataDTO,
-                                e.target.value
-                                )
-                            }
-                            />
-                        </div>
+                            <div key={fieldKey} className="an03-form-field">
+                                <label>{label}</label>
+                                <select
+                                    value={value as string}
+                                    onChange={(e) =>
+                                        setCurrentOcrData((prev) => {
+                                            const prevStructuredData =
+                                                prev.structuredContractDataDTO || {} as StructuredContractDataDTO;
+                                            return {
+                                                ...prev,
+                                                structuredContractDataDTO: {
+                                                    ...prevStructuredData,
+                                                    [fieldKey]: e.target.value,
+                                                },
+                                            };
+                                        })
+                                    }
+                                >
+                                    <option value="">선택</option>
+                                    <option value="JEONSE">전세</option>
+                                    <option value="MONTHLY">월세</option>
+                                </select>
+                            </div>
+                        );
+                    } else if (fieldKey === "downPaymentSigned") {
+                        return (
+                            <div key={fieldKey} className="an03-form-field">
+                                <label>{label}</label>
+                                <select
+                                    value={value ? "true" : "false"}
+                                    onChange={(e) =>
+                                        setCurrentOcrData((prev) => {
+                                            const prevStructuredData =
+                                                prev.structuredContractDataDTO || {} as StructuredContractDataDTO;
+                                            return {
+                                                ...prev,
+                                                structuredContractDataDTO: {
+                                                    ...prevStructuredData,
+                                                    [fieldKey]: e.target.value === "true", // string을 boolean으로 변환
+                                                },
+                                            };
+                                        })
+                                    }
+                                >
+                                    <option value="true">예</option>
+                                    <option value="false">아니오</option>
+                                </select>
+                            </div>
+                        );
+                    } else if (dateFields.includes(fieldKey)) { // 👈 이 부분을 추가하여 dateFields 배열 사용
+                        // value가 string인지, 아니면 Date 객체인지 확인하고 포맷팅합니다.
+                        const formattedDate = value && typeof value === 'string'
+                            ? value.split('T')[0]
+                            : '';
+
+                        return (
+                            <div key={fieldKey} className="an03-form-field">
+                                <label htmlFor={fieldKey}>{label}</label>
+                                <input
+                                    id={fieldKey}
+                                    type="date" // 👈 input 타입을 date로 변경
+                                    value={formattedDate}
+                                    onChange={(e) =>
+                                        handleDataChange(
+                                            fieldKey as keyof StructuredContractDataDTO,
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
+                        );
+                    } else {
+                        // 나머지 필드 input 처리
+                        return (
+                            <div key={fieldKey} className="an03-form-field">
+                                <label htmlFor={fieldKey}>{label}</label>
+                                <input
+                                    id={fieldKey}
+                                    type="text"
+                                    value={value != null ? value.toString() : ""}
+                                    onChange={(e) =>
+                                        handleDataChange(
+                                            fieldKey as keyof StructuredContractDataDTO,
+                                            e.target.value
+                                        )
+                                    }
+                                />
+                            </div>
                         );
                     }
-                    else {
-                    // 나머지 필드 input 처리
-                    return (
-                    <div key={fieldKey} className="an03-form-field">
-                        <label htmlFor={fieldKey}>{label}</label>
-                        <input
-                        id={fieldKey}
-                        type="text"
-                        value={value != null ? value.toString() : ""}
-                        onChange={(e) =>
-                            handleDataChange(
-                            fieldKey as keyof StructuredContractDataDTO,
-                            e.target.value
-                            )
-                        }
-                        />
-                    </div>
-                    );
-                }
                 })}
             </div>
-            </div>
+        </div>
         </div>
 
         {/* Kakao 지도 섹션 */}
@@ -365,22 +345,23 @@ const PG100003: React.FC<PG100003Props> = ({
             </div>
             )}
         </div>
-        </div>
 
+        
+        </div>
         {/* 하단 버튼 */}
         <div className="an03-actions">
-        <button
-            className="an02-ai-analyze-start-btn"
-            onClick={handleBackToUpload}
-        >
-            다시 업로드하기
-        </button>
-        <button
-            className="an02-ai-analyze-start-btn"
-            onClick={handleProcessResult}
-        >
-            다음 단계로 진행
-        </button>
+            <button
+                className="an02-ai-analyze-start-btn"
+                onClick={handleBackToUpload}
+            >
+                다시 업로드하기
+            </button>
+            <button
+                className="an02-ai-analyze-start-btn"
+                onClick={handleProcessResult}
+            >
+                다음 단계로 진행
+            </button>
         </div>
     </div>
     );

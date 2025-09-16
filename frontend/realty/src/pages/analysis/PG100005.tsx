@@ -273,9 +273,9 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   <li key={idx}>
                     <span>{label}</span>
                     <em>
-                      {value === true || value === "true"
+                      { value === "true"
                         ? "예"
-                        : value === false || value === "false"
+                        : value === "false"
                         ? "아니오"
                         : value}
                     </em>

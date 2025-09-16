@@ -20,7 +20,8 @@ import lombok.RequiredArgsConstructor;
 import realty.apicommunication.FileComponent;
 import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
-import realty.domain.dto.AnalysisResultDTO;
+import realty.domain.dto.AiRiskAnalysisRequest;
+import realty.domain.dto.AnomalyDetectResult;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.MapInfo;
 import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
@@ -74,9 +75,9 @@ public class ContractController {
 
         formatAddress(contractInfo.getStructuredContractDataDTO());
 
-        // log.info("위험 분석을 실행합니다.");
-        // AnalysisResultDTO analysisResultDTO = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
-        // log.info("위험 분석 결과 : {}", analysisResultDTO.toString());
+        log.info("위험 분석을 실행합니다.");
+        AnomalyDetectResult analysisResultDTO = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
+        log.info("위험 분석 결과 : {}", analysisResultDTO.toString());
 
         String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity
@@ -119,6 +120,36 @@ public class ContractController {
                 .mapInfo(mapinfo)
                 .build();
         return ResponseEntity.ok(contractResponse);
+    }
+
+     /**
+     * 이상치 분석
+     */
+    @PostMapping("/contracts/anomalyDetect")
+    public ResponseEntity<AnomalyDetectResult> anomalyDetect(@RequestBody ContractDTO.ContractInfo contractInfo) {
+        log.info("이상치 분석을 실행합니다.");
+        AnomalyDetectResult analysisResult = ocrComponent.analyzeContractRisks(contractInfo.getStructuredContractDataDTO());
+        log.info("이상치 분석 결과 : {}", analysisResult.toString());
+
+        
+
+        return ResponseEntity
+                .ok()
+                .body(analysisResult);
+    }
+
+     /**
+     * AI 위험 분석
+     */
+    @PostMapping("/contracts/aiRiskAnalysis")
+    public ResponseEntity<String> analyze(
+            @RequestBody AiRiskAnalysisRequest request) {
+
+        log.info("AI 리스크 분석 요청: {}", request);
+
+        // TODO 분석 로직 실행
+
+        return ResponseEntity.ok("AI 위험분석 완료");
     }
 
     /**

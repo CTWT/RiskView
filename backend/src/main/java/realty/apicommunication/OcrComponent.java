@@ -14,8 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
-import realty.controller.BoardController;
-import realty.domain.dto.AnalysisResultDTO;
+import realty.domain.dto.AnomalyDetectResult;
 import realty.domain.dto.ContractDTO;
 /*
  * 수업명 : 가비아 2회차
@@ -86,15 +85,15 @@ public class OcrComponent {
      * @param structuredContractDataDTO 계약서 정보
      * @return
      */
-    public AnalysisResultDTO analyzeContractRisks(ContractDTO.StructuredContractDataDTO structuredContractDataDTO){
+    public AnomalyDetectResult analyzeContractRisks(ContractDTO.StructuredContractDataDTO structuredContractDataDTO){
 
         triggerFastApiAnalysis();
 
         // post
-        ResponseEntity<AnalysisResultDTO> response = restTemplate.postForEntity(
+        ResponseEntity<AnomalyDetectResult> response = restTemplate.postForEntity(
                 "http://localhost:8000/analyze_estate",
                 structuredContractDataDTO,
-                AnalysisResultDTO.class);
+                AnomalyDetectResult.class);
 
         return response.getBody();
     }

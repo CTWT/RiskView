@@ -36,6 +36,7 @@ const PG100001: React.FC = () => {
     } | null>(null);
 
     const [documentCode, setDocumentCode] = useState<string | null>(null);
+    const [ocrData, setOcrData] = useState<OcrDataType | null>(null);
 
     // 단계 변경 함수 (하위 컴포넌트에서 호출하여 상위 상태를 변경)
     const handleNextPhase = (nextPhase: number) => {
@@ -76,8 +77,8 @@ const PG100001: React.FC = () => {
                             analysisOutputData.uploadedFilePreview
                         }
                         // PG100003에서 다음 단계(PG100004)로 넘어가고 싶을 때 호출할 함수
-                        onAnalysisComplete={(code) => {
-                            setDocumentCode(code); // documentCode 저장
+                        onAnalysisComplete={(ocrData : OcrDataType) => {
+                            setOcrData(ocrData);
                             handleNextPhase(2); // 분석 완료 (PG100004) 단계로 전환
                         }}
                         onBackToPreviousPhase={handleBackToPhase0}
@@ -85,8 +86,13 @@ const PG100001: React.FC = () => {
                 )}
 
             {analysisPhase === 2 && ( // ⭐ AI 분석 중 (PG100004 렌더링) ⭐
-                <PG100004
-                    onAnalysisComplete={handleFinalAnalysisComplete} // ⭐ 분석 완료 시 콜백 연결 ⭐
+                <PG100004 
+                    ocrData = {ocrData}
+                    onAnalysisComplete={(documentCode : string | null) => {
+                        console.log("PG100001 got documentCode:", documentCode);
+                        setDocumentCode(documentCode);
+                        handleFinalAnalysisComplete();
+                    }} // ⭐ 분석 완료 시 콜백 연결 ⭐
                 />
             )}
 

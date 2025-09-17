@@ -4,9 +4,9 @@ from ..Estate import runEstate
 # ============================================
 #  수업명 : 가비아 2회차
 #  작성자 : 박윤성
-#  수정자 : 
+#  수정자 : 박윤성
 #  작성일 : 25.09.10
-#  수정일 : 
+#  수정일 : 25.09.17
 #  파일명 : z_score.py
 #  설명  : 이상치 분석 통계학적 계산
 # ============================================
@@ -71,6 +71,28 @@ def calculate_user_z_score(user_value, values):
         return 0.0 # 모든 데이터가 동일하면 Z-score는 0
 
     return (user_value - mean) / std_dev
+
+# ============================================
+# 사용자 입력값에 대한 편차율 계산 함수
+# ============================================
+def calculate_deviation_rate(user_value, values):
+    """
+    평균 대비 편차율을 계산합니다.
+    
+    @param user_value: 사용자 입력 값
+    @param values: 비교 대상 값 리스트
+    @return: 편차율 (float, %) 또는 None
+    """
+    n = len(values)
+    if n == 0:
+        return None
+
+    mean = sum(values) / n
+    if mean == 0:
+        return None
+
+    deviationPercent = abs(user_value - mean) / mean * 100
+    return deviationPercent
 
 # ============================================
 #  Z-score 값에 따른 이상치 분류

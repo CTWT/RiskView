@@ -22,9 +22,10 @@ if __package__ is None or __package__ == '':
     from api.estate.components.remove_address_details import clean_address
     from api.estate.components.building_ledger import get_building_info_from_ledger
     from api.estate.Estate import runEstate
-    from api.estate.components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
-    from api.estate.components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
+    from api.estate.components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score, calculate_deviation_rate
+    from api.estate.components.local_infra import get_park_data, get_hospital_data, get_places_nearby, get_facilities_data, get_subway_data, get_school_data
     from api.estate.components.calc_distance import haversine_distance
+    from api.estate.components.calc_distance import get_boundary_coordinates
     from api.ocr.data.LeaseContract import LeaseContract
 else:
     # Main.py 등 다른 모듈에서 임포트될 때 (상대 경로 임포트)
@@ -33,17 +34,18 @@ else:
     from .components.remove_address_details import clean_address
     from .components.building_ledger import get_building_info_from_ledger
     from .Estate import runEstate
-    from .components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score
-    from .components.local_infra import get_subway_data, get_park_data, get_school_data, get_hospital_data, get_large_shopping_data, get_facilities_data, get_cultural_space_data
+    from .components.z_score import calculate_contract_price, compute_z_scores, classify_z_score, calculate_user_z_score, calculate_deviation_rate
+    from .components.local_infra import get_park_data, get_hospital_data, get_places_nearby, get_facilities_data, get_subway_data, get_school_data
     from .components.calc_distance import haversine_distance
-    from api.ocr.data.LeaseContract import LeaseContract
+    from .components.calc_distance import get_boundary_coordinates
+    from ..ocr.data.LeaseContract import LeaseContract
 
 # ============================================
 #  수업명 : 가비아 2회차
 #  작성자 : 박윤성
 #  수정자 : 박윤성
 #  작성일 : 25.09.09
-#  수정일 : 25.09.15
+#  수정일 : 25.09.17
 #  파일명 : estate_main.py
 #  설명  : 이상치 분석 메인 파일
 # ============================================
@@ -172,7 +174,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     max_additional_points = 0 # 최대 가능 점수
 
     # ============================================
-    # OCR 결과(LeaseContract) 가져오기(지금은 목업데이터로 처리)
+    # OCR 결과(LeaseContract) 가져오기
     # ============================================
     # LeaseContract 객체에서 정보 추출
     address = contract_data.location
@@ -180,10 +182,8 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     user_bldg_usg = normalize_building_usage(contract_data.buildingStructureUse)
 
     print("입력한 주소: ", address)
-    print(f"입력한 계약 정보: 계약금액 {userContractPrice}, 건물용도 {user_bldg_usg}")
+    print(f"입력한 계약 정보: 계약금액 {userContractPrice}, 건물용도: {user_bldg_usg}")
 
-    address = clean_address(address) # 주소에서 지나친 상세 정보 제거
-    print("clean_address: ", address)
     result = extract_sigungudong(address) # 주소에서 시군구동을 추출
     if not result:
         return {"error": "주소 정보를 추출할 수 없습니다."}
@@ -208,57 +208,86 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     coords = address_to_coord(address)
     if not coords:
         return {"error": "주소를 좌표로 변환할 수 없습니다."}
-    y, x = coords
-    print(f"X좌표: {x}, Y좌표: {y}")
+    x, y = coords
+    print(f"경도: {x}, 위도: {y}")
 
     # ============================================
-    # 지하철역 목록 가져오기
-    # - 가장 가까운 역 기준으로 점수 계산
-    # - 400m 이내: +3
-    # - 800m 이내: +2
-    # - 1200m 이내: +1
+    # 역세권 점수 계산 (카카오 API)
+    # - 400m 이내: +3점
+    # - 800m 이내: +2점
+    # - 1200m 이내: +1점
     # ============================================
-    subway_station_count=0
-    min_dist = float('inf') # 가장 가까운 역의 거리를 저장할 변수
-    subway_location_points = 0 # 지하철역 위치 점수
-    stations = get_subway_data(start_index="1", end_index="1000")
+    min_dist_subway = float('inf')
+    nearest_subway_name = ""
+    subway_location_points = 0
+
+    # 카카오 API로 1.2km 이내의 지하철역 모두 가져오기
+    stations = get_subway_data(lon=x, lat=y, radius=1200) or []
     if stations:
-        max_additional_points += 3 # 지하철역 점수 최대 3점
+        max_additional_points += 3  # 지하철역 점수 최대 3점
         print(f"☑️ 중간 최대 점수 (지하철역 추가): {max_additional_points}")
+        
         for station in stations:
-            lat = station['lat']
-            lon = station['lon']
-            name = station['name']
+            dist = haversine_distance(x, y, station['lon'], station['lat'])
+            print(f"{station.get('name')}까지 거리: {dist:.2f}m")
+            if dist < min_dist_subway:
+                min_dist_subway = dist
+                nearest_subway_name = station.get('name')
 
-            # 위도, 경도 유효성 체크
-            if lat is None or lon is None:
-                print(f"역 {name}의 좌표 정보가 없습니다.")
-                continue
+        if nearest_subway_name:
+            print(f"가장 가까운 지하철역 '{nearest_subway_name}'까지 거리: {min_dist_subway:.2f}m")
 
-            # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-            dist = haversine_distance(x, y, lat, lon)
+        if min_dist_subway <= 400:
+            subway_location_points = 3
+        elif min_dist_subway <= 800:
+            subway_location_points = 2
+        elif min_dist_subway <= 1200:
+            subway_location_points = 1
 
-            # 1.2km 이내의 모든 역을 출력하고, 가장 가까운 거리를 찾음
-            if dist <= 1200:
-                print(f"{name}역까지 거리: {dist:.2f}m")
-                subway_station_count += 1
-                if dist < min_dist:
-                    min_dist = dist
-
-        print(f"1.2km 이내 역 개수: {subway_station_count}개")
-
-        # 가장 가까운 역의 거리를 기준으로 점수 부여
-        if min_dist <= 400:  # 400m 이내(5분 거리)
-            subway_location_points += 3
-        elif min_dist <= 800: # 800m 이내(10분 거리)
-            subway_location_points += 2
-        elif min_dist <= 1200: # 1200m 이내(15분 거리)
-            subway_location_points += 1
-
-        print("✅ 역세권 점수: ", subway_location_points, "\n")
+        print(f"✅ 역세권 점수: {subway_location_points}\n")
         additional_points += subway_location_points
     else:
-        print("❌ 지하철역 정보를 가져오지 못해 점수를 계산할 수 없습니다.")
+        print("❌ 1.2km 이내에 지하철역 정보가 없어 역세권 점수를 계산할 수 없습니다.\n")
+
+    # ============================================
+    # 학군 점수 계산 (카카오 API)
+    # - 500m 이내 학교가 1개라도 있으면: +2.5점
+    # ============================================
+    school_location_points = 0
+    # 카카오 API로 500m 이내 학교 정보 조회
+    schools = get_school_data(lon=x, lat=y, radius=500) or []
+
+    if schools:
+        max_additional_points += 2.5  # 학교 점수 최대 2.5점
+        print(f"☑️ 중간 최대 점수 (학교 추가): {max_additional_points}")
+
+        min_dist_school = float('inf')
+        nearest_school_name = ""
+
+        for school in schools:
+            dist = haversine_distance(x, y, school['lon'], school['lat'])
+            print(f"{school.get('name')}까지 거리: {dist:.2f}m")
+            if dist < min_dist_school:
+                min_dist_school = dist
+                nearest_school_name = school.get('name')
+
+        if min_dist_school <= 500:
+            print(f"가장 가까운 학교 '{nearest_school_name}'까지 거리: {min_dist_school:.2f}m")
+            school_location_points = 2.5
+
+        print(f"✅ 학군 점수: {school_location_points}\n")
+        additional_points += school_location_points
+    else:
+        print("❌ 500m 이내에 학교 정보가 없어 학군 점수를 계산할 수 없습니다.\n")
+
+    # ============================================
+    # 주변 시설 검색을 위한 경계 좌표 계산
+    # ============================================
+    boundary_400m = get_boundary_coordinates(x, y, 400) # lon, lat, distance_m
+    boundary_500m = get_boundary_coordinates(x, y, 500) # lon, lat, distance_m
+    boundary_800m = get_boundary_coordinates(x, y, 800) # lon, lat, distance_m
+    boundary_1000m = get_boundary_coordinates(x, y, 1000) # lon, lat, distance_m
+    boundary_1200m = get_boundary_coordinates(x, y, 1200) # lon, lat, distance_m
 
     # ============================================
     # 1km 이내 공원 목록 가져오기
@@ -269,7 +298,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     park_count=0
     min_park_dist = float('inf') # 가장 가까운 공원의 거리를 저장할 변수
     park_location_points = 0 # 공원 위치 점수
-    parks = get_park_data(start_index="1", end_index="1000")
+    parks = get_park_data(start_index="1", end_index="1000") or []
     if parks:
         max_additional_points += 1 # 공원 점수 최대 1점
         print(f"☑️ 중간 최대 점수 (공원 추가): {max_additional_points}")
@@ -283,8 +312,8 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
                 print(f"{name}의 좌표 정보가 없습니다.")
                 continue
 
-            # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-            dist = haversine_distance(x, y, lat, lon)
+            # 거리 계산 (address_to_coord의 x, y와 경도, 위도 비교)
+            dist = haversine_distance(x, y, lon, lat)
 
             if dist <= 1000: # 1km 이내
                 print(f"{name}까지 거리: {dist:.2f}m")
@@ -305,223 +334,211 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     else:
         print("❌ 공원 정보를 가져오지 못해 점수를 계산할 수 없습니다.")
 
-    # ============================================
-    # 500m 이내 초중고 학교 목록 가져오기
-    # - 500m 이내 학교가 있으면: +2
-    # ============================================
-    # school_count=0
-    # min_school_dist = float('inf') # 가장 가까운 학교의 거리를 저장할 변수
-    # school_location_points = 0 # 학교 위치 점수
-    # schools = get_school_data(pageNm=1, numOfRows=60000)
-    # if schools:
-    #     max_additional_points += 2 # 학교 점수 최대 2점
-    #     print(f"☑️ 중간 최대 점수 (학교 추가): {max_additional_points}")
-    #     for school in schools:
-    #         lat = school['lat']
-    #         lon = school['lon']
-    #         name = school['name']
 
-    #         # 위도, 경도 유효성 체크
-    #         if lat is None or lon is None:
-    #             print(f"{name}의 좌표 정보가 없습니다.")
-    #             continue
-
-    #         # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-    #         dist = haversine_distance(x, y, lat, lon)
-
-    #         if dist <= 500:  # 500m 이내
-    #             print(f"{name}까지 거리: {dist:.2f}m")
-    #             school_count += 1
-    #             if dist < min_school_dist:
-    #                 min_school_dist = dist
-    #     print(f"500m 이내 초중고 개수: {school_count}개")
-
-    #     if min_school_dist <= 500:
-    #         school_location_points += 2
-    #     print(f"✅ 학교 위치 점수: {school_location_points}\n")
-    #     additional_points += school_location_points
-    # else:
-    #     print("❌ 학교 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
-
-    # # ============================================
-    # # 1km 이내 병원 목록 가져오기
-    # # - 최대점: +2.5
-    # # - 종합병원이나 지역응급의료센터는 +1.5
-    # # - 일반 병원의 경우 10개마다 +0.2씩 추가(소수점 둘째 자리 버림)
-    # # - 일반 병원 개수로 얻을 수 있는 최대점은 +1(병원 50개까지만)
-    # # ============================================
-    # # 공백 기준으로 단어 분리
-    # words = address.split()
-    # # 첫 번째와 두 번째 단어를 변수에 저장
-    # sido = words[0]
-    # sigungu = words[1]
-    # hospital_count=0
-    # normal_hospital_count=0
-    # hospitals = get_hospital_data(Q0=sido, Q1=sigungu, numOfRows=60000) # 시군구별 필터링하여 API 호출
-    # if hospitals:
-    #     max_additional_points += 2.5 # 병원 점수 최대 2.5점
-    #     print(f"☑️ 중간 최대 점수 (병원 추가): {max_additional_points}")
-    #     for hospital in hospitals:
-    #         lat = hospital['lat']
-    #         lon = hospital['lon']
-    #         name = hospital['name']
-
-    #         # 위도, 경도 유효성 체크
-    #         if lat is None or lon is None:
-    #             print(f"{name}의 좌표 정보가 없습니다.")
-    #             continue
-
-    #         # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-    #         dist = haversine_distance(x, y, lat, lon)
-
-    #         if dist <= 1000:  # 1km 이내
-    #             if hospital['dutyDivNam'] == "종합병원" or hospital['dutyEmclsName'] == "지역응급의료센터":
-    #                 print(f"종합병원이나 지역응급의료센터 {name}까지 거리: {dist:.2f}m")
-    #                 additional_points += 1.5 # 종합병원이나 지역응급의료센터는 1.5점
-    #                 hospital_count += 1
-    #             else:
-    #                 print(f"일반 병원 {name}까지 거리: {dist:.2f}m")
-    #                 normal_hospital_count += 1
-    #                 hospital_count += 1
-
-    #     hospital_location_points = math.floor(normal_hospital_count * 0.02 * 10) / 10 # 일반 병원의 경우 10개마다 0.2점씩 추가(소수점 둘째 자리 버림)
-    #     print(f"1km 이내 병원 개수: {hospital_count}개")
-    #     print(f"✅ 병원 위치 점수: {hospital_location_points}\n")
-    #     additional_points += hospital_location_points
-    # else:
-    #     print("❌ 병원 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
 
     # ============================================
-    # 1km 이내 대형 쇼핑시설 목록 가져오기 (2번에 나누어서)
-    # - 1km 이내 대형 쇼핑시설이 있으면: +2
+    # 1km 이내 병원 목록 가져오기
+    # - 최대점: +2.5
+    # - 종합병원이나 지역응급의료센터는 +1.5
+    # - 일반 병원의 경우 10개당 +0.2점
     # ============================================
-    shop_count=0
-    min_shop_dist = float('inf') # 가장 가까운 쇼핑시설의 거리를 저장할 변수
-    shopping_location_points = 0 # 쇼핑시설 위치 점수
-    shops = get_large_shopping_data(start_index=1, end_index=1000)
-    shops2 = get_large_shopping_data(start_index=1001, end_index=1200)
-    if shops or shops2:
-        max_additional_points += 2 # 쇼핑시설 점수 최대 2점
-        print(f"☑️ 중간 최대 점수 (쇼핑시설 추가): {max_additional_points}")
-        if shops:
-            for shop in shops:
-                lat = shop['lat']
-                lon = shop['lon']
-                name = shop['name']
-
-                # 위도, 경도 유효성 체크
-                if lat is None or lon is None:
-                    print(f"{name}의 좌표 정보가 없습니다.")
-                    continue
-
-                # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-                dist = haversine_distance(x, y, lat, lon)
-
-                if dist <= 1000:  # 1km 이내
-                    print(f"{name}까지 거리: {dist:.2f}m")
-                    shop_count += 1
-                    if dist < min_shop_dist:
-                        min_shop_dist = dist
-        if shops2:
-            for shop in shops2:
-                lat = shop['lat']
-                lon = shop['lon']
-                name = shop['name']
-
-                # 위도, 경도 유효성 체크
-                if lat is None or lon is None:
-                    print(f"{name}의 좌표 정보가 없습니다.")
-                    continue
-
-                # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-                dist = haversine_distance(x, y, lat, lon)
-
-                if dist <= 1000:  # 1km 이내
-                    print(f"{name}까지 거리: {dist:.2f}m")
-                    shop_count += 1
-                    if dist < min_shop_dist:
-                        min_shop_dist = dist
-        print(f"1km 이내 대형 쇼핑시설 개수: {shop_count}개")
-        if min_shop_dist <= 1000:
-            shopping_location_points += 2
-        print(f"✅ 쇼핑시설 위치 점수: {shopping_location_points}\n")
-        additional_points += shopping_location_points
-    else:
-        print("❌ 쇼핑시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
-
-    # ============================================
-    # 1km 이내 문화시설 목록 가져오기
-    # - 가장 가까운 문화시설 기준으로 점수 계산(0.5점)
-    # ============================================
-    cultural_space_count=0
-    min_cultural_dist = float('inf')
-    cultural_location_points = 0
-    cultural_spaces = get_cultural_space_data(sigungu)
-    if cultural_spaces:
-        max_additional_points += 0.5 # 문화시설 점수 최대 0.5점
-        print(f"☑️ 중간 최대 점수 (문화시설 추가): {max_additional_points}")
-        for cultural_space in cultural_spaces:
-            lat = cultural_space['lat']
-            lon = cultural_space['lon']
-            name = cultural_space['name']
+    hospital_count=0
+    normal_hospital_count=0
+    hospital_location_points = 0
+    hospitals = get_hospital_data(boundary=boundary_1000m) or [] # DB에서 범위 내 병원 정보 조회
+    if hospitals:
+        max_additional_points += 2.5 # 병원 점수 최대 2.5점
+        print(f"☑️ 중간 최대 점수 (병원 추가): {max_additional_points}")
+        has_general_hospital = False # 1.5점은 한 번만 추가되도록 플래그 설정
+        for hospital in hospitals:
+            lat = hospital['lat']
+            lon = hospital['lon']
+            name = hospital['name']
 
             # 위도, 경도 유효성 체크
             if lat is None or lon is None:
-                print(f"역 {name}의 좌표 정보가 없습니다.")
+                # print(f"{name}의 좌표 정보가 없습니다.") # 로그가 너무 많아 주석 처리
                 continue
 
-            # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-            dist = haversine_distance(x, y, lat, lon)
+            dist = haversine_distance(x, y, lon, lat) # (수정) haversine_distance(lat1, lon1, lat2, lon2) 순서에 맞게 인자 전달
 
             if dist <= 1000:  # 1km 이내
-                print(f"{name}까지 거리: {dist:.2f}m")
-                cultural_space_count += 1
-                if dist < min_cultural_dist:
-                    min_cultural_dist = dist
-        print(f"1km 이내 문화시설 개수: {cultural_space_count}개")
-        if min_cultural_dist <= 1000:
-            cultural_location_points += 0.5
-        print(f"✅ 문화시설 위치 점수: {cultural_location_points}\n")
-        additional_points += cultural_location_points
+                # 종합병원이나 지역응급의료센터는 1.5점 (최초 1회만)
+                if not has_general_hospital and (hospital['dutyDivNam'] == "종합병원" or hospital['dutyEmclsName'] == "지역응급의료센터"):
+                    print(f"종합병원/지역응급의료센터 {name}까지 거리: {dist:.2f}m")
+                    hospital_location_points += 1.5
+                    has_general_hospital = True
+                else: # 일반 병원
+                    # print(f"일반 병원 {name}까지 거리: {dist:.2f}m") # 로그가 너무 많아 주석 처리
+                    normal_hospital_count += 1
+                hospital_count += 1
+
+        # 일반 병원 점수 계산(10개당 0.2점)
+        normal_hospital_points = normal_hospital_count / 10 * 0.2
+        hospital_location_points += normal_hospital_points
+        
+        print(f"1km 이내 병원 개수: {hospital_count}개 (종합병원급 포함)")
+        print(f"✅ 병원 위치 점수: {hospital_location_points}\n")
+        additional_points += hospital_location_points
     else:
-        print("❌ 문화시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.")
+        print("❌ 병원 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
 
     # ============================================
-    # 1km 이내 공공체육시설 목록 가져오기
-    # - 1km 이내 공공체육시설이 있으면: +0.5
+    # 1km 이내 공공체육시설 여부 확인
+    # - 1km 이내 공공체육시설이 1개라도 있으면: +0.5점
     # ============================================
-    facility_count=0
-    min_facility_dist = float('inf')
     facility_location_points = 0
-    facilities = get_facilities_data(sigungu)
+    facilities = get_facilities_data(boundary=boundary_1000m) or []
+
     if facilities:
-        max_additional_points += 0.5 # 공공체육시설 점수 최대 0.5점
+        max_additional_points += 0.5  # 공공체육시설 점수 최대 0.5점
         print(f"☑️ 중간 최대 점수 (공공체육시설 추가): {max_additional_points}")
+        
         for facility in facilities:
             lat = facility['lat']
             lon = facility['lon']
-            name = facility['name']
+            name = facility.get('name')
 
             # 위도, 경도 유효성 체크
             if lat is None or lon is None:
                 print(f"{name}의 좌표 정보가 없습니다.")
                 continue
 
-            # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-            dist = haversine_distance(x, y, lat, lon)
+            # 거리 계산 (lat1, lon1, lat2, lon2)
+            dist = haversine_distance(y, x, lat, lon)
 
             if dist <= 1000:  # 1km 이내
-                print(f"{name}까지 거리: {dist:.2f}m")
-                facility_count += 1
-                if dist < min_facility_dist:
-                    min_facility_dist = dist
-        print(f"1km 이내 공공체육시설 개수: {facility_count}개")
-        if min_facility_dist <= 1000:
-            facility_location_points += 0.5
-        print(f"✅ 공공체육시설 위치 점수: {facility_location_points}\n")
+                print(f"{name}까지 거리: {dist:.2f}m (1km 이내)")
+                facility_location_points = 0.5
+                break  # 하나라도 찾으면 점수 부여 후 종료
+
+        if facility_location_points == 0:
+            print("⚠️ 1km 이내 공공체육시설이 없습니다.")
+        else:
+            print(f"✅ 공공체육시설 위치 점수: {facility_location_points}\n")
+
         additional_points += facility_location_points
     else:
         print("❌ 공공체육시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+
+
+    # ============================================
+    # 카카오 API로 반경 1km 이내 장소 조회
+    # - 대형 쇼핑시설: +2
+    # - 문화시설: +1.5
+    # - 스포츠시설: +1
+    # - 편의점: +1
+    # ============================================
+    def calculate_scores_by_category(center_lat, center_lon, current_max_points, sigungu=None):
+        additional_points = 0
+        max_additional_points = current_max_points
+
+        # Kakao API로 반경 1km 이내 장소 조회
+        try:
+            places = get_places_nearby(center_lon, center_lat, radius=1000, categories=['large_shopping', 'cultural_facility', 'cafe', 'convenience_store'])
+        except Exception as e:
+            print(f"❌ 카카오 API 호출 중 오류 발생: {e}")
+            places = []
+
+        # 카테고리별 장소 필터링
+        category_groups = {
+            'subway': [],                 # SW8: 지하철역
+            'school': [],                 # SC4: 학교
+            'large_shopping': [],         # MT1: 대형마트
+            'cultural_facility': [],      # CT1: 문화시설
+            'cafe': [],                   # CE7: 카페
+            'convenience_store': []       # CS2: 편의점
+        }
+
+        for place in places:
+            cat = place['category']
+            if cat in category_groups:
+                category_groups[cat].append(place)
+
+        # ===== 대형 쇼핑시설 =====
+        shop_count = len(category_groups['large_shopping'])
+        min_shop_dist = float('inf')
+        shopping_location_points = 0
+
+        if shop_count > 0:
+            max_additional_points += 2
+            print(f"☑️ 중간 최대 점수 (쇼핑시설 추가): {max_additional_points}")
+
+            for shop in category_groups['large_shopping']:
+                lat = shop['lat']
+                lon = shop['lon']
+                name = shop['name']
+
+                dist = haversine_distance(center_lon, center_lat, lon, lat) # (lon1, lat1, lon2, lat2)
+                if dist <= 1000:
+                    print(f"{name}까지 거리: {dist:.2f}m")
+                    if dist < min_shop_dist:
+                        min_shop_dist = dist
+
+            if min_shop_dist <= 1000:
+                shopping_location_points = 2
+            print(f"1km 이내 대형 쇼핑시설 개수: {shop_count}개")
+            print(f"✅ 쇼핑시설 위치 점수: {shopping_location_points}\n")
+            additional_points += shopping_location_points
+        else:
+            print("❌ 쇼핑시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+
+        # ===== 문화시설 =====
+        cultural_count = len(category_groups['cultural_facility'])
+        min_cultural_dist = float('inf')
+        cultural_location_points = 0
+
+        if cultural_count > 0:
+            max_additional_points += 0.5
+            print(f"☑️ 중간 최대 점수 (문화시설 추가): {max_additional_points}")
+
+            for cultural in category_groups['cultural_facility']:
+                lat = cultural['lat']
+                lon = cultural['lon']
+                name = cultural['name']
+
+                dist = haversine_distance(center_lon, center_lat, lon, lat) # (lon1, lat1, lon2, lat2)
+                if dist <= 1000:
+                    print(f"{name}까지 거리: {dist:.2f}m")
+                    if dist < min_cultural_dist:
+                        min_cultural_dist = dist
+
+            if min_cultural_dist <= 1000:
+                cultural_location_points = 0.5
+            print(f"1km 이내 문화시설 개수: {cultural_count}개")
+            print(f"✅ 문화시설 위치 점수: {cultural_location_points}\n")
+            additional_points += cultural_location_points
+        else:
+            print("❌ 문화시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+
+        # ===== 카페/편의점 위치 점수 =====
+        cafe_count = len(category_groups['cafe'])
+        convenience_count = len(category_groups['convenience_store'])
+        total_cafe_conv_count = cafe_count + convenience_count
+        cafe_conv_location_points = 0
+
+        if total_cafe_conv_count > 0:
+            # 10개당 0.1점이므로, 최대 점수를 동적으로 계산
+            possible_points = (total_cafe_conv_count // 10) * 0.1
+            max_additional_points += possible_points
+            print(f"☑️ 중간 최대 점수 (카페/편의점 추가): {max_additional_points}")
+
+            cafe_conv_location_points = possible_points
+
+            print(f"1km 이내 카페 개수: {cafe_count}개")
+            print(f"1km 이내 편의점 개수: {convenience_count}개")
+            print(f"✅ 카페/편의점 위치 점수: {cafe_conv_location_points:.1f}\n")
+            additional_points += cafe_conv_location_points
+        else:
+            print("❌ 카페/편의점 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+
+        print(f"최종 추가 점수: {additional_points} / 최대 점수: {max_additional_points}")
+        return additional_points, max_additional_points
+
+    # 카카오 API를 사용한 점수 계산
+    kakao_points, new_max_points = calculate_scores_by_category(y, x, max_additional_points, sigungu=sigungu)
+    additional_points += kakao_points
+    max_additional_points = new_max_points
 
     # ============================================
     # 건물 특성 요소
@@ -587,6 +604,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # Z-score 계산
     z_scores = compute_z_scores(prices)
 
+
     # 분류 라벨링
     for i, row in enumerate(valid_rows):
         row["z_score"] = round(z_scores[i], 2)
@@ -628,9 +646,15 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
             price_stability_score = int(30 - 40 * (z - 1.5))
         else: # 2.0 이상
             price_stability_score = 0
-
     else:
         print("❌ 주변 실거래가 데이터가 부족하여 Z-score를 계산할 수 없습니다.")
+
+    # 평균 대비 편차율 계산
+    deviationPercent = calculate_deviation_rate(userContractPrice, prices)
+    if deviationPercent is not None:
+        print(f"편차율: {deviationPercent:.2f}%")
+    else:
+        print("❌ 편차율을 계산할 수 없습니다.")
 
     # ============================================
     # 최종 위험도 점수 계산
@@ -659,13 +683,13 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
         risk_comment = "한두 가지 경미한 위험 신호가 존재합니다. 계약서의 특약이나 등기부등본 등 관련 서류를 추가로 확인하는 것이 좋습니다."
     elif totalRiskScore >= 50:
         risk_level = "경고"
-        risk_comment = "시세, 건물 조건 등 여러 항목에서 위험 신호가 동시에 발생했습니다. 현장을 직접 확인하거나 전문가의 상담을 받아보는 것을 권고합니다."
+        risk_comment = "여러 항목에서 위험 신호가 동시에 발생했습니다. 현장을 직접 확인하거나 전문가의 상담을 받아보는 것을 권고합니다."
     elif totalRiskScore >= 25:
         risk_level = "고위험"
         risk_comment = "시세 대비 가격 편차가 크거나, 문서 또는 자산에 리스크가 존재합니다. 계약을 재검토할 필요가 있습니다."
     else: # 0~24
         risk_level = "치명"
-        risk_comment = "전입 불가, 과도한 근저당 등 계약에 치명적인 위험 요소가 발견되었습니다. 계약을 중단하고 전문가의 자문을 받는 것을 강력히 권장합니다."
+        risk_comment = "계약에 치명적인 위험 요소가 발견되었습니다. 계약을 중단하고 전문가의 자문을 받는 것을 강력히 권장합니다."
 
     print(f"✴️ 위험 등급: {risk_level}")
     print(f"✴️ 분석 코멘트: {risk_comment}")
@@ -692,60 +716,10 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 # 파일 단독 실행 시 테스트용 임시 계약 데이터로 분석 실행
 if __name__ == '__main__':
     test_contract = LeaseContract(
-        location="서울 동작구 노량진로 233",
-        deposit=50000, # 보증금
+        location="서울 서대문구 창천동 창천동 33-12",
+        deposit=500000000, # 보증금(예시: 5억)
         rentAmount=0, # 월세
         leasePeriodStart=date(2025, 8, 1), # 임대 시작일
         buildingStructureUse="아파트" # 건물 용도
     )
     result = analyze_estate(test_contract)
-
-# ============================================
-# 임시 제외 API
-# ============================================
-
-# # 편의점 목록 가져오기 : 일단 코드에서 제외
-# cvs_count=0
-# cvses = get_cvs_data()
-# for cvs in cvses:
-#     lat = cvs['lat']
-#     lon = cvs['lon']
-#     name = cvs['name']
-
-#     # 위도, 경도 유효성 체크
-#     if lat is None or lon is None:
-#         print(f"{name}의 좌표 정보가 없습니다.")
-#         continue
-
-#     # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-#     dist = haversine_distance(x, y, lat, lon)
-
-#     if dist <= 1000:  # 1km 이내
-#         print(f"{name}까지 거리: {dist:.2f}m")
-#         cvs_count += 1
-# print(f"1km 이내 편의점 개수: {cvs_count}개\n")
-
-# ============================================
-# 후보 API
-# ============================================
-
-# # 공원 목록 가져오기
-# park_count=0
-# parks = get_odp_park_data(start_index=1, end_index=150000)
-# for park in parks:
-#     lat = park['lat']
-#     lon = park['lon']
-#     name = park['name']
-
-#     # 위도, 경도 유효성 체크
-#     if lat is None or lon is None:
-#         print(f"{name}의 좌표 정보가 없습니다.")
-#         continue
-
-#     # 거리 계산 (address_to_coord의 x, y와 역의 위도, 경도 비교)
-#     dist = haversine_distance(x, y, lat, lon)
-
-#     if dist <= 1000:  # 1km 이내
-#         print(f"{name}까지 거리: {dist:.2f}m")
-#         park_count += 1
-# print(f"1km 이내 공원 개수: {park_count}개\n")

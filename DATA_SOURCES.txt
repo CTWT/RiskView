@@ -1,0 +1,50 @@
+[데이터 출처 정보]
+
+[국토교통부_건축HUB_건축물대장정보 서비스]
+- API 제공 기관: 국토교통부, 공공데이터포털
+- 문서/가이드 URL: https://www.vworld.kr/dev/v4dv_geocoderguide2_s001.do
+- 사용 조건: 이용허락범위 제한 없음
+- 사용 목적: 주차장, 층수, 사용승인일, 법정동코드 등 특정 건물 관련 정보 파악
+
+[행정안전부_행정표준코드_법정동코드]
+- API 제공 기관: 행정안전부, 공공데이터포털
+- 문서/가이드 URL: https://www.data.go.kr/data/15077871/openapi.do
+- 사용 조건: 이용허락범위 제한 없음
+- 사용 목적: 시군구코드 및 법정동코드 파악
+
+[행정안전부_행정안전부_실시간 상세주소정보 조회(검색API)]
+- API 제공 기관: 행정안전부, 공공데이터포털
+- 문서/가이드 URL:
+    - https://www.data.go.kr/data/15096712/openapi.do?recommendDataYn=Y
+    - https://business.juso.go.kr/addrlink/openApi/apiReqst.do
+- 사용 조건: 이용허락범위 제한 없음
+- 사용 목적: 시군구동 파악
+
+[KAKAO REST API]
+- API 제공 기관: 카카오
+- 문서/가이드 URL: https://developers.kakao.com/docs/latest/ko/local/dev-guide
+- 사용 목적: 주소↔좌표 변환, 지도 정보 조회 등
+
+[Geocoder API 2.0]
+- API 제공 기관: 브이월드 (vWorld), 공간정보 오픈플랫폼
+- 문서/가이드 URL: https://www.vworld.kr/dev/v4dv_geocoderguide2_s001.do
+- 사용 조건: 브이월드 Open API 사용 규정에 따름
+- 사용 목적: 주소↔좌표 변환
+
+[서울시 주요 공원현황]
+- API 제공 기관: 서울 열린데이터 광장
+- 문서/가이드 URL: https://data.seoul.go.kr/dataList/OA-394/S/1/datasetView.do
+- 라이선스: 공공누리 제1유형 – 출처표시 (상업적 이용 및 변경 가능)
+- 사용 목적: 서울시 주요 공원 위치 정보 파악
+
+[서울시 병의원 위치 정보]
+- API 제공 기관: 서울 열린데이터 광장
+- 문서/가이드 URL: https://data.seoul.go.kr/dataList/OA-20337/A/1/datasetView.do
+- 라이선스: 공공누리 제1유형 – 출처표시 (상업적 이용 및 변경 가능)
+- 사용 목적: 서울시 병의원 위치 정보 파악
+
+[서울시 공공체육시설 현황]
+- API 제공 기관: 서울 열린데이터 광장
+- 문서/가이드 URL: https://data.seoul.go.kr/dataList/OA-1115/F/1/datasetView.do
+- 라이선스: 공공누리 제1유형 – 출처표시 (상업적 이용 및 변경 가능)
+- 사용 목적: 서울시 공공체육시설 위치 정보 파악

@@ -12,16 +12,16 @@ interface PG100004Props {
 
 export type SentimentCategory = "긍정" | "부정" | "중립";
 
-export interface RiskAssessment { level: string; comment: string; }
-export interface UserZScoreAnalysis { zScore: number | null; label: string; }
 export interface AnomalyDetectResult {
   userContractPrice: number;
   totalRiskScore: number;
   averagePrice: number;
   isAnomaly: boolean;
-  deviationPercent : number,
-  riskAssessment: RiskAssessment;
-  userZScoreAnalysis: UserZScoreAnalysis;
+  deviationPercent : number;
+  riskLevel: string;
+  riskComment: string;
+  zScore: number | null;
+  label: string;
 }
 export interface ContractClauseDTO {
   clauseType: "계약금" | "중도금" | "잔금" | "특약" | "기타";

@@ -723,15 +723,10 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
         "averagePrice": calculate_average_price(valid_rows), # 평균 시세(주변 실거래가 평균)
         "isAnomaly": isAnomaly, # 이상치 여부
         "deviationPercent" : deviationPercent,
-        "riskAssessment": {
-            "level": risk_level,
-            "comment": risk_comment
-        },
-        "surroundingTransactions": valid_rows,
-        "userZScoreAnalysis": {
-            "zScore": round(user_z_score, 2) if user_z_score is not None else None,
-            "label": userLabel
-        }
+        "riskLevel": risk_level,
+        "riskComment": risk_comment,
+        "zScore": user_z_score,
+        "label": userLabel
     }
 
     return analysis_result

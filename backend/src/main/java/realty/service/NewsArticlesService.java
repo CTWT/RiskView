@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,9 @@ public class NewsArticlesService {
     private RestTemplate restTemplate;
 
     private final String wordCloudApiUrl = "http://localhost:8000/wordcloud/generate-wordcloud"; // 워드클라우드 엔드포인트 URL
+
+    // 워드클라우드 이미지 데이터를 캐싱할 변수 (volatile로 원자성 보장)
+    private volatile byte[] cachedWordCloudImage;
 
     // @Autowired를 사용한 생성자 주입
     public NewsArticlesService(NewsArticlesRepository newsArticlesRepository, RestTemplate restTemplate) {
@@ -125,13 +129,27 @@ public class NewsArticlesService {
     }
 
     /**
-     * 모든 뉴스 기사의 내용(content)에서 단어 빈도를 계산하는 메서드
+     * 캐시된 워드클라우드 이미지를 반환하는 메서드
      * @return 워드클라우드 이미지의 byte 배열
      */
-    public byte[] getWordFrequencies() {
-        log.info("워드클라우드 데이터 생성을 위해 AI API 호출 시작");
+    public byte[] getWordCloudImage() {
+        log.info("캐시된 워드클라우드 이미지 요청");
+        if (cachedWordCloudImage == null || cachedWordCloudImage.length == 0) {
+            log.warn("캐시된 워드클라우드 이미지가 없습니다. 실시간 생성을 시도합니다.");
+            return generateAndCacheWordCloud();
+        }
+        return cachedWordCloudImage;
+    }
 
-        List<NewsArticles> allArticles = newsArticlesRepository.findAll(); // 모든 뉴스 기사 조회
+    /**
+     * 모든 뉴스 기사 내용으로 워드클라우드를 생성하고 결과를 캐시에 저장합니다.
+     * 이 메서드는 스케줄러에 의해 주기적으로 호출되거나 수동으로 트리거될 수 있습니다.
+     * @return 생성된 워드클라우드 이미지의 byte 배열
+     */
+    @Scheduled(fixedRate = 3600000) // 1시간(3600000ms)마다 실행
+    public byte[] generateAndCacheWordCloud() {
+        log.info("워드클라우드 데이터 생성을 위해 AI API 호출 시작");
+        List<NewsArticles> allArticles = newsArticlesRepository.findAll();
         List<String> contents = allArticles.stream()
                                            .map(NewsArticles::getContent)
                                            .collect(Collectors.toList()); // 모든 뉴스 기사의 내용을 리스트로 변환
@@ -155,11 +173,14 @@ public class NewsArticlesService {
                     requestEntity, // HTTP 요청 엔티티
                     byte[].class // 응답 데이터 타입
             );
-            log.info("워드클라우드 이미지 수신 완료");
-            return response.getBody();
+
+            byte[] imageBytes = response.getBody();
+            this.cachedWordCloudImage = imageBytes; // 결과를 캐시에 저장
+            log.info("새로운 워드클라우드 이미지를 생성하고 캐시에 저장했습니다. ({} bytes)", imageBytes != null ? imageBytes.length : 0);
+            return imageBytes;
         } catch (Exception e) {
             log.error("워드클라우드 데이터 생성 AI API 호출 중 오류 발생", e);
-            return new byte[0]; // 오류 발생 시 빈 byte 배열 반환
+            return new byte[0];
         }
     }
 

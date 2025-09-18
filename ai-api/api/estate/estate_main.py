@@ -121,10 +121,20 @@ def calculate_building_related_additional_points(building_info: dict) -> tuple[f
         print("❌ 건물 층수 정보가 없어 층수 점수를 계산할 수 없습니다.")
 
     # 3. 주차장 점수
-    has_indoor_parking = building_info.get('indr_mech', 0) > 0 or building_info.get('indr_auto', 0) > 0
-    has_outdoor_parking = building_info.get('oudr_mech', 0) > 0 or building_info.get('oudr_auto', 0) > 0
-    has_self_parking = building_info.get('indr_auto', 0) > 0 or building_info.get('oudr_auto', 0) > 0
-    has_mechanical_parking = building_info.get('indr_mech', 0) > 0 or building_info.get('oudr_mech', 0) > 0
+    indoor_mech = building_info.get('indr_mech', 0) # 실내 기계식 주차장 수
+    indoor_auto = building_info.get('indr_auto', 0) # 실내 자주식 주차장 수
+    outdoor_mech = building_info.get('oudr_mech', 0) # 실외 기계식 주차장 수
+    outdoor_auto = building_info.get('oudr_auto', 0) # 실외 자주식 주차장 수
+
+    print("실내 기계식 주차장 수: ", indoor_mech)
+    print("실내 자주식 주차장 수: ", indoor_auto)
+    print("실외 기계식 주차장 수: ", outdoor_mech)
+    print("실외 자주식 주차장 수: ", outdoor_auto)
+
+    has_indoor_parking = indoor_mech > 0 or indoor_auto > 0 # 실내 주차장 유무
+    has_outdoor_parking = outdoor_mech > 0 or outdoor_auto > 0 # 실외 주차장 유무
+    has_self_parking = indoor_auto > 0 or outdoor_auto > 0 # 자주식 주차장 유무
+    has_mechanical_parking = indoor_mech > 0 or outdoor_mech > 0 # 기계식 주차장 유무
 
     # 실내/실외 점수: 실내가 있으면 +1, 실내 없고 실외만 있으면 +0.5
     if has_indoor_parking:
@@ -162,6 +172,9 @@ def calculate_average_price(rows):
         
     return sum(prices) / len(prices)
 
+# ============================================
+# **** 주변 실거래가 평균 계산(메인 함수) ****
+# ============================================
 
 def analyze_estate(contract_data: LeaseContract) -> dict:
     """
@@ -199,10 +212,10 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     ji = result.get('subBun', '')
 
     # 확인용 출력
-    print(sido)                # 서울특별시
-    print(sigungu)             # 동작구
-    print(eupmyeondong)        # 노량진동
-    print(beopjeongdong_code)  # 1168010600
+    print(f"시도: {sido}")                # 서울특별시
+    print(f"시군구: {sigungu}")             # 동작구
+    print(f"읍면동: {eupmyeondong}")        # 노량진동
+    print(f"법정동코드: {beopjeongdong_code}")  # 1168010600
 
     # 주소를 좌표로 변환
     coords = address_to_coord(address)
@@ -210,6 +223,15 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
         return {"error": "주소를 좌표로 변환할 수 없습니다."}
     x, y = coords
     print(f"경도: {x}, 위도: {y}")
+
+    # ============================================
+    # 주변 시설 검색을 위한 경계 좌표 계산
+    # ============================================
+    boundary_400m = get_boundary_coordinates(x, y, 400) # lon, lat, distance_m
+    boundary_500m = get_boundary_coordinates(x, y, 500) # lon, lat, distance_m
+    boundary_800m = get_boundary_coordinates(x, y, 800) # lon, lat, distance_m
+    boundary_1000m = get_boundary_coordinates(x, y, 1000) # lon, lat, distance_m
+    boundary_1200m = get_boundary_coordinates(x, y, 1200) # lon, lat, distance_m
 
     # ============================================
     # 역세권 점수 계산 (카카오 API)
@@ -281,41 +303,37 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
         print("❌ 500m 이내에 학교 정보가 없어 학군 점수를 계산할 수 없습니다.\n")
 
     # ============================================
-    # 주변 시설 검색을 위한 경계 좌표 계산
-    # ============================================
-    boundary_400m = get_boundary_coordinates(x, y, 400) # lon, lat, distance_m
-    boundary_500m = get_boundary_coordinates(x, y, 500) # lon, lat, distance_m
-    boundary_800m = get_boundary_coordinates(x, y, 800) # lon, lat, distance_m
-    boundary_1000m = get_boundary_coordinates(x, y, 1000) # lon, lat, distance_m
-    boundary_1200m = get_boundary_coordinates(x, y, 1200) # lon, lat, distance_m
-
-    # ============================================
     # 1km 이내 공원 목록 가져오기
     # - 가장 가까운 공원 기준으로 점수 계산
     # - 300m 이내: +1
     # - 1km 이내: +0.5
     # ============================================
-    park_count=0
-    min_park_dist = float('inf') # 가장 가까운 공원의 거리를 저장할 변수
-    park_location_points = 0 # 공원 위치 점수
-    parks = get_park_data(start_index="1", end_index="1000") or []
+    park_count = 0
+    min_park_dist = float('inf')  # 가장 가까운 공원의 거리 저장
+    park_location_points = 0.0    # 공원 위치로 부터 얻는 점수
+
+    # boundary 활용 가능하면 거리 범위로 미리 필터링
+    # 예: boundary = (y - delta_lon, y + delta_lon, x - delta_lat, x + delta_lat)
+    # optional, 없으면 전체 공원 대상
+    parks = get_park_data(boundary=None) or []
+
     if parks:
-        max_additional_points += 1 # 공원 점수 최대 1점
+        max_additional_points += 1  # 공원 점수 최대 1점 부여
         print(f"☑️ 중간 최대 점수 (공원 추가): {max_additional_points}")
         for park in parks:
             lat = park['lat']
             lon = park['lon']
             name = park['name']
 
-            # 위도, 경도 유효성 체크
+            # 유효성 체크
             if lat is None or lon is None:
                 print(f"{name}의 좌표 정보가 없습니다.")
                 continue
 
-            # 거리 계산 (address_to_coord의 x, y와 경도, 위도 비교)
-            dist = haversine_distance(x, y, lon, lat)
+            # 거리 계산
+            dist = haversine_distance(x, y, lon, lat)  # 주의: 함수 시그니처 확인
 
-            if dist <= 1000: # 1km 이내
+            if dist <= 1000:  # 1km 이내인 경우만 카운트
                 print(f"{name}까지 거리: {dist:.2f}m")
                 park_count += 1
                 if dist < min_park_dist:
@@ -323,18 +341,16 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
         print(f"1km 이내 공원 개수: {park_count}개")
 
-        # 가장 가까운 공원의 거리를 기준으로 점수 부여
-        if min_park_dist <= 300: # 300m 이내
-            park_location_points += 1
-        elif min_park_dist <= 1000: # 1km 이내
+        # 가장 가까운 공원의 거리에 따라 점수
+        if min_park_dist <= 300:
+            park_location_points += 1.0
+        elif min_park_dist <= 1000:
             park_location_points += 0.5
 
         print("✅ 공원 위치 점수: ", park_location_points, "\n")
         additional_points += park_location_points
     else:
         print("❌ 공원 정보를 가져오지 못해 점수를 계산할 수 없습니다.")
-
-
 
     # ============================================
     # 1km 이내 병원 목록 가져오기
@@ -374,7 +390,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
                 hospital_count += 1
 
         # 일반 병원 점수 계산(10개당 0.2점)
-        normal_hospital_points = normal_hospital_count / 10 * 0.2
+        normal_hospital_points = min(normal_hospital_count / 10 * 0.2, 1) # 최대 1점
         hospital_location_points += normal_hospital_points
         
         print(f"1km 이내 병원 개수: {hospital_count}개 (종합병원급 포함)")
@@ -385,13 +401,13 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
     # ============================================
     # 1km 이내 공공체육시설 여부 확인
-    # - 1km 이내 공공체육시설이 1개라도 있으면: +0.5점
+    # - 1km 이내 공공체육시설이 1개라도 있으면: +1점
     # ============================================
     facility_location_points = 0
     facilities = get_facilities_data(boundary=boundary_1000m) or []
 
     if facilities:
-        max_additional_points += 0.5  # 공공체육시설 점수 최대 0.5점
+        max_additional_points += 1 # 공공체육시설 점수 최대 1점
         print(f"☑️ 중간 최대 점수 (공공체육시설 추가): {max_additional_points}")
         
         for facility in facilities:
@@ -409,7 +425,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
             if dist <= 1000:  # 1km 이내
                 print(f"{name}까지 거리: {dist:.2f}m (1km 이내)")
-                facility_location_points = 0.5
+                facility_location_points = 1
                 break  # 하나라도 찾으면 점수 부여 후 종료
 
         if facility_location_points == 0:
@@ -424,10 +440,9 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
     # ============================================
     # 카카오 API로 반경 1km 이내 장소 조회
-    # - 대형 쇼핑시설: +2
-    # - 문화시설: +1.5
-    # - 스포츠시설: +1
-    # - 편의점: +1
+    # - 대형마트: +2
+    # - 문화시설: +1
+    # - 카페/편의점: +1
     # ============================================
     def calculate_scores_by_category(center_lat, center_lon, current_max_points, sigungu=None):
         additional_points = 0
@@ -455,7 +470,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
             if cat in category_groups:
                 category_groups[cat].append(place)
 
-        # ===== 대형 쇼핑시설 =====
+        # ===== 대형마트 =====
         shop_count = len(category_groups['large_shopping'])
         min_shop_dist = float('inf')
         shopping_location_points = 0
@@ -485,26 +500,15 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
         # ===== 문화시설 =====
         cultural_count = len(category_groups['cultural_facility'])
-        min_cultural_dist = float('inf')
         cultural_location_points = 0
 
         if cultural_count > 0:
-            max_additional_points += 0.5
+            max_additional_points += 1
             print(f"☑️ 중간 최대 점수 (문화시설 추가): {max_additional_points}")
 
-            for cultural in category_groups['cultural_facility']:
-                lat = cultural['lat']
-                lon = cultural['lon']
-                name = cultural['name']
+            # 10개당 0.2점, 최대 1점
+            cultural_location_points = min((cultural_count // 10) * 0.2, 1)
 
-                dist = haversine_distance(center_lon, center_lat, lon, lat) # (lon1, lat1, lon2, lat2)
-                if dist <= 1000:
-                    print(f"{name}까지 거리: {dist:.2f}m")
-                    if dist < min_cultural_dist:
-                        min_cultural_dist = dist
-
-            if min_cultural_dist <= 1000:
-                cultural_location_points = 0.5
             print(f"1km 이내 문화시설 개수: {cultural_count}개")
             print(f"✅ 문화시설 위치 점수: {cultural_location_points}\n")
             additional_points += cultural_location_points
@@ -518,12 +522,14 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
         cafe_conv_location_points = 0
 
         if total_cafe_conv_count > 0:
-            # 10개당 0.1점이므로, 최대 점수를 동적으로 계산
-            possible_points = (total_cafe_conv_count // 10) * 0.1
-            max_additional_points += possible_points
-            print(f"☑️ 중간 최대 점수 (카페/편의점 추가): {max_additional_points}")
+            # 계산 점수: 10개당 0.1점
+            calculated_points = (total_cafe_conv_count // 10) * 0.1
+            # 최대 1점으로 제한
+            cafe_conv_location_points = min(calculated_points, 1.0)
 
-            cafe_conv_location_points = possible_points
+            # 최대 가능한 추가 점수 항목도 1점 고정
+            max_additional_points += 1.0  
+            print(f"☑️ 중간 최대 점수 (카페/편의점 추가): {max_additional_points}")
 
             print(f"1km 이내 카페 개수: {cafe_count}개")
             print(f"1km 이내 편의점 개수: {convenience_count}개")
@@ -589,6 +595,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     data = runEstate("1000", "2025", sigungu, user_bldg_usg) # 실거래가 데이터 가져옴(동일 자치구, 동일 건물용도)
     if not data or not data.get("rows"):
         print("실거래가 데이터를 가져오지 못했습니다.")
+        print(f"불러온 전체 실거래가 데이터: 0개")
         # exit() 대신 결과 반환
         return {"error": "실거래가 데이터를 가져오지 못했습니다."}
     rows = data["rows"]
@@ -599,21 +606,22 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
     # 유효한 계약금액만 필터링
     valid_rows = [r for r in rows if r["contract_price"] is not None]
+    print(f"불러온 전체 실거래가 데이터: {len(valid_rows)}개")
     prices = [r["contract_price"] for r in valid_rows]
 
-    # Z-score 계산
-    z_scores = compute_z_scores(prices)
+    # 주변 실거래가 데이터에 Z-score와 라벨 추가
+    if prices:
+        z_scores_list = compute_z_scores(prices)
+        for i, row in enumerate(valid_rows):
+            row["z_score"] = round(z_scores_list[i], 2)
+            row["label"] = classify_z_score(z_scores_list[i])
 
-
-    # 분류 라벨링
-    for i, row in enumerate(valid_rows):
-        row["z_score"] = round(z_scores[i], 2)
-        row["label"] = classify_z_score(z_scores[i])
-
-    # # 주변 실거래가 분석 결과 출력
-    # print(f"\n--- [{sigungu}] 실거래가 이상치 분석 결과 ---")
-    # for row in valid_rows:
-    #     print(f"{row['stdg_nm']} | 계약가: {row['contract_price']} | Z: {row['z_score']} | {row['label']}")
+    # 주변 실거래가 분석 결과 출력
+    print(f"\n--- [{sigungu}] 실거래가 이상치 분석 결과 ---")
+    # '이상치'인 거래만 필터링하여 출력
+    risky_transactions = [row for row in valid_rows if row.get('label') in ['이상치']]
+    for row in risky_transactions:
+        print(f"🚨 {row['stdg_nm']} {row.get('bldg_nm', '')} ({row.get('bldg_usg', '')}) | 계약가: {row['contract_price']} | Z: {row['z_score']} | {row['label']}")
 
     # 사용자 입력 계약금액의 Z-score 계산 및 결과 출력
     print("\n--- 입력 주소 분석 결과 ---")

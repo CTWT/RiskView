@@ -18,11 +18,11 @@ from openai import OpenAI
 # -------------------------
 load_dotenv(find_dotenv())
 
-API_KEY = os.getenv("OPENAI_API_KEY")
-if not API_KEY:
-    raise RuntimeError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
+# API_KEY = os.getenv("OPENAI_API_KEY")
+# if not API_KEY:
+#     raise RuntimeError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
 
-client = OpenAI(api_key=API_KEY)
+# client = OpenAI(api_key=API_KEY)
 
 # -------------------------
 # 프롬프트 (상세 riskReason 요구사항 포함)

@@ -15,6 +15,7 @@ import xmltodict
 import xml.etree.ElementTree as ET
 from io import BytesIO
 from .remove_address_details import clean_address
+import pymysql
 
 # ============================================
 #  수업명 : 가비아 2회차
@@ -92,38 +93,75 @@ def fetch_api_data(url: str, response_type: str = "json") -> Optional[Dict[str, 
     return None
 
 # ============================================
-# 공원/녹지 API
+# 공원/녹지
 # ============================================
 
-# 공원/녹지 관련 정보 API 호출 메서드
-# 서울열린데이터 공공 API : 서울시 주요 공원현황
-# 주요 반환 컬럼 : P_PARK(공원명), LONGITUDE(위도), LATITUDE(경도), 기타
-# https://data.seoul.go.kr/dataList/OA-394/S/1/datasetView.do
-def get_park_data(**kwargs) -> dict:
-    url = f"{data_seoul_api_base_url}/json/SearchParkInfoService/{kwargs.get('start_index', '1')}/{kwargs.get('end_index', '1000')}"
-    print(url)
-    data = fetch_api_data(url, response_type="json")
-    if not data:
+# 공공데이터포털 전국도시공원정보표준데이터
+# https://www.data.go.kr/data/15012890/standard.do
+def get_park_data(boundary: Optional[tuple] = None) -> List[Dict]:
+    """
+    DB의 park_info 테이블에서 공원 정보 조회
+    boundary 튜플 (min_lon, max_lon, min_lat, max_lat)이 주어지면 해당 범위 내 공원만 조회
+
+    @param boundary: (min_lon, max_lon, min_lat, max_lat)
+    @return: 공원 정보 리스트 (각 항목에 'name', 'lat', 'lon' 포함)
+    """
+    conn = get_db_connection()
+    if not conn:
+        print("❌ 데이터베이스 연결 실패")
         return []
-    parks = (data or {}).get("SearchParkInfoService", {}).get("row", []) # 안전한 get 호출
-    park_list = []
-    for park in parks:
-        name = park.get('P_PARK')
-        lat = park.get('LATITUDE')
-        lon = park.get('LONGITUDE')
 
-        # 위도, 경도 숫자 변환
-        try:
-            lat = float(lat)
-            lon = float(lon)
-        except (TypeError, ValueError):
-            lat, lon = None, None
+    sql = """
+        SELECT 
+            park_name,
+            addr1,
+            addr2,
+            ST_Y(location) AS lat,
+            ST_X(location) AS lon
+        FROM park_info
+    """
+    params = []
+    if boundary:
+        min_lon, max_lon, min_lat, max_lat = boundary
+        sql += """
+            WHERE ST_X(location) BETWEEN %s AND %s
+              AND ST_Y(location) BETWEEN %s AND %s
+        """
+        params.extend([min_lon, max_lon, min_lat, max_lat])
 
-        park_list.append({
-            'name': name,
-            'lat': lat,
-            'lon': lon
-        })    
+    park_list: List[Dict] = []
+    try:
+        # DictCursor 사용해서 키-값으로 결과 받기
+        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
+            print(f"실행할 SQL: {sql}")
+            print(f"파라미터: {params}")
+            if params:
+                cursor.execute(sql, params)
+            else:
+                cursor.execute(sql)
+            rows = cursor.fetchall()
+            print(f"조회된 공원 수: {len(rows)}")
+
+            for row in rows:
+                # 이름, 위도, 경도 필드 체크
+                park_name = row.get('park_name')
+                lat = row.get('lat')
+                lon = row.get('lon')
+                if park_name is None or lat is None or lon is None:
+                    print(f"⚠ {park_name}의 좌표 정보 불완전해서 건너뜀")
+                    continue
+
+                park_list.append({
+                    'name': park_name,
+                    'lat': float(lat),
+                    'lon': float(lon)
+                })
+
+    except Exception as e:
+        print(f"공원 정보 조회 중 오류 발생: {e}")
+    finally:
+        conn.close()
+
     return park_list
 
 # ============================================
@@ -132,7 +170,7 @@ def get_park_data(**kwargs) -> dict:
 
 def get_school_data(lon: float, lat: float, radius: int = 500) -> list:
     """
-    카카오 API를 이용해 특정 좌표 주변의 학교 정보를 가져옵니다.
+    카카오 API를 이용해 특정 좌표 주변의 학교 정보 조회
     @param lon: 중심점 경도
     @param lat: 중심점 위도
     @param radius: 검색 반경 (미터)
@@ -146,7 +184,11 @@ def get_school_data(lon: float, lat: float, radius: int = 500) -> list:
 
 def get_subway_data(lon: float, lat: float, radius: int = 1200) -> list:
     """
-    카카오 API를 이용해 특정 좌표 주변의 지하철역 정보를 가져옵니다.
+    카카오 API를 이용해 특정 좌표 주변의 지하철역 정보 조회
+    @param lon: 중심점 경도
+    @param lat: 중심점 위도
+    @param radius: 검색 반경 (미터)
+    @return: 지하철역 정보 리스트
     """
     return get_places_nearby(lon, lat, radius, categories=['subway'])
 
@@ -160,6 +202,8 @@ def get_subway_data(lon: float, lat: float, radius: int = 1200) -> list:
 def get_hospital_data(boundary: Optional[tuple] = None) -> list:
     """
     병원 관련 정보 DB 조회 메서드
+    @param boundary: (min_lon, max_lon, min_lat, max_lat)
+    @return: 병원 정보 리스트
     """
     conn = get_db_connection()
     if not conn:
@@ -221,13 +265,13 @@ def get_hospital_data(boundary: Optional[tuple] = None) -> list:
 # 체육시설 API
 # ============================================
 
-# 서울시 공공 체육시설 정보 API 호출 메서드
+# 서울시 공공 체육시설 정보 호출 메서드
 # 서울열린데이터 서울시 공공 체육시설 정보
 # https://data.seoul.go.kr/dataList/OA-21779/S/1/datasetView.do
 def get_facilities_data(boundary: Optional[tuple] = None) -> list:
     """
-    DB의 sports_facility_info 테이블에서 체육시설 정보를 조회합니다.
-    boundary 튜플 (min_lon, max_lon, min_lat, max_lat)이 주어지면 해당 범위 내 시설만 조회합니다.
+    DB의 sports_facility_info 테이블에서 체육시설 정보 조회
+    boundary 튜플 (min_lon, max_lon, min_lat, max_lat)이 주어지면 해당 범위 내 시설만 조회
 
     @param boundary: (min_lon, max_lon, min_lat, max_lat)
     @return: 체육시설 정보 리스트
@@ -312,9 +356,6 @@ def search_places_by_category(lon, lat, radius=1000, category_group_code=None, p
         "page": page,
         "size": size
     }
-    
-    # 디버깅을 위한 로그 추가
-    print(f"카카오 API 호출: lon={lon}, lat={lat}, category={category_group_code}")
     
     response = requests.get(url, headers=HEADERS, params=params)
     

@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -69,13 +70,13 @@ public class NewsArticlesController {
     }
 
     /**
-     * 워드클라우드에 사용할 키워드와 빈도를 반환하는 메서드
+     * 캐시된 워드클라우드 이미지를 반환하는 메서드
      * @return 워드클라우드 이미지 (image/png)
      */
     @GetMapping(value = "/keywords")
-    public ResponseEntity<byte[]> getNewsKeywords() {
+    public ResponseEntity<byte[]> getCachedNewsKeywords() {
         log.info("워드클라우드 키워드 요청 수신");
-        byte[] imageBytes = newsArticlesService.getWordFrequencies();
+        byte[] imageBytes = newsArticlesService.getWordCloudImage();
         log.info("워드클라우드 이미지 응답 생성: {} bytes", imageBytes.length);
 
         // HTTP 응답 헤더 설정
@@ -84,5 +85,18 @@ public class NewsArticlesController {
         headers.setContentLength(imageBytes.length); // 이미지 크기 설정
 
         return ResponseEntity.ok().headers(headers).body(imageBytes); // 이미지 반환
+    }
+
+    /**
+     * 워드클라우드 캐시를 수동으로 갱신하는 API
+     * @return 갱신된 워드클라우드 이미지
+     */
+    @PostMapping(value = "/keywords/refresh")
+    public ResponseEntity<byte[]> refreshNewsKeywords() {
+        log.info("워드클라우드 캐시 수동 갱신 요청 수신");
+        byte[] imageBytes = newsArticlesService.generateAndCacheWordCloud();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        return ResponseEntity.ok().headers(headers).body(imageBytes);
     }
 }

@@ -2,6 +2,8 @@ package realty.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import org.slf4j.Logger;
@@ -131,8 +133,6 @@ public class ContractController {
                 .analyzeAnomaly(contractInfo.getStructuredContractDataDTO());
         log.info("이상치 분석 결과 : {}", analysisResult.toString());
 
-        analysisResult.getUserZScoreAnalysis().setZScore(0.0);
-
         return ResponseEntity
                 .ok()
                 .body(analysisResult);
@@ -143,7 +143,14 @@ public class ContractController {
              @RequestBody String contractCaluse) {
         log.info("특약사항 분석을 실행합니다.");
         ContractClauseDTO contractClauseDTO = contractService.analyzeClause(contractCaluse);
+        String decoded = URLDecoder.decode(contractClauseDTO.getClauseValue(), StandardCharsets.UTF_8);
+        // 문자열 끝에 '=' 있으면 제거
+        if (decoded.endsWith("=")) {
+            decoded = decoded.substring(0, decoded.length() - 1);
+        }
+        contractClauseDTO.setClauseValue(decoded);
         log.info("특약사항 분석 결과 : {}", contractClauseDTO.toString());
+
 
         return ResponseEntity
                 .ok()

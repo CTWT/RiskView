@@ -18,12 +18,6 @@ from openai import OpenAI
 # -------------------------
 load_dotenv(find_dotenv())
 
-# API_KEY = os.getenv("OPENAI_API_KEY")
-# if not API_KEY:
-#     raise RuntimeError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
-
-# client = OpenAI(api_key=API_KEY)
-
 # -------------------------
 # 프롬프트 (상세 riskReason 요구사항 포함)
 # -------------------------
@@ -149,6 +143,13 @@ def analyze_clause(clause_text: str, clause_title: str = None):
     clause_title: 조항 제목(옵션). 없으면 "특약사항"으로 기본값 사용.
     반환: dict (clauseType, clauseTitle, clauseValue, isRisky, riskReason)
     """
+
+    API_KEY = os.getenv("OPENAI_API_KEY")
+    if not API_KEY:
+        raise RuntimeError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
+
+    client = OpenAI(api_key=API_KEY)
+
     if not clause_text:
         raise ValueError("clause_text는 비어있을 수 없습니다.")
 

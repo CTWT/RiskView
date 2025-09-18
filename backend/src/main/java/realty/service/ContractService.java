@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -50,6 +52,7 @@ import realty.domain.repository.TransactionAnomalyRepository;
 @Service
 @RequiredArgsConstructor
 public class ContractService {
+    private static final Logger log = LoggerFactory.getLogger(ContractService.class);
 
     private final DocumentsRepository documentsRepository;
     private final StructuredContractDataRepository contractRepository;
@@ -136,6 +139,7 @@ public class ContractService {
                                                         .clauseTitle(contractClauseDTO.getClauseTitle())
                                                         .clauseType(clauseTypeEnum)
                                                         .clauseValue(contractClauseDTO.getClauseValue())
+                                                        .riskReason(contractClauseDTO.getRiskReason())
                                                         .isRisky(contractClauseDTO.getIsRisky())
                                                         .build();
         
@@ -166,7 +170,7 @@ public class ContractService {
                                                                     .reportCode(reportCode)
                                                                     .anomalyCode("not-set")
                                                                     .averagePrice(anomalyDetectResult.getAveragePrice())
-                                                                    .deviationPercent(new BigDecimal(100))
+                                                                    .deviationPercent(anomalyDetectResult.getDeviationPercent())
                                                                     .isAnomaly(anomalyDetectResult.getIsAnomaly())
                                                                     .price(anomalyDetectResult.getUserContractPrice())
                                                                     .build();
@@ -190,6 +194,7 @@ public class ContractService {
                 "http://localhost:8000/analyze_estate",
                 structuredContractDataDTO,
                 AnomalyDetectResult.class);
+
 
         return response.getBody();
     }

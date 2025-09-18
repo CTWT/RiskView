@@ -702,13 +702,27 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     print(f"✴️ 위험 등급: {risk_level}")
     print(f"✴️ 분석 코멘트: {risk_comment}")
 
+    # 평균 대비 편차율 계산
+    deviationPercent = calculate_deviation_rate(userContractPrice, prices)
+    if deviationPercent is not None:
+        print(f"편차율: {deviationPercent:.2f}%")
+    else:
+        print("❌ 편차율을 계산할 수 없습니다.")
+
+    isAnomaly = True
+    if risk_level != "정상":
+        isAnomaly = False
+
+    print(f"z-score : {round(user_z_score, 2) if user_z_score is not None else None}")
+
     # --- 최종 결과 반환 ---
     analysis_result = {
         "address": address,
         "userContractPrice": userContractPrice,
         "totalRiskScore": totalRiskScore, # 최종 위험도 점수(100점 만점)
         "averagePrice": calculate_average_price(valid_rows), # 평균 시세(주변 실거래가 평균)
-        "isAnomaly": False, # 이상치 여부
+        "isAnomaly": isAnomaly, # 이상치 여부
+        "deviationPercent" : deviationPercent,
         "riskAssessment": {
             "level": risk_level,
             "comment": risk_comment
@@ -719,7 +733,30 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
             "label": userLabel
         }
     }
+
     return analysis_result
+
+# ============================================
+# 사용자 입력값에 대한 편차율 계산 함수
+# ============================================
+def calculate_deviation_rate(user_value, values):
+    """
+    평균 대비 편차율을 계산합니다.
+    
+    @param user_value: 사용자 입력 값
+    @param values: 비교 대상 값 리스트
+    @return: 편차율 (float, %) 또는 None
+    """
+    n = len(values)
+    if n == 0:
+        return None
+
+    mean = sum(values) / n
+    if mean == 0:
+        return None
+
+    deviationPercent = abs(user_value - mean) / mean * 100
+    return deviationPercent
 
 # 파일 단독 실행 시 테스트용 임시 계약 데이터로 분석 실행
 if __name__ == '__main__':

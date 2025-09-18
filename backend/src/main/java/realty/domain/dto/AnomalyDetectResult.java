@@ -1,5 +1,7 @@
 package realty.domain.dto;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,6 +18,7 @@ public class AnomalyDetectResult {
     private Long totalRiskScore;    // 총 점수
     private Long averagePrice;      // 평균가
     private Boolean isAnomaly;      // 이상여부
+    private BigDecimal deviationPercent;
     private RiskAssessment riskAssessment;  //위험 코멘트
     private UserZScoreAnalysis userZScoreAnalysis; //z-score 분석
 }

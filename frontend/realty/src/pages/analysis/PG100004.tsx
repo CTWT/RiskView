@@ -19,6 +19,7 @@ export interface AnomalyDetectResult {
   totalRiskScore: number;
   averagePrice: number;
   isAnomaly: boolean;
+  deviationPercent : number,
   riskAssessment: RiskAssessment;
   userZScoreAnalysis: UserZScoreAnalysis;
 }
@@ -47,21 +48,10 @@ export interface FinalCommitRequest {
   anomalyDetectResult: AnomalyDetectResult;
   analysisReportsDTO: AnalysisReportsDTO;
 }
-interface AnalysisStep {
-  label: string;
-  action?: () => Promise<string | void>;
-}
 
 const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
-
-  const [documentCode, setDocumentCode] = useState<string | null>(null);
-  const [clauseAnalysis, setClauseAnalysis] = useState<ContractClauseDTO | null>(null);
-  const [anomalyDetectResult, setAnomalyDetectResult] = useState<AnomalyDetectResult | null>(null);
-  const [analysisReport, setAnalysisReport] = useState<AnalysisReportsDTO | null>(null);
-
-  const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
   const uploadDocument = async (): Promise<string | null> => {
     try {
@@ -96,6 +86,7 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
       clause
     );
     console.log("특약사항 분석결과 ==>", response.data);
+    console.log(response.data.riskReason)
     return response.data;
   };
 
@@ -148,14 +139,12 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
 
       // 1️⃣ 문서 업로드
       const uploadedDocumentCode = await uploadDocument();
-      setDocumentCode(uploadedDocumentCode ?? "");
       accumulatedProgress += 20;
       setProgress(accumulatedProgress);
       setCurrentStep(1);
 
       // 2️⃣ 이상치 분석
       const rAnomalyDetectResult = await anomalyDetect(ocrData!);
-      setAnomalyDetectResult(rAnomalyDetectResult);
       accumulatedProgress += 20;
       setProgress(accumulatedProgress);
       setCurrentStep(2);
@@ -165,7 +154,6 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
       const specialTerms = ocrData?.structuredContractDataDTO?.specialTerms?.trim();
       if (specialTerms) {
         rClauseAnalysis = await clauseAnalyze(specialTerms);
-        setClauseAnalysis(rClauseAnalysis);
       }
       accumulatedProgress += 20;
       setProgress(accumulatedProgress);
@@ -173,7 +161,6 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
 
       // 4️⃣ AI 위험 요소 분석
       const rAnalysisReport = dummyAnalysisReport//await aiRiskAnalyze(ocrData!, rAnomalyDetectResult);
-      setAnalysisReport(rAnalysisReport);
       accumulatedProgress += 20;
       setProgress(accumulatedProgress);
       setCurrentStep(4);

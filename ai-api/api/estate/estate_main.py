@@ -193,6 +193,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     address = contract_data.location
     userContractPrice = contract_data.deposit + (contract_data.rentAmount * 100) # 환산전세가 계산
     user_bldg_usg = normalize_building_usage(contract_data.buildingStructureUse)
+    contract_date_str = contract_data.contractDate[:8] if isinstance(contract_data.contractDate, str) and len(contract_data.contractDate) >= 6 else ""
 
     print("입력한 주소: ", address)
     print(f"입력한 계약 정보: 계약금액 {userContractPrice}, 건물용도: {user_bldg_usg}")
@@ -592,14 +593,14 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # ============================================
     # 실거래가 이상치 탐지
     # ============================================
-    data = runEstate("1000", "2025", sigungu, user_bldg_usg) # 실거래가 데이터 가져옴(동일 자치구, 동일 건물용도)
-    if not data or not data.get("rows"):
+    rows, total_count = runEstate("1", "1000", sigungu_code, user_bldg_usg, contract_date_str) # 실거래가 데이터 가져옴(동일 자치구, 동일 건물용도)
+    if not rows:
         print("실거래가 데이터를 가져오지 못했습니다.")
         print(f"불러온 전체 실거래가 데이터: 0개")
         # exit() 대신 결과 반환
         return {"error": "실거래가 데이터를 가져오지 못했습니다."}
-    rows = data["rows"]
 
+    # TODO: total_count를 사용하여 페이지네이션 구현 필요
     # 계약금액 계산
     for row in rows:
         row["contract_price"] = calculate_contract_price(row)
@@ -607,6 +608,11 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # 유효한 계약금액만 필터링
     valid_rows = [r for r in rows if r["contract_price"] is not None]
     print(f"불러온 전체 실거래가 데이터: {len(valid_rows)}개")
+
+    # 실거래가 데이터가 없는 경우에 대한 처리
+    if not valid_rows:
+        print("유효한 실거래가 데이터가 없습니다.")
+
     prices = [r["contract_price"] for r in valid_rows]
 
     # 주변 실거래가 데이터에 Z-score와 라벨 추가
@@ -631,31 +637,38 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
 
     user_z_score = calculate_user_z_score(userContractPrice, prices)
     userLabel = "계산 불가"
-    price_stability_score = 0 # 시세 안정성 점수 (80점 만점)
+    price_stability_score = 0  # 시세 안정성 점수 (80점 만점)
 
-    if user_z_score is not None:
-        userLabel = classify_z_score(user_z_score)
-        print(f"입력하신 계약금액({userContractPrice})의 Z-score는 {user_z_score:.2f}이며, '{userLabel}' 수준입니다.")
-        
-        # Z-score를 80점 만점의 '시세 안정성 점수'로 변환 (비선형)
-        # 0~0.5: 안전(70~80), 0.5~1.0: 양호(50~70), 1.0~1.5: 주의(30~50), 1.5~2.0: 경계(10~30), 2.0~: 위험(0~10)
-        z = abs(user_z_score)
-        if z < 0.5:
-            # 0.5일 때 70점, 0일 때 80점
-            price_stability_score = int(80 - 20 * z)
-        elif z < 1.0:
-            # 1.0일 때 50점, 0.5일 때 70점
-            price_stability_score = int(70 - 40 * (z - 0.5))
-        elif z < 1.5:
-            # 1.5일 때 30점, 1.0일 때 50점
-            price_stability_score = int(50 - 40 * (z - 1.0))
-        elif z < 2.0:
-            # 2.0일 때 10점, 1.5일 때 30점
-            price_stability_score = int(30 - 40 * (z - 1.5))
-        else: # 2.0 이상
-            price_stability_score = 0
+    if prices: # 주변 실거래가 데이터가 있을 경우에만 Z-score 계산
+        user_z_score = calculate_user_z_score(userContractPrice, prices)
+
+        if user_z_score is not None:
+            userLabel = classify_z_score(user_z_score)
+            print(f"입력하신 계약금액({userContractPrice})의 Z-score는 {user_z_score:.2f}이며, '{userLabel}' 수준입니다.")
+            
+            # Z-score를 80점 만점의 '시세 안정성 점수'로 변환 (비선형)
+            # 0~0.5: 안전(70~80), 0.5~1.0: 양호(50~70), 1.0~1.5: 주의(30~50), 1.5~2.0: 경계(10~30), 2.0~: 위험(0~10)
+            z = abs(user_z_score)
+            if z < 0.5:
+                # 0.5일 때 70점, 0일 때 80점
+                price_stability_score = int(80 - 20 * z)
+            elif z < 1.0:
+                # 1.0일 때 50점, 0.5일 때 70점
+                price_stability_score = int(70 - 40 * (z - 0.5))
+            elif z < 1.5:
+                # 1.5일 때 30점, 1.0일 때 50점
+                price_stability_score = int(50 - 40 * (z - 1.0))
+            elif z < 2.0:
+                # 2.0일 때 10점, 1.5일 때 30점
+                price_stability_score = int(30 - 40 * (z - 1.5))
+            else: # 2.0 이상
+                price_stability_score = 0
+        else:
+            print("⚠️ 주변 실거래가 데이터가 있으나 Z-score를 계산할 수 없습니다. (데이터가 모두 동일한 값일 수 있습니다)")
+            price_stability_score = 40 # 계산 불가 시 중간값
     else:
         print("❌ 주변 실거래가 데이터가 부족하여 Z-score를 계산할 수 없습니다.")
+        price_stability_score = 40 # 데이터가 없으면 중간값(40점)으로 설정
 
     # 평균 대비 편차율 계산
     deviationPercent = calculate_deviation_rate(userContractPrice, prices)
@@ -757,9 +770,10 @@ def calculate_deviation_rate(user_value, values):
 if __name__ == '__main__':
     test_contract = LeaseContract(
         location="서울 서대문구 창천동 창천동 33-12",
-        deposit=500000000, # 보증금(예시: 5억)
+        deposit=100000000, # 보증금(예시: 1억)
         rentAmount=0, # 월세
         leasePeriodStart=date(2025, 8, 1), # 임대 시작일
-        buildingStructureUse="아파트" # 건물 용도
+        buildingStructureUse="아파트", # 건물 용도
+        contractDate="20250917" # 계약일
     )
     result = analyze_estate(test_contract)

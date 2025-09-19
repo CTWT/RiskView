@@ -5,13 +5,15 @@ from datetime import date
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
 #  작성자 : 김관호
-#  수정자 : 
+#  수정자 : 박윤성
 #  작성일 : 25.07.21
+#  수정일 : 25.09.19
 #  파일명 : LeaseContract.py
 
 # 정제된 OCR 데이터를 저장하고 POST요청보낼 계약서 클래스
 @dataclass
 class LeaseContract:
+    contractDate: date  # 계약일
     leaseType: str = ""  # 임대 유형(전세:JEONSE, 월세:MONTHLY)
     location: str = ""  # 소재지
     landType: str = ""  # 토지-지목

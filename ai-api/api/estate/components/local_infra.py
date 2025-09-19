@@ -1,4 +1,3 @@
-from tkinter.constants import LAST
 import requests
 import os
 import time

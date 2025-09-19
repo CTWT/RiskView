@@ -63,14 +63,18 @@ public class ContractService {
     private final RestTemplate restTemplate;
 
     public StructuredContractData findStructuredContractDataByDocumentcode(String documentcode) {
+        log.info("문서 코드로 구조화된 계약 데이터 조회 시작: {}", documentcode);
         return contractRepository.findByDocumentcode(documentcode);
     }
 
     public Documents findDocumentByUsercode(String Usercode) {
+        log.info("사용자 코드로 문서 조회 시작: {}", Usercode);
         return documentsRepository.findByUserCode(Usercode);
     }
 
     private String documentSave(ContractDTO.DocumentsDTO documentsDTO, String userCode) {
+        log.info("문서 저장 시작. 사용자 코드: {}", userCode);
+
         Documents entity = ContractDTO.DocumentsDTO.toEntity(documentsDTO);
         entity.setUserCode(userCode);
         entity.setDocumentCode("not-set");
@@ -81,21 +85,26 @@ public class ContractService {
         savedEntity.setDocumentCode(generatedCode);
         documentsRepository.save(savedEntity);
         documentsRepository.flush();
-
+        
+        log.info("문서 저장 완료. 생성된 문서 코드: {}", generatedCode);
         return generatedCode;
     }
 
     private void structuredContractDataSave(ContractDTO.StructuredContractDataDTO structuredContractDataDTO, String documentCode) {
+        log.info("구조화된 계약 데이터 저장 시작. 문서 코드: {}", documentCode);
         StructuredContractData entity = ContractDTO.StructuredContractDataDTO.toEntity(structuredContractDataDTO);
         entity.setDocumentcode(documentCode);
         contractRepository.save(entity);
+        log.info("구조화된 계약 데이터 저장 완료. 문서 코드: {}", documentCode);
     }
 
     private void fileStorageMetadataSave(ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO, String documentCode) {
+        log.info("파일 메타데이터 저장 시작. 문서 코드: {}", documentCode);
         FileStorageMetadata entity = ContractDTO.FileStorageMetadataDTO.toEntity(fileStorageMetadataDTO);
         entity.setFileCode("not-set");
         entity.setEntityCode(documentCode);
         FileStorageMetadata savedEntity = fileStorageMetadataRepository.save(entity);
+        fileStorageMetadataRepository.flush();
 
         String generateCode = "FSM" + String.format("%08d", savedEntity.getFileId());
         savedEntity.setFileCode(generateCode);
@@ -104,16 +113,18 @@ public class ContractService {
 
     @Transactional
     public String save(ContractDTO.ContractInfo contractInfo, String userCode) {
+        log.info("계약 정보 저장 트랜잭션 시작. 사용자 코드: {}", userCode);
         String documentsCode = documentSave(contractInfo.getDocumentsDTO(), userCode);
         structuredContractDataSave(contractInfo.getStructuredContractDataDTO(), documentsCode);
         fileStorageMetadataSave(contractInfo.getFileStorageMetadataDTO(), documentsCode);
 
-        System.out.println("계약서 저장 완료!");
+        log.info("계약 정보 저장 트랜잭션 완료. 문서 코드: {}", documentsCode);
         return documentsCode;
     }
 
     @Transactional
     public void save(FinalCommitRequest finalCommitRequest) {
+        log.info("최종 분석 결과 저장 트랜잭션 시작. 문서 코드: {}", finalCommitRequest.getDocumentCode());
         ContractClauseDTO contractClauseDTO = finalCommitRequest.getContractClauseDTO();
         contractClauseSave(contractClauseDTO, finalCommitRequest.getDocumentCode());
         
@@ -122,9 +133,11 @@ public class ContractService {
 
         AnomalyDetectResult anomalyDetectResult = finalCommitRequest.getAnomalyDetectResult();
         anomalyDetectSave(anomalyDetectResult, reportCode);
+        log.info("최종 분석 결과 저장 트랜잭션 완료. 문서 코드: {}", finalCommitRequest.getDocumentCode());
     }
 
     private void contractClauseSave(ContractClauseDTO contractClauseDTO, String documentCode) {
+        log.info("계약 조항 저장 시작. 문서 코드: {}", documentCode);
         // 문자열 → Enum 변환
         ClauseType clauseTypeEnum;
         try {
@@ -145,10 +158,12 @@ public class ContractService {
         
         contractClauseRepository.save(contractClause);
         contractClauseRepository.flush();
-        
+        log.info("계약 조항 저장 완료. 문서 코드: {}", documentCode);
     }
 
     private String analysisReportSave(AnalysisReportsDTO analysisReportsDTO, String documentCode) {
+        log.info("분석 리포트 저장 시작. 문서 코드: {}", documentCode);
+
         AnalysisReport analysisReport = AnalysisReport.builder()
                                                         .documentCode(documentCode)
                                                         .reportCode("not-set")
@@ -161,11 +176,14 @@ public class ContractService {
 
         AnalysisReport savedEntity = analysisReportRepository.save(analysisReport);
         analysisReportRepository.flush();
+
+        log.info("분석 리포트 저장 완료. 생성된 리포트 코드: {}", savedEntity.getReportCode());
         return savedEntity.getReportCode();
                                                         
     }
 
     private void anomalyDetectSave(AnomalyDetectResult anomalyDetectResult, String reportCode) {
+        log.info("거래 이상 감지 결과 저장 시작. 리포트 코드: {}", reportCode);
         TransactionAnomaly transactionAnomaly = TransactionAnomaly.builder()
                                                                     .reportCode(reportCode)
                                                                     .anomalyCode("not-set")
@@ -175,7 +193,8 @@ public class ContractService {
                                                                     .price(anomalyDetectResult.getUserContractPrice())
                                                                     .build();
 
-        transactionAnomalyRepository.save(transactionAnomaly);                                   
+        transactionAnomalyRepository.save(transactionAnomaly);
+        log.info("거래 이상 감지 결과 저장 완료. 리포트 코드: {}", reportCode);
     }
 
 
@@ -186,16 +205,22 @@ public class ContractService {
      * @return
      */
     public AnomalyDetectResult analyzeAnomaly(ContractDTO.StructuredContractDataDTO structuredContractDataDTO){
+        log.info("이상 거래 분석 시작. 주소: {}", structuredContractDataDTO.getLocation());
 
         triggerFastApiAnalysis("analyze_estate");
 
+        log.info("FastAPI 'analyze_estate' 호출");
         // post
         ResponseEntity<AnomalyDetectResult> response = restTemplate.postForEntity(
                 "http://localhost:8000/analyze_estate",
                 structuredContractDataDTO,
                 AnomalyDetectResult.class);
 
-
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("이상 거래 분석 성공. 결과: {}", response.getBody());
+        } else {
+            log.error("이상 거래 분석 실패. 응답 코드: {}", response.getStatusCode());
+        }
         return response.getBody();
     }
 
@@ -205,6 +230,7 @@ public class ContractService {
      * @return
      */
     public ContractClauseDTO analyzeClause(String contractClause){
+        log.info("특약사항 분석 시작. 내용: {}", contractClause);
         triggerFastApiAnalysis("analyze_clause");
 
         Map<String, String> body = new HashMap<>();
@@ -217,13 +243,19 @@ public class ContractService {
         // HttpEntity로 body + headers 감싸기
         HttpEntity<Map<String, String>> request = new HttpEntity<>(body, headers);
 
+        log.info("FastAPI 'analyze_clause' 호출");
         // POST 요청
         ResponseEntity<ContractClauseDTO> response = restTemplate.postForEntity(
                 "http://localhost:8000/analyze_clause",
                 request,
                 ContractClauseDTO.class
         );
-
+        
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("특약사항 분석 성공. 결과: {}", response.getBody());
+        } else {
+            log.error("특약사항 분석 실패. 응답 코드: {}", response.getStatusCode());
+        }
         return response.getBody();
     }
 
@@ -231,6 +263,7 @@ public class ContractService {
      * ocr결과를 이상치분석 api 요청
      */
     private void triggerFastApiAnalysis(String apiName) {
+        log.info("FastAPI 트리거 활성화: {}", apiName);
         Map<String, String> triggerBody = new HashMap<>();
         triggerBody.put("api_name", apiName);
 
@@ -241,7 +274,7 @@ public class ContractService {
 
         if (response.getBody() != null) {
             String message = (String) response.getBody().get("message");
-            System.out.println("FastAPI 응답: " + message);
+            log.info("FastAPI 트리거 응답: {}", message);
         }
     }
 

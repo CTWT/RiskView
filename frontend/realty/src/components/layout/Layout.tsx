@@ -1,4 +1,3 @@
-import React from "react";
 import type { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import Header from "./Header";
@@ -12,7 +11,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
     const location = useLocation();
 
-    // 헤더를 숨겨야 하는 조건 확인
+    // 헤더를 숨겨야 하는 조건 확인 ??? -> 헤더는 숨기지 않는다, 헤더에 있는 메뉴접근시 로그인 여부에 따라 메인 혹은 로그인 화면으로 이동시켜야한다.
     const shouldHideHeader = () => {
         // PG300001 페이지에서 signup 파라미터가 있는 경우 (회원가입 플로우)
         if (location.pathname === "/PG300001") {
@@ -31,9 +30,7 @@ const Layout = ({ children }: LayoutProps) => {
     return (
         <div className="layout-container">
             {!shouldHideHeader() && <Header />}
-            <main className={mainContentClass}>
-                {children}
-            </main>
+            <main className={mainContentClass}>{children}</main>
             <Footer />
         </div>
     );

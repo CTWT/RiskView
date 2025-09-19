@@ -3,6 +3,8 @@ import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
+import * as Common from "../../../../components/common";
+import * as UserAPI from "../../../../components/api";
 
 // Signup_InfoInputPage: 비밀번호 및 닉네임 설정 페이지
 
@@ -50,7 +52,7 @@ const userIdRegex = /^[a-z0-9._-]{4,20}$/;
  * @param props.onLogin - 로그인 페이지로 돌아가는 콜백 함수
  * @returns JSX.Element - 이메일(읽기전용), 비밀번호, 닉네임 입력 폼이 포함된 UI 컴포넌트
  */
-const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
+const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
     // useToast 훅 사용
     const { toast, showToast } = useToast(); // toast 상태도 가져오기
     // 아이디 중복 확인 중 여부 및 중단 제어
@@ -71,6 +73,99 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
     const [isNicknameValid, setIsNicknameValid] = useState<boolean | null>(
         null
     ); // null: 미확인, true: 유효, false: 무효
+
+    // 이메일 상태
+    // const [email, setEmail] = useState("");
+    // 이메일 전송 상태
+    // const [send, setSend] = useState(false);
+
+    // 공통 함수 적용
+    const [form, setForm] = useState({
+        id: "",
+        email: "",
+        num: "",
+    });
+
+    // 인풋 박스 변경점 체크
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // 인풋 박스 포커스 아웃 이벤트 발생
+    const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        switch (name) {
+            case "id": {
+                const idResult = Common.validateId(value);
+                if (idResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: idResult.value || "",
+                    }));
+                } else {
+                    showToast(idResult.message || "", { type: "error" });
+                }
+                break;
+            }
+            case "email": {
+                const emailResult = Common.validateEmail(value);
+
+                if (emailResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: emailResult.value || "",
+                    }));
+                    showToast(emailResult.message || "", { type: "success" });
+                } else {
+                    showToast(emailResult.message || "", { type: "error" });
+                }
+                break;
+            }
+            case "num": {
+                const numResult = Common.validateNum(value);
+
+                if (numResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: numResult.value || "",
+                    }));
+                } else {
+                    showToast(numResult.message || "", { type: "error" });
+                }
+                break;
+            }
+        }
+    };
+
+    const handleSendEmail = async () => {
+        const emailResult = Common.validateEmail(form.email);
+
+        if (!emailResult.valid) {
+            showToast(emailResult.message!, { type: "error" });
+            return;
+        }
+
+        try {
+            const available = await UserAPI.checkEmailDuplicate(
+                emailResult.value!
+            );
+            if (!available) {
+                showToast("이미 사용중인 이메일 입니다.", { type: "error" });
+                return;
+            }
+
+            const message = await UserAPI.sendVerificationEmail(
+                emailResult.value!
+            );
+            showToast(message || "인증코드가 전송되었습니다.", {
+                type: "success",
+            });
+            // setSend(true);
+        } catch {
+            showToast("이메일 전송 중 오류가 발생했습니다.", { type: "error" });
+        }
+    };
 
     /**
      * 비밀번호 보기/숨기기 토글 핸들러
@@ -373,7 +468,8 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
         if (validPassword && validNickname && validUserIdFinal) {
             // 모든 조건 통과 시 다음 페이지로 이동
             console.log("폼 제출 완료:", {
-                email: userEmail,
+                // email: userEmail,
+                // email,
                 password,
                 nickname,
                 userId,
@@ -427,20 +523,36 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
 
                 {/* 회원정보 입력 폼 */}
                 <form className="authForm" onSubmit={handleSubmit}>
-                    {/* 이메일 필드 (읽기 전용) */}
+                    {/* 이메일 필드 */}
                     <div className="authFormRow">
                         <input
-                            type="email"
-                            value={userEmail}
-                            readOnly
                             className="authInput"
-                            style={{
-                                backgroundColor: "#d9d9d9",
-                                color: "#828282",
-                                userSelect: "none",
-                            }}
-                            onMouseDown={(e) => e.preventDefault()} // 드래그 차단
+                            type="text"
+                            name="email"
+                            placeholder="이메일"
+                            value={form.email}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
                         />
+                    </div>
+                    {/* 인증번호 입력 필드 */}
+                    <div className="authFormRowEmail">
+                        <input
+                            className="authInput"
+                            type="text"
+                            name="num"
+                            placeholder="인증번호"
+                            value={form.num}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            maxLength={6}
+                        />
+                        <button
+                            className="normalButton"
+                            onClick={handleSendEmail}
+                        >
+                            인증받기
+                        </button>
                     </div>
 
                     {/* 아이디 입력 필드 */}

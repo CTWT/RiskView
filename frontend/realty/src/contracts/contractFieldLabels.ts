@@ -44,6 +44,7 @@ const contractFieldLabels: Record<ContractFieldKey, string> = {
     leasePeriodEnd: "임대 종료일",
     commissionAmount: "중개보수 금액",
     specialTerms: "특약사항",
+    contractDate: "계약일",
 
     // 임대인
     lessorAddress: "임대인 주소",

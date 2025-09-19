@@ -116,6 +116,9 @@ public class StructuredContractData implements Serializable {
     @Column(name = "special_terms", columnDefinition = "TEXT")
     private String specialTerms;
 
+    @Column(name = "contract_date")
+    private LocalDate contractDate;
+
     @Column(name = "lessor_address", length = 255)
     private String lessorAddress;
 

@@ -146,6 +146,9 @@ public class ContractDTO {
         private long commissionAmount;  // 중개보수 금액
         private String specialTerms;  // 특약사항
 
+        @DateTimeFormat(pattern = "yyyy-MM-dd")
+        private Date contractDate;  // 임대 종료일
+
         // Lessor (임대인)
         private String lessorAddress;  // 임대인 주소
         private String lessorIdNumber;  // 임대인 주민등록번호
@@ -200,6 +203,7 @@ public class ContractDTO {
                 .leasePeriodEnd(toDate(structuredContractData.getLeasePeriodEnd()))
                 .commissionAmount(structuredContractData.getCommissionAmount() != null ? structuredContractData.getCommissionAmount() : 0)
                 .specialTerms(structuredContractData.getSpecialTerms())
+                .contractDate(toDate(structuredContractData.getContractDate()))
                 .lessorAddress(structuredContractData.getLessorAddress())
                 .lessorIdNumber(structuredContractData.getLessorIdNumber())
                 .lessorPhone(structuredContractData.getLessorPhone())

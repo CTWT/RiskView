@@ -9,7 +9,7 @@ import {
   Document,
   StyleSheet,
 } from "@react-pdf/renderer";
-import type { StructuredContractDataDTO } from "../../src/types/contract"
+import type { StructuredContractDataDTO } from "../types/contract"
 
 // 앱 시작 시 1회 등록
 Font.register({

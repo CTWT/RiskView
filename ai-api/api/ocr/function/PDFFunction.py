@@ -126,6 +126,10 @@ def insertTexttoPDF(contract:LeaseContract,pdf_path:str) -> str:
     for i, text in enumerate(texts):
         page.insert_text((86, 522 + i * 12), text, fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
 
+    page.insert_text((465, 606), str(contract.contractDate.year), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
+    page.insert_text((500, 606), str(contract.contractDate.month), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
+    page.insert_text((529, 606), str(contract.contractDate.day), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
+
     page.insert_text((140, 622), contract.lessorAddress, fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
     page.insert_text((140, 637), contract.lessorIdNumber, fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
     page.insert_text((345, 637), contract.lessorPhone, fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)

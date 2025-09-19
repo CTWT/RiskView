@@ -48,6 +48,7 @@ async def process_file(file: UploadFile = File(...)):
     
     # ocr결과물 leaseContract 인스턴스에 매핑
     outputContract = ocrMapping(ocr_list)
+    print(outputContract)
 
     contract_json = jsonable_encoder(outputContract)
     return JSONResponse(content=contract_json)

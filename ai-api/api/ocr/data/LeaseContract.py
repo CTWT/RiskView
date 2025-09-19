@@ -13,7 +13,6 @@ from datetime import date
 # 정제된 OCR 데이터를 저장하고 POST요청보낼 계약서 클래스
 @dataclass
 class LeaseContract:
-    contractDate: date  # 계약일
     leaseType: str = ""  # 임대 유형(전세:JEONSE, 월세:MONTHLY)
     location: str = ""  # 소재지
     landType: str = ""  # 토지-지목
@@ -36,6 +35,7 @@ class LeaseContract:
     leasePeriodEnd: date = 0  # 임대 종료일
     commissionAmount: int = 0  # 중개보수 금액
     specialTerms: str = ""  # 특약사항
+    contractDate: date = 0  # 계약일
 
     # Lessor (임대인)
     lessorAddress: str = ""  # 임대인 주소

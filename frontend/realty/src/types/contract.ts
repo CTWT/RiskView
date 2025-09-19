@@ -52,6 +52,7 @@ export interface StructuredContractDataDTO {
     leasePeriodEnd: string | null;
     commissionAmount: number | null;
     specialTerms: string | null;
+    contractDate: string | null;
     lessorName: string | null;
     lessorAddress: string | null;
     lessorPhone: string | null;

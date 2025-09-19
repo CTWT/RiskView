@@ -7,7 +7,7 @@ import "../../styles/common/common.css";
 import contractFieldLabels from "../../contracts/contractFieldLabels";
 import type { StructuredContractDataDTO } from "../../types/contract";
 import { pdf } from "@react-pdf/renderer";
-import ReportPDF from "../../../public/pdfjs/reportPDF.tsx"; // 위에서 만든 컴포넌트 import
+import ReportPDF from "../../components/reportPDF"
 
 
 /*
@@ -106,6 +106,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         "leasePeriodStart",
         "leasePeriodEnd",
         "specialTerms",
+        "contractDate"
     ]);
 
     const restEntries = useMemo(() => {

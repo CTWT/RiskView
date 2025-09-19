@@ -61,7 +61,7 @@ const PG100003: React.FC<PG100003Props> = ({
     // Kakao 지도 객체를 저장할 ref
     const mapRef = useRef<kakao.maps.Map | null>(null);
 
-    const dateFields = ["middlePaymentDate", "balanceDate", "rentDate","leasePeriodStart","leasePeriodEnd"];
+    const dateFields = ["middlePaymentDate", "balanceDate", "rentDate","leasePeriodStart","leasePeriodEnd", "contractDate"];
 
     /**
      * Kakao 지도 초기화 useEffect

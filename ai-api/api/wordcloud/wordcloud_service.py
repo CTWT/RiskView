@@ -6,6 +6,13 @@ from dotenv import load_dotenv
 from collections import Counter
 import pymysql
 
+# 생성자 : 유연우
+# 생성일 : 25.09.17
+# 파일명 : wordcloud_service.py
+# 수정자 :
+# 수정일 : 25.09.19
+# 설명 : 워드클라우드 생성 서비스
+
 load_dotenv()
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
@@ -14,10 +21,15 @@ DB_NAME = os.getenv("DB_NAME")
 DB_PORT = int(os.getenv("DB_PORT"))
 
 FONT_PATHS = [
-    "/System/Library/Fonts/Supplemental/AppleSDGothicNeo-Bold.otf",
-    "/Library/Fonts/AppleSDGothicNeo-Bold.otf",
-    "/System/Library/Fonts/Supplemental/AppleGothic.ttf",
+    # macOS 기본 폰트
+    "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+    # Windows 기본 폰트
+    "C:/Windows/Fonts/malgun.ttf",
+    # 공통 설치용 (Noto Sans CJK KR)
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+    "C:/Windows/Fonts/NotoSansCJKkr-Regular.otf",
 ]
+
 FONT_PATH = next((p for p in FONT_PATHS if os.path.exists(p)), None)
 if not FONT_PATH:
     raise FileNotFoundError("굵은 한글 폰트를 찾지 못했습니다.")
@@ -30,8 +42,8 @@ VIOLET = ["#7c5cff", "#8b5cf6", "#a78bfa"]
 MAGENTA = ["#d946ef", "#ff4fd8"]
 
 
-def _clamp01(x):
-    return max(0.0, min(1.0, x))
+# def _clamp01(x):
+#     return max(0.0, min(1.0, x))
 
 
 def _weighted_choice(items, weights):
@@ -120,13 +132,8 @@ def generate_wordcloud(months: int = 12) -> bytes:
     return buf.getvalue()
 
 
-# 로컬에서 시각화 확인용 헬퍼 함수 (FastAPI 라우트에서는 호출하지 마세요)
+# 로컬에서 시각화 확인용 함수 (FastAPI 라우트에서는 호출 X)
 def preview_wordcloud(months: int = 12, save_path: str | None = None):
-    """
-    로컬에서 시각화 확인용 헬퍼.
-    - FastAPI 라우트에서는 호출하지 마세요.
-    - months만 받도록 generate_wordcloud와 동일 시그니처 유지.
-    """
     png = generate_wordcloud(months=months)
     from PIL import Image as _Image
     import io as _io

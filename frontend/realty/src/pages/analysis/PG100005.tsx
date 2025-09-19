@@ -6,6 +6,9 @@ import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import "../../styles/common/common.css";
 import contractFieldLabels from "../../contracts/contractFieldLabels";
 import type { StructuredContractDataDTO } from "../../types/contract";
+import { pdf } from "@react-pdf/renderer";
+import ReportPDF from "../../../public/pdfjs/reportPDF.tsx"; // 위에서 만든 컴포넌트 import
+
 
 /*
  * @file PG100005.tsx
@@ -26,10 +29,23 @@ interface PG100005Props {
     documentCode: string | null;
 }
 
+
 const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     const [data, setData] = useState<StructuredContractDataDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState<string | null>(null);
+
+    const handleExportPDF = async (data: StructuredContractDataDTO) => {
+        const blob = await pdf(<ReportPDF data={data} />).toBlob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "분석보고서.pdf";
+        a.click();
+
+        URL.revokeObjectURL(url); // 메모리 해제
+    };
 
     useEffect(() => {
         const code = documentCode ?? sessionStorage.getItem("rv_documentCode");
@@ -172,7 +188,13 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             <span className="rv05-chip-dot note" />
             <div>
               <div className="rv05-chip-title">계약 유형</div>
-              <div className="rv05-chip-sub">{leaseType}</div>
+              <div className="rv05-chip-sub">
+                {leaseType === "JEONSE"
+                  ? "전세"
+                  : leaseType === "MONTHLY"
+                  ? "월세"
+                  : leaseType}
+              </div>
             </div>
           </div>
         </div>
@@ -273,10 +295,14 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   <li key={idx}>
                     <span>{label}</span>
                     <em>
-                      { value === "true"
+                      {value === "true"
                         ? "예"
                         : value === "false"
                         ? "아니오"
+                        : value === "JEONSE"
+                        ? "전세"
+                        : value === "MONTHLY"
+                        ? "월세"
                         : value}
                     </em>
                   </li>
@@ -292,6 +318,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             onClick={() => window.history.back()}
           >
             뒤로
+          </button>
+          <button
+            className="an02-ai-analyze-start-btn"
+            onClick={() => data && handleExportPDF(data)}
+          >
+            pdf 파일로 받기
           </button>
           <button
             className="an02-ai-analyze-start-btn"

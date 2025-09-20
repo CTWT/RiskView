@@ -79,18 +79,31 @@ public class EmailService {
             logger.debug("MimeMessageHelper 생성 및 기본 설정 완료.");
             helper.setFrom(senderEmail);
             helper.setTo(email);
-            helper.setSubject("이메일 인증코드");
-            String emailContent = "<div style=\"font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;\">"
-                                + "<h2 style=\"color: #0056b3;\">이메일 인증 안내</h2>"
-                                + "<p>안녕하세요. 귀하의 이메일 인증을 위한 코드가 발급되었습니다.</p>"
-                                + "<p>아래 인증 코드를 입력하여 본인 확인을 완료해 주세요.</p>"
-                                + "<div style=\"background-color: #f0f0f0; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;\">"
-                                + "<p style=\"font-size: 24px; font-weight: bold; color: #d9534f; margin: 0;\">" + code + "</p>"
-                                + "</div>"
-                                + "<p>본 인증 코드는 30분 동안 유효합니다.</p>"
-                                + "<p>감사합니다.</p>"
-                                + "<p style=\"font-size: 12px; color: #777;\">본 메일은 발신 전용입니다.</p>"
-                                + "</div>";
+            helper.setSubject("[RiskView] 이메일 인증 코드를 확인해주세요.");
+            String emailContent = "<!DOCTYPE html>"
+                + "<html>"
+                + "<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa;\">"
+                + "  <div style=\"max-width: 600px; margin: 40px auto; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden;\">"
+                + "    <div style=\"background-color: #8b5cf6; color: white; padding: 24px; text-align: center;\">"
+                + "      <h1 style=\"margin: 0; font-size: 24px;\">RiskView 이메일 인증</h1>"
+                + "    </div>"
+                + "    <div style=\"padding: 32px;\">"
+                + "      <h2 style=\"font-size: 20px; color: #343a40; margin-top: 0;\">인증 코드를 확인해주세요.</h2>"
+                + "      <p style=\"font-size: 16px; color: #495057; line-height: 1.6;\">안녕하세요! RiskView입니다.<br>아래 인증 코드를 입력하여 본인 확인을 완료해주세요.</p>"
+                + "      <div style=\"background-color: #f1f3f5; border-radius: 8px; margin: 24px 0; padding: 20px; text-align: center;\">"
+                + "        <p style=\"font-size: 32px; font-weight: 700; color: #8b5cf6; margin: 0; letter-spacing: 4px;\">" + code + "</p>"
+                + "      </div>"
+                + "      <p style=\"font-size: 14px; color: #868e96;\">이 인증 코드는 <strong>30분</strong> 동안 유효합니다.</p>"
+                + "      <p style=\"font-size: 14px; color: #868e96;\">만약 직접 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.</p>"
+                + "    </div>"
+                + "    <div style=\"background-color: #f8f9fa; padding: 16px; text-align: center; font-size: 12px; color: #adb5bd;\">"
+                + "      © RiskView. All rights reserved.<br>본 메일은 발신 전용입니다."
+                + "    </div>"
+                + "  </div>"
+                + "</body>"
+                + "</html>";
+
+        
             helper.setText(emailContent, true);
 
             logger.debug("이메일 전송 시도...");

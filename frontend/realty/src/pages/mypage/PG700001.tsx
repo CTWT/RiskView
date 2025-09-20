@@ -1,16 +1,18 @@
-import React from "react";
-import { FiBarChart, FiAlertTriangle, FiDollarSign, FiZap } from "react-icons/fi";
+import React, { useState } from "react";
+import { FiBarChart, FiAlertTriangle, FiDollarSign, FiZap, FiChevronLeft } from "react-icons/fi";
 import "../../styles/common/Common.css";
 import PageContainer from "../../components/layout/PageContainer";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import PG700002 from "./PG700002";
+import PG700003 from "./PG700003";
 
 /*
 * 수업명 : 가비아 2회차
 * 이름 : 이주하
 * 작성자 : 이주하
-* 수정자 : 
+* 수정자 : 박윤성
 * 작성일 : 25.09.11
+* 수정일 : 25.09.20
 * 파일명 : PG700001.tsx
 */
 
@@ -29,6 +31,9 @@ import PG700002 from "./PG700002";
  */
 
 const PG700001: React.FC = () => {
+    // 프로필 수정 화면 표시 여부 상태
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+
     const userData = {
         nickname: "루미님", // 사용자 닉네임 
         email: "homeprotector", // 사용자 이메일 (localStorage에서 가져옴)
@@ -82,20 +87,44 @@ const PG700001: React.FC = () => {
         ],
     };
 
+    // 프로필 수정 버튼 클릭 핸들러
+    const handleEditProfileClick = () => {
+        setIsEditingProfile(true);
+    };
+
+    // 뒤로가기 버튼 클릭 핸들러
+    const handleBackClick = () => {
+        setIsEditingProfile(false);
+    };
+
     return (
         <>
         {/* 마이페이지 전체 페이지 레이아웃 래퍼 */}
-        <PageContainer showBreadcrumb={true} centerContent={true}>
+        <PageContainer showBreadcrumb={true} centerContent={!isEditingProfile}>
 
             {/* 페이지 내부 컨텐츠 */}
             <div className="mypage-container">
 
-            {/* 상단 제목 영역 */}
-            <CommonContainerHeader
-                subtitle="마이페이지"
-                title="마이페이지"
-                description="나의 분석 기록과 통계를 확인하세요"
-            />
+            {isEditingProfile ? (
+                // ─── 프로필 수정 화면 ────────────────────────
+                <>
+                    <div className="profile-edit-wrapper">
+                        <p onClick={handleBackClick} className="backTo">
+                            <FiChevronLeft />
+                            뒤로가기
+                        </p>
+                        <PG700003 onBack={handleBackClick} />
+                    </div>
+                </>
+            ) : (
+                // ─── 마이페이지 기본 화면 ────────────────────────
+                <>
+                    {/* 상단 제목 영역 */}
+                    <CommonContainerHeader
+                        subtitle="마이페이지"
+                        title="마이페이지"
+                        description="나의 분석 기록과 통계를 확인하세요"
+                    />
 
             <div className="mypage-content">
 
@@ -105,7 +134,9 @@ const PG700001: React.FC = () => {
                   <p className="profile-name">{userData.nickname}</p> {/* 사용자 닉네임 */}
                   <p className="profile-email">{userData.email}</p>   {/* 사용자 이메일 */}
                 </div>
-                <button className="profile-edit-btn">프로필 수정</button>
+                <button className="profile-edit-btn" onClick={handleEditProfileClick}>
+                    프로필 수정
+                </button>
                 </div>
 
               {/* ─── 통계 및 차트 영역 ───────────────────── */}
@@ -222,6 +253,8 @@ const PG700001: React.FC = () => {
                 </div>
 
             </div>
+            </>
+            )}
             </div>
         </PageContainer>
         </>

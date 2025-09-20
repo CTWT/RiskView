@@ -60,25 +60,25 @@ public class UserService {
      * @throws InvalidCredentialsException 비밀번호가 일치하지 않을 때
      */
     public User userLogin(UserDTO userDTO, HttpServletRequest request) {
-        logger.info("Attempting login for userId: {}", userDTO.getUserId());
+        logger.info("로그인 시도 시작. userId: {}", userDTO.getUserId());
         // userId로 유저 객체 찾아옴
         User user = findByUserId(userDTO.getUserId());
 
         // 찾아오지 못할 경우
         if (user == null) {
-            logger.warn("Login failed: User not found for userId: {}", userDTO.getUserId());
+            logger.warn("로그인 실패: 사용자를 찾을 수 없음. userId: {}", userDTO.getUserId());
             throw new UserNotFoundException("존재하지 않는 아이디입니다.");
         }
 
         // 탈퇴한 사용자인 경우
         if (user.getIsDeleted() == 1) {
-            logger.warn("Login failed: Account is deleted for userId: {}", user.getUserId());
+            logger.warn("로그인 실패: 탈퇴한 계정. userId: {}", user.getUserId());
             throw new AccountDeletedException("탈퇴한 사용자입니다.");
         }
 
         // 비밀번호가 일치하지 않을 경우
         if (!passwordEncoder.matches(userDTO.getPassword(), user.getPassword())) {
-            logger.warn("Login failed: Invalid credentials for userId: {}", user.getUserId());
+            logger.warn("로그인 실패: 비밀번호 불일치. userId: {}", user.getUserId());
             throw new InvalidCredentialsException("아이디 혹은 비밀번호가 일치하지 않습니다.");
         }
         logger.info("Login credentials validated for userId: {}", user.getUserId());
@@ -103,7 +103,7 @@ public class UserService {
         String userAgent = request.getHeader("User-Agent");
         logger.debug("User-Agent: {}", userAgent);
         // 로그인 기록 남기기
-        logger.info("Login successful for userId: {}. Saving login history.", user.getUserId());
+        logger.info("로그인 성공. 로그인 기록 저장. userId: {}", user.getUserId());
         loginHistoryService.saveLoginHistory(user, ipAddress, userAgent);
         
         return user;
@@ -118,7 +118,7 @@ public class UserService {
      */
     @Transactional
     public void signUpUser(UserDTO userDTO) {
-        logger.info("Attempting to sign up new user with userId: {}", userDTO.getUserId());
+        logger.info("신규 회원가입 처리 시작. userId: {}", userDTO.getUserId());
         // UserDTO 객체에 담겨 있는 회원가입 시 입력 정보를 User 객체에 다시 옮겨 담음
         User user = new User();
         user.setUserId(userDTO.getUserId());
@@ -139,15 +139,15 @@ public class UserService {
         if (savedUser.getUserSeq() != null) {
             // UserCode설정: "U" + 8자리 숫자로 포맷된 userSeq
             savedUser.setUserCode("U" + String.format("%08d", savedUser.getUserSeq()));
-            logger.info("User code generated: {}", savedUser.getUserCode());
+            logger.info("사용자 코드 생성 완료: {}", savedUser.getUserCode());
         } else {
-            logger.error("Failed to generate userSeq after saving user.", new RuntimeException("userSeq is null"));
+            logger.error("userSeq 생성 실패. userSeq가 null입니다.", new RuntimeException("userSeq is null"));
             throw new RuntimeException("userSeq가 null입니다");
         }
 
         // 업데이트된 User 객체를 데이터베이스에 반영
         userRepository.save(savedUser);
-        logger.info("User signup successful for userId: {}", savedUser.getUserId());
+        logger.info("회원가입 성공. userId: {}", savedUser.getUserId());
     }
 
     /**
@@ -159,86 +159,88 @@ public class UserService {
      */
     @Transactional
     public void updateUserInfo(String userId, UserDTO userDTO) {
-        logger.info("Attempting to update user info for userId: {}", userId);
+        logger.info("사용자 정보 수정 시작. userId: {}", userId);
         // 데이터베이스에서 사용자 ID로 해당되는 사용자 정보 찾아옴
         User user = userRepository.findByUserId(userId);
         
         // 사용자를 찾을 수 없으면
         if (user == null) {
-            logger.warn("User info update failed: User not found for userId: {}", userId);
+            logger.warn("사용자 정보 수정 실패: 사용자를 찾을 수 없음. userId: {}", userId);
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
         // 새 비밀번호를 입력한 상태라면
         if (userDTO.getNewPassword() != null && !userDTO.getNewPassword().trim().isEmpty()) {
-            logger.debug("Attempting to update password for userId: {}", userId);
+            logger.debug("비밀번호 변경 시도. userId: {}", userId);
             // 현재 비밀번호를 입력하지 않으면
             if (userDTO.getCurrentPassword() == null || userDTO.getCurrentPassword().trim().isEmpty()) {
-                logger.warn("Password update failed for {}: current password not provided.", userId);
+                logger.warn("비밀번호 변경 실패: 현재 비밀번호가 입력되지 않음. userId: {}", userId);
                 throw new InvalidCredentialsException("현재 비밀번호를 입력해주세요.");
             }
             // 현재 비밀번호가 일치하지 않으면
             if (!passwordEncoder.matches(userDTO.getCurrentPassword(), user.getPassword())) {
-                logger.warn("Password update failed for {}: current password does not match.", userId);
+                logger.warn("비밀번호 변경 실패: 현재 비밀번호 불일치. userId: {}", userId);
                 throw new InvalidCredentialsException("현재 비밀번호가 일치하지 않습니다.");
             }
 
             // 새 비밀번호와 비밀번호 확인이 일치하지 않으면
             if (!userDTO.getNewPassword().equals(userDTO.getConfirmNewPassword())) {
-                logger.warn("Password update failed for {}: new password and confirmation do not match.", userId);
+                logger.warn("비밀번호 변경 실패: 새 비밀번호와 확인이 일치하지 않음. userId: {}", userId);
                 throw new InvalidCredentialsException("새 비밀번호와 비밀번호 확인이 일치하지 않습니다.");
             }
 
             // 새 비밀번호 저장
             user.setPassword(passwordEncoder.encode(userDTO.getNewPassword()));
-            logger.debug("Password updated successfully for userId: {}", userId);
+            logger.debug("비밀번호 변경 성공. userId: {}", userId);
         }
         // 이름이 입력된 상태라면
         if (userDTO.getName() != null && !userDTO.getName().trim().isEmpty()) {
             // 이름 저장
             user.setName(userDTO.getName().trim());
-            logger.debug("Updating name for userId: {}", userId);
+            logger.debug("이름 변경. userId: {}", userId);
         }
         // 닉네임이 입력된 상태라면
         if (userDTO.getUserNickname() != null && !userDTO.getUserNickname().trim().isEmpty()) {
             // 닉네임 저장
             user.setUserNickname(userDTO.getUserNickname().trim());
-            logger.debug("Updating nickname for userId: {}", userId);
+            logger.debug("닉네임 변경. userId: {}", userId);
         }
         // 이메일이 입력된 상태라면
         if (userDTO.getEmail() != null && !userDTO.getEmail().trim().isEmpty()) {
             // 이메일 저장
             user.setEmail(userDTO.getEmail().trim());
-            logger.debug("Updating email for userId: {}", userId);
+            logger.debug("이메일 변경. userId: {}", userId);
         }
         // 언어가 입력된 상태라면
         if (userDTO.getPreferredLanguage() != null && !userDTO.getPreferredLanguage().trim().isEmpty()) {
             // 언어 저장
             user.setPreferredLanguage(userDTO.getPreferredLanguage());
-            logger.debug("Updating preferred language for userId: {}", userId);
+            logger.debug("선호 언어 변경. userId: {}", userId);
         }
 
         // 데이터베이스에 변경사항 저장
         userRepository.save(user);
-        logger.info("User info updated successfully for userId: {}", userId);
+        logger.info("사용자 정보 수정 성공. userId: {}", userId);
     }
 
-    /* 추후 개발 시 참고 예정
+    /**
+     * 회원 탈퇴 처리
+     * @param userId 사용자 ID
+     * @param password 현재 비밀번호
+     */
+    @Transactional
     public void deleteAccount(String userId) {
+        logger.info("회원 탈퇴 처리 시작. userId: {}", userId);
         // 사용자 ID로 데이터베이스에서 사용자 찾기
         User user = userRepository.findByUserId(userId);
-        // 사용자를 찾았으면
-        if (user != null) {
-            // 회원탈퇴처리
-            user.setIsDeleted(1);
-            // 데이터베이스에 반영
-            userRepository.save(user);
-        // 사용자를 찾을 수 없으면
-        } else {
-            System.out.println("사용자를 찾을 수 없습니다");
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
+        // 회원탈퇴처리 (is_deleted = 1)
+        user.setIsDeleted(1);
+        userRepository.save(user);
+        logger.info("회원 탈퇴 처리 완료 (is_deleted=1). userId: {}", userId);
     }
-    */
 
     /**
      * 사용자 ID 찾기
@@ -248,24 +250,24 @@ public class UserService {
      * @throws AccountDeletedException 탈퇴한 사용자인 경우
      */
     public String findUserId(UserDTO userDTO) {
-        logger.info("Attempting to find userId for name: {} and email: {}", userDTO.getName(), userDTO.getEmail());
+        logger.info("아이디 찾기 시작. name: {}, email: {}", userDTO.getName(), userDTO.getEmail());
         // 이름과 이메일로 유저 찾아옴
         User foundUser = findByNameAndEmail(userDTO.getName(), userDTO.getEmail());
 
         // 유저 정보를 찾지 못하면
         if (foundUser == null) {
-            logger.warn("Find userId failed: User not found for name: {} and email: {}", userDTO.getName(), userDTO.getEmail());
+            logger.warn("아이디 찾기 실패: 사용자를 찾을 수 없음. name: {}, email: {}", userDTO.getName(), userDTO.getEmail());
             throw new UserNotFoundException("입력하신 정보와 일치하는 사용자를 찾을 수 없습니다.");
         }
         
         // 탈퇴한 사용자인 경우
         if (foundUser.getIsDeleted() == 1) {
-            logger.warn("Find userId failed: Account is deleted for user: {}", foundUser.getUserId());
+            logger.warn("아이디 찾기 실패: 탈퇴한 계정. userId: {}", foundUser.getUserId());
             throw new AccountDeletedException("탈퇴한 사용자입니다.");
         }
 
         // 찾은 유저의 아이디 반환
-        logger.info("Found userId: {} for name: {} and email: {}", foundUser.getUserId(), userDTO.getName(), userDTO.getEmail());
+        logger.info("아이디 찾기 성공. userId: {} for name: {}, email: {}", foundUser.getUserId(), userDTO.getName(), userDTO.getEmail());
         return foundUser.getUserId();
     }
 
@@ -277,17 +279,17 @@ public class UserService {
      * @throws EmailNotVerifiedException 이메일 인증이 완료되지 않았을 때
      */
     public User authToFindPassword(UserDTO userDTO, HttpServletRequest request) {
-        logger.info("Attempting to authenticate for password find for userId: {} and email: {}", userDTO.getUserId(), userDTO.getEmail());
+        logger.info("비밀번호 찾기 인증 시작. userId: {}, email: {}", userDTO.getUserId(), userDTO.getEmail());
         // 입력받은 사용자 ID와 이메일로 유저 찾아옴
         User foundUser = findByUserIdAndEmail(userDTO.getUserId(), userDTO.getEmail());
 
         // 일치하는 사용자를 찾을 수 없는 경우
         if (foundUser == null) {
-            logger.warn("Password find auth failed: User not found for userId: {} and email: {}", userDTO.getUserId(), userDTO.getEmail());
+            logger.warn("비밀번호 찾기 인증 실패: 사용자를 찾을 수 없음. userId: {}, email: {}", userDTO.getUserId(), userDTO.getEmail());
             throw new UserNotFoundException("입력하신 정보와 일치하는 사용자를 찾을 수 없습니다.");
         }
 
-        logger.info("Password find auth successful for userId: {}", foundUser.getUserId());
+        logger.info("비밀번호 찾기 인증 성공. userId: {}", foundUser.getUserId());
         // 찾아낸 사용자 객체 반환
         return foundUser;
     }
@@ -300,23 +302,23 @@ public class UserService {
      */
     @Transactional
     public void resetPassword(String userId, String newPassword) {
-        logger.info("Attempting to reset password for userId: {}", userId);
+        logger.info("비밀번호 재설정 시작. userId: {}", userId);
         // 데이터베이스에서 사용자 ID로 사용자 찾아옴
         User user = userRepository.findByUserId(userId);
         
         // 사용자를 찾을 수 없으면
         if (user == null) {
-            logger.warn("Password reset failed: User not found for userId: {}", userId);
+            logger.warn("비밀번호 재설정 실패: 사용자를 찾을 수 없음. userId: {}", userId);
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
         
         // 사용자 비밀번호 업데이트
         user.setPassword(passwordEncoder.encode(newPassword));
-        logger.debug("Password for user {} has been encoded and set.", userId);
+        logger.debug("새 비밀번호 암호화 및 설정 완료. userId: {}", userId);
         
         // 데이터베이스에 반영
         userRepository.save(user);
-        logger.info("Password reset successful for userId: {}", userId);
+        logger.info("비밀번호 재설정 성공. userId: {}", userId);
     }
 
     /**
@@ -325,7 +327,7 @@ public class UserService {
      * @return 사용자 정보
      */
     public User findByUserId(String userId) {
-        logger.debug("Finding user by userId: {}", userId);
+        logger.trace("사용자 조회 (by userId: {})", userId);
         return userRepository.findByUserId(userId);
     }
 
@@ -336,7 +338,7 @@ public class UserService {
      * @return 사용자 정보
      */
     public User findByNameAndEmail(String name, String email) {
-        logger.debug("Finding user by name: {} and email: {}", name, email);
+        logger.trace("사용자 조회 (by name: {}, email: {})", name, email);
         return userRepository.findByNameAndEmail(name, email);
     }
 
@@ -347,7 +349,7 @@ public class UserService {
      * @return 사용자 정보
      */
     public User findByUserIdAndEmail(String userId, String email) {
-        logger.debug("Finding user by userId: {} and email: {}", userId, email);
+        logger.trace("사용자 조회 (by userId: {}, email: {})", userId, email);
         return userRepository.findByUserIdAndEmail(userId, email);
     }
 
@@ -357,7 +359,7 @@ public class UserService {
      * @return 중복 여부
      */
     public boolean isUserIdDuplicated(String userId) {
-        logger.debug("Checking for userId duplication: {}", userId);
+        logger.debug("아이디 중복 확인. userId: {}", userId);
         return userRepository.existsByUserId(userId);
     }
 
@@ -367,7 +369,7 @@ public class UserService {
      * @return 중복 여부
      */
     public boolean isEmailDuplicated(String email) {
-        logger.debug("Checking for email duplication: {}", email);
+        logger.debug("이메일 중복 확인. email: {}", email);
         return userRepository.existsByEmail(email);
     }
 
@@ -377,19 +379,19 @@ public class UserService {
      * @return 중복 여부
      */
     public boolean isNicknameDuplicated(String nickname) {
-        logger.debug("Checking for nickname duplication: {}", nickname);
+        logger.debug("닉네임 중복 확인. nickname: {}", nickname);
         return userRepository.existsByUserNickname(nickname);
     }
 
     public Map<String, Object> getCurrentUserResponse(HttpServletRequest request){
-        logger.debug("Getting current user response from request.");
+        logger.debug("현재 사용자 정보 응답 생성 시작");
         Map<String, Object> response = new HashMap<>();
         
         User user = getCurrentUser(request);
 
         // 사용자를 찾을 수 없으면
         if (user == null) {
-            logger.warn("Could not find current user to build response.");
+            logger.warn("현재 사용자 정보를 찾을 수 없어 응답을 생성할 수 없습니다.");
             response.put("success", false);
             response.put("message", "사용자를 찾을 수 없습니다.");
             return response;
@@ -398,22 +400,27 @@ public class UserService {
         // 응답에 사용자 정보 담기
         response.put("success", true);
         response.put("user", Map.of(
+            "userCode", user.getUserCode(),
             "userId", user.getUserId(),
-            "nickname", user.getUserNickname()
+            "userNickname", user.getUserNickname(),
+            "email", user.getEmail(),
+            "name", user.getName(),
+            "preferredLanguage", user.getPreferredLanguage(),
+            "createdAt", user.getCreatedAt()
         ));
 
-        logger.debug("Successfully built response for current user: {}", user.getUserId());
+        logger.debug("현재 사용자 정보 응답 생성 완료. userId: {}", user.getUserId());
         return response;
     }
 
     public User getCurrentUser(HttpServletRequest request) {
-        logger.debug("Getting current user from request.");
+        logger.debug("요청에서 현재 사용자 정보 조회 시작");
         // 쿠키에서 accessToken 추출
         String accessToken = jwtUtil.extractTokenFromCookies(request, "accessToken");
         
         // accessToken이 없으면F
         if (accessToken == null || accessToken.isEmpty()) {
-            logger.warn("Cannot get current user: accessToken is missing or empty.");
+            logger.warn("현재 사용자를 조회할 수 없음: accessToken이 쿠키에 없습니다.");
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
@@ -421,30 +428,75 @@ public class UserService {
         Claims claims = jwtUtil.getClaims(accessToken);
         // Claims가 유효하지 않으면
         if (claims == null) {
-            logger.warn("Cannot get current user: claims from accessToken are invalid.");
+            logger.warn("현재 사용자를 조회할 수 없음: accessToken의 claims가 유효하지 않습니다.");
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
         // Claims에서 userId 추출
         String userId = claims.get("userId", String.class);
         if (userId == null) {
-            logger.warn("Cannot get current user: userId is null in claims.");
+            logger.warn("현재 사용자를 조회할 수 없음: claims에 userId가 없습니다.");
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
-        logger.debug("Found current user: {}", userId);
+        logger.debug("현재 사용자 조회 성공. userId: {}", userId);
         return findByUserId(userId);
     }
     
     public String getCurrentUserId(HttpServletRequest request){
-        logger.debug("Getting current userId from request.");
+        logger.debug("현재 사용자 ID 조회");
         User user = getCurrentUser(request);
         return user.getUserId();
     }
 
     public String getCurrentUserCode(HttpServletRequest request) {
-        logger.debug("Getting current userCode from request.");
+        logger.debug("현재 사용자 코드 조회");
         User user = getCurrentUser(request);
         return user.getUserCode();
+    }
+
+    /**
+     * 마이페이지에 필요한 사용자 정보를 DTO로 변환하여 반환
+     * @param userId
+     * @return
+     */
+    public UserDTO getUserInfoForMyPage(String userId) {
+        logger.debug("마이페이지용 사용자 정보 조회 시작. userId: {}", userId);
+        User user = findByUserId(userId);
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
+        }
+
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUserId(user.getUserId());
+        userDTO.setUserNickname(user.getUserNickname());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setName(user.getName());
+        userDTO.setPreferredLanguage(user.getPreferredLanguage());
+        userDTO.setCreatedAt(user.getCreatedAt());
+        // 비밀번호 관련 필드는 null 또는 빈 값으로 설정
+
+        logger.debug("마이페이지용 사용자 정보 조회 성공. userId: {}", userId);
+        return userDTO;
+    }
+
+    /**
+     * 현재 비밀번호 일치 여부 확인
+     * @param userId 사용자 ID
+     * @param currentPassword 사용자가 입력한 현재 비밀번호
+     * @return 일치하면 true, 아니면 false
+     */
+    public boolean verifyCurrentPassword(String userId, String currentPassword) {
+        logger.debug("현재 비밀번호 확인 시작. userId: {}", userId);
+        User user = findByUserId(userId);
+        if (user == null) {
+            throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
+        }
+        if (currentPassword == null || currentPassword.trim().isEmpty()) {
+            throw new InvalidCredentialsException("현재 비밀번호를 입력해주세요.");
+        }
+        boolean isMatch = passwordEncoder.matches(currentPassword, user.getPassword());
+        logger.debug("비밀번호 일치 여부 확인 결과: {}. userId: {}", isMatch, userId);
+        return isMatch;
     }
 }

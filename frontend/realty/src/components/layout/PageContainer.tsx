@@ -25,8 +25,8 @@ const PageContainer: React.FC<Props> = ({
     ...(fullWidth && { maxWidth: "none", width: "100vw" }),
     ...(backgroundColor && { backgroundColor }),
     justifyContent: centerContent ? "center" : "flex-start",
-    flexDirection: "column", // 세로 배치로 변경
-    alignItems: centerContent ? "center" : "flex-start",
+    flexDirection: "column",
+    alignItems: "center", // 항상 가로 중앙 정렬을 유지
   };
 
   return (

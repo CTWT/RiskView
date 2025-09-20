@@ -1876,6 +1876,8 @@
 .authButtonWrapper {
     display: flex;
     justify-content: center;
+    gap: 12px; /* 버튼 사이 간격 추가 */
+    margin-top: 20px; /* 상단 여백 추가 */
 }
 
 .authFindWrapper {
@@ -2330,6 +2332,16 @@
     background-color: #a290ff;
     color: white;
 }
+
+.authButton.submit {
+    width: 100%;
+}
+
+.authButton.cancel:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
 
 .authButton:hover {
     background-color: #9078ff;
@@ -3041,6 +3053,166 @@
     }
 }
 
+/* PG700001.tsx - 프로필 수정 화면 래퍼 */
+.profile-edit-wrapper {
+    width: 100%;
+    max-width: 800px; /* PG700003의 profile-edit-layout과 동일한 너비 */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-edit-wrapper .backTo {
+    margin-bottom: 1rem; /* 하단 여백 */
+    margin-left: 0; /* 기존 auto 마진 제거 */
+    margin-right: 0; /* 기존 auto 마진 제거 */
+    justify-content: flex-start;
+}
+
+/* PG700003.tsx - 프로필 수정 레이아웃 */
+.profile-edit-layout {
+    display: flex;
+    gap: 40px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 사이드바 */
+.profile-sidebar {
+    flex-shrink: 0;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #8b5cf6;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.profile-nav {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.profile-nav-item {
+    width: 100%;
+    padding: 12px 16px;
+    border: none;
+    background-color: transparent;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 16px;
+    font-weight: 600;
+    color: #4b5563;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.profile-nav-item:hover {
+    background-color: #f3f4f6;
+}
+
+.profile-nav-item.active {
+    background-color: #ede9fe;
+    color: #8b5cf6;
+}
+
+/* PG700003.tsx - 프로필 수정 페이지 스타일 */
+
+.profile-edit-container {
+    flex: 0 0 540px; /* flex-grow, flex-shrink를 0으로 설정하여 크기 고정 */
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.profile-edit-container .page-authwelcome {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.profile-edit-container .form-section {
+    width: 100%;
+    gap: 20px; /* 각 입력 그룹 사이의 간격 */
+}
+
+.profile-edit-container .input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-edit-container .input-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.profile-edit-container .input-field.readonly {
+    background-color: #f3f4f6; /* 회색 배경 */
+    color: #6b7280; /* 어두운 회색 텍스트 */
+    cursor: not-allowed; /* 커서 모양 변경 */
+}
+
+.profile-edit-container .auth-h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.5rem;
+}
+
+/* 입력 필드 내부에 버튼이 있는 경우 */
+.input-with-button {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-button .input-field {
+    padding-right: 80px; /* 버튼 공간 확보 */
+}
+
+.input-inner-button {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: calc(100% - 12px);
+    padding: 0 12px;
+    border: none;
+    border-radius: 4px;
+    background-color: #8b5cf6;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.input-inner-button:disabled {
+    background-color: #a78bfa;
+    cursor: not-allowed;
+}
+
+
+
 /* AI 감성 분석 스타일 */
 
 .sentiment-header h3 {
@@ -3388,15 +3560,15 @@
 /* PG300008.tsx - 아이디 찾기 스타일 */
 .backToLogin {
     color: #a290ff;
-    marginbottom: 16px;
+    margin-bottom: 16px;
     cursor: pointer;
-    fontweight: 600;
-    fontsize: 14px;
+    font-weight: 600;
+    font-size: 14px;
     display: flex;
-    alignitems: center;
+    align-items: center;
     gap: 6px;
-    alignself: flex-start;
-    marginleft: 0px;
+    align-self: flex-start;
+    margin-left: 0px;
 }
 
 .backToLogin:hover {

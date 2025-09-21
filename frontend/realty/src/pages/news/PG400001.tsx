@@ -7,8 +7,8 @@ import PageContainer from "../../components/layout/PageContainer";
  * 생성자 : 이주하
  * 생성일 : 25.08.01
  * 파일명 : PG400001.tsx
- * 수정자 : 박윤성
- * 수정일 : 25.09.08
+ * 수정자 : 박윤성, 유연우
+ * 수정일 : 25.09.19
  * 설명 : 뉴스 페이지 컴포넌트
  */
 
@@ -35,13 +35,14 @@ interface PaginationInfo {
 }
 
 // 감성 분석 데이터 타입
-interface SentimentAnalysis {
-  score: number; // 감성 점수 (0-100)
-  type: "positive" | "negative" | "neutral"; // 감성 유형
-  confidence: number; // 신뢰도 (0-100)
-  keywords: string[]; // 핵심 키워드
-  marketImpact: "bullish" | "bearish" | "neutral"; // 시장 영향도
-  analysisTime: string; // 분석 시간
+export type SentimentCategory = '긍정' | '부정' | '중립';
+export interface SentimentAnalysis {
+  sentimentScore: number | null;     // Double
+  sentimentCategory: SentimentCategory; // String (enum 성격)
+  sentimentEmoji: string | null;     // String
+  summary: string | null;            // String
+  keyWords: string[] | null;           // String (백엔드가 문자열로 내려줌)
+  analysisTime: string;          // String (날짜 시간)
 }
 
 // 뉴스 페이지 컴포넌트
@@ -79,30 +80,25 @@ const PG400001: React.FC = () => {
 
   // 감성 분석 API 호출 함수
   const fetchSentimentAnalysis = async (newsId: number) => {
+    console.log("감성 분석 API 호출, newsId:", newsId);
     setSentimentLoading(true);
     try {
       // API 호출 (실제 API 엔드포인트로 변경 필요)
-      const response = await fetch(`/api/sentiment/analyze/${newsId}`);
+      const response = await fetch(`http://localhost:8080/api/board/news_articles/sentimentAnalysis/${newsId}`);
+      console.log("API 호출 URL:", `/api/board/news_articles/sentimentAnalysis/${newsId}`);
       if (!response.ok) {
         throw new Error("감성 분석 API 호출 실패");
       }
       const data = await response.json();
+
+      console.log("감성 분석 데이터:", data);
       setSentimentAnalysis(data);
     } catch (error) {
       console.error("감성 분석 오류:", error);
-      // 임시 더미 데이터 (실제 환경에서는 제거)
-      setSentimentAnalysis({
-        score: 72,
-        type: "negative",
-        confidence: 85,
-        keywords: ["위험 요가", "신용 붕괴", "신중 접근"],
-        marketImpact: "bearish",
-        analysisTime: "2025.08.15 오후 17:39:48",
-      });
     } finally {
       setSentimentLoading(false);
     }
-  };
+   };
 
   // 뉴스 선택 시 감성 분석 실행
   const handleNewsSelect = (news: NewsItem) => {
@@ -113,13 +109,14 @@ const PG400001: React.FC = () => {
 
   // 감성 분석 결과 렌더링 함수
   const renderSentimentAnalysis = () => {
+    console.log("렌더링 감성 분석 데이터:", sentimentAnalysis);
     if (!sentimentAnalysis) return null;
 
     const getSentimentColor = () => {
-      switch (sentimentAnalysis.type) {
-        case "positive":
+      switch (sentimentAnalysis.sentimentCategory) {
+        case "긍정":
           return "#4CAF50";
-        case "negative":
+        case "부정":
           return "#f44336";
         default:
           return "#FF9800";
@@ -127,10 +124,10 @@ const PG400001: React.FC = () => {
     };
 
     const getSentimentText = () => {
-      switch (sentimentAnalysis.type) {
-        case "positive":
+      switch (sentimentAnalysis.sentimentCategory) {
+        case "긍정":
           return "긍정적 시장 선호";
-        case "negative":
+        case "부정":
           return "부정적 시장 선호";
         default:
           return "중립적";
@@ -143,9 +140,6 @@ const PG400001: React.FC = () => {
         <div className="rv05-banner">
           <div>
             <div className="rv05-banner-title"></div>
-            <div className="rv05-banner-sub">
-              AI 감성분석은 아직 개발 단계입니다.
-            </div>
           </div>
           <div className="rv05-badge warn">준비중</div>
         </div>
@@ -164,12 +158,12 @@ const PG400001: React.FC = () => {
                 <div
                   className="score-fill"
                   style={{
-                    width: `${sentimentAnalysis.score}%`,
+                    width: `${sentimentAnalysis.sentimentScore}%`,
                     backgroundColor: getSentimentColor(),
                   }}
                 ></div>
               </div>
-              <span className="score-value">{sentimentAnalysis.score}/100</span>
+              <span className="score-value">{sentimentAnalysis.sentimentScore}/100</span>
             </div>
           </div>
 
@@ -184,11 +178,11 @@ const PG400001: React.FC = () => {
 
           <div className="sentiment-keywords">
             <span className="keywords-label">핵심 키워드:</span>
-            {sentimentAnalysis.keywords.map((keyword) => (
+            {sentimentAnalysis.keyWords ? sentimentAnalysis.keyWords.map((keyword) => (
               <span key={keyword} className="keyword-tag">
                 {keyword}
               </span>
-            ))}
+            )) : "키워드 없음"}
           </div>
 
           <div className="analysis-time">
@@ -303,12 +297,13 @@ const PG400001: React.FC = () => {
         console.log("API 응답 데이터:", data);
         // 뉴스 데이터 설정
         const formattedNews: NewsItem[] = data.content.map((item: any) => ({
-          articleId: item.articleId,
+          articleId: item.articleId ?? item.article_id ?? item.id,  // fallback
           title: item.title,
-          publishedAt: item.publishedAt, // API 응답 필드명 확인
+          publishedAt: item.publishedAt ?? item.published_at,
           content: item.content,
-          siteName: item.siteName,
+          siteName: item.siteName ?? item.site_name,
         }));
+        console.log("포맷된 데이터:", formattedNews)
         setNewsData(formattedNews);
         // 페이지네이션 데이터 설정
         setPagination({
@@ -456,10 +451,13 @@ const PG400001: React.FC = () => {
 
           {/* 뉴스 목록 */}
           <div className="news-list">
-            {/* 로딩 중 로딩 스피너 표시 */}
+            {/* 로딩 중 로딩 스피너 표시 현재 관호오빠 코드 로딩바 사용중 (움직임 없는지 확인)*/} 
             {loading ? (
               <div className="loading-spinner">
-                <div className="spinner"></div>
+                <div className="an04-loading-card"></div> 
+
+                <div className="an04-spinner-wrapper"></div>
+                <div className="an04-spinner"></div>
                 <p>뉴스를 불러오는 중...</p>
               </div>
             ) : (
@@ -516,7 +514,7 @@ const PG400001: React.FC = () => {
                           pagination.currentPage === page ? "active" : ""
                         }`}
                         onClick={() => goToPage(page)}
-                      >
+                      > 
                         {page}
                       </button>
                     ))}
@@ -589,7 +587,7 @@ const PG400001: React.FC = () => {
                 ) : (
                   <>
                     {wordCloudImage ? (
-                      <img src={wordCloudImage} alt="연관 키워드 워드클라우드" style={{ width: '100%', height: 'auto' }} />
+                      <img src={wordCloudImage} alt="연관 키워드 워드클라우드" style={{ width: '100%', height: '80%' }} /> // 이미지 스타일 조정 원래 high : auto
                     ) : (
                       <p>워드클라우드를 표시할 수 없습니다.</p>
                     )}

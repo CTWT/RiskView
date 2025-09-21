@@ -1,5 +1,6 @@
 package realty.controller;
 
+import realty.domain.dto.NewsSentimentAnalysisDTO;
 import realty.service.NewsArticlesService;
 import realty.service.NewsArticlesService.NewsArticlesPage;
 
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,8 +22,9 @@ import org.springframework.web.bind.annotation.RestController;
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 박윤성
+ * 수정자 : 유연우
  * 작성일 : 25.07.28
+ * 수정일 : 25.09.19
  * 파일명 : NewsArticlesController.java
  */
 @Slf4j
@@ -99,4 +102,13 @@ public class NewsArticlesController {
         headers.setContentType(MediaType.IMAGE_PNG);
         return ResponseEntity.ok().headers(headers).body(imageBytes);
     }
+
+    @GetMapping("/sentimentAnalysis/{id}") 
+    public ResponseEntity<NewsSentimentAnalysisDTO> analyzeSentiment(@PathVariable("id") Long articleId) {
+        log.info("뉴스 감성 분석 요청 수신: articleId={}", articleId);
+        NewsSentimentAnalysisDTO result = newsArticlesService.performSentimentAnalysis(articleId);
+        log.info("뉴스 감성 분석 완료: articleId={}, result={}", articleId, result);
+        return ResponseEntity.ok(result);
+    }
+
 }

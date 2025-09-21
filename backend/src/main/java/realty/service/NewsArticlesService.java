@@ -1,7 +1,9 @@
 package realty.service;
 
 import realty.domain.dto.NewsArticlesDTO;
+import realty.domain.dto.NewsSentimentAnalysisDTO;
 import realty.domain.model.NewsArticles;
+import realty.domain.model.NewsSentimentAnalysis;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.HttpMethod;
 import realty.domain.repository.NewsArticlesRepository;
+import realty.domain.repository.NewsSentimentAnalysisRepository;
+
 import org.springframework.http.ResponseEntity;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -33,6 +37,9 @@ public class NewsArticlesService {
 
     @Autowired
     private NewsArticlesRepository newsArticlesRepository;
+
+    @Autowired
+    private NewsSentimentAnalysisRepository newsSentimentAnalysisRepository;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -182,7 +189,7 @@ public class NewsArticlesService {
             log.error("워드클라우드 데이터 생성 AI API 호출 중 오류 발생", e);
             return new byte[0];
         }
-    }
+    } 
 
     /**
      * 뉴스 목록 + 페이지 정보를 담고 있는 클래스
@@ -248,5 +255,20 @@ public class NewsArticlesService {
         public int getNextBlockStartPage() { return nextBlockStartPage; }
         public boolean isHasPrevBlock() { return hasPrevBlock; }
         public boolean isHasNextBlock() { return hasNextBlock; }
+    }
+
+    public NewsSentimentAnalysisDTO performSentimentAnalysis(Long articleId) {
+        
+        NewsArticles article = newsArticlesRepository.findByArticleId(articleId)
+                .orElseThrow(() -> new NoSuchElementException("해당 articleId에 해당하는 뉴스 기사가 없습니다: " + articleId));
+        
+        String sentimentCode = article.getArticleCode();
+        
+        NewsSentimentAnalysis existingAnalysis = newsSentimentAnalysisRepository.findByArticleCode(sentimentCode)
+                .orElseThrow(() -> new NoSuchElementException("해당 articleCode에 해당하는 감성 분석 결과가 없습니다: " + sentimentCode));
+
+        NewsSentimentAnalysisDTO dto = NewsSentimentAnalysisDTO.fromEntity(existingAnalysis);
+
+        return dto;
     }
 }

@@ -4,17 +4,16 @@ package realty.service;
 import realty.domain.dto.UserDTO;
 import realty.domain.model.RolePermission;
 import realty.domain.model.User;
-import realty.domain.repository.UserRepository;
+import realty.domain.repository.UserRepository; 
 import realty.exception.AccountDeletedException;
 import realty.exception.InvalidCredentialsException;
 import realty.exception.UserNotFoundException;
 import realty.support.JwtUtil;
 import realty.exception.EmailNotVerifiedException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional;
-
+import jakarta.transaction.Transactional; 
 import java.util.HashMap;
-import java.util.Map;
+import java.util.Map; 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

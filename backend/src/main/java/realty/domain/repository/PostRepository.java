@@ -1,10 +1,11 @@
 package realty.domain.repository;
 
+import realty.domain.model.Post;
+import realty.domain.model.User;
 import java.util.Optional;
-
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import realty.domain.model.Post;
 
 /*
  * 수업명 : 가비아 2회차
@@ -16,4 +17,14 @@ import realty.domain.model.Post;
 
 public interface PostRepository extends JpaRepository<Post, Long>, JpaSpecificationExecutor<Post> {
     Optional<Post> findByPostCode(String postCode);
+
+    /**
+     * 
+     * @param userCode
+     * @return
+     */
+    long countByAuthorUserCode(String userCode);
+    List<Post> findByAuthorUserCode(String userCode);
+    List<Post> findByAuthor(User user);
+    List<Post> findByPostCodeIn(List<String> postCodes);
 }

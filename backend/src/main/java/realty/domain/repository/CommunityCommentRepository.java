@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import realty.domain.model.CommunityComment;
 import realty.domain.model.Post;
+import realty.domain.model.User;
 
 /*
  * 수업명 : 가비아 2회차
@@ -18,4 +19,9 @@ import realty.domain.model.Post;
 public interface CommunityCommentRepository extends JpaRepository<CommunityComment, Long> {
     List<CommunityComment> findByPost(Post post);
     Optional<CommunityComment> findByCommentCode(String commentCode);
+
+    long countByAuthorUserCode(String userCode);
+    List<CommunityComment> findByAuthorUserCode(String userCode);
+    long countByPostId(Long postId);
+    List<CommunityComment> findByAuthor(User user);
 }

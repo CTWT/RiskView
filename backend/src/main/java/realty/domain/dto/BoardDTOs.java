@@ -9,8 +9,9 @@ import java.util.List;
 /*
  * 수업명 : 가비아 2회차
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.09.03
+ * 수정일 : 25.09.22
  * 파일명 : BoardDTOs.java
  */
 
@@ -34,6 +35,35 @@ public class BoardDTOs {
         private String author;
         private String date; // "YYYY.MM.DD"
         private int views;
+        private int likes;
+        private int comments;
+    }
+
+        /**
+     * 내가 쓴 댓글 목록 조회 응답 DTO
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MyCommentResponseDTO {
+        private Long id;
+        private String content;
+        private String postTitle;
+        private String createdAt; // "YYYY.MM.DD"
+        private Long postId;
+    }
+    
+    /**
+     * 내가 좋아요한 글 목록 조회 응답 DTO
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MyLikedPostResponseDTO {
+        private Long id;
+        private String title;
+        private String author;
+        private String createdAt; // "YYYY.MM.DD"
         private int likes;
         private int comments;
     }
@@ -99,5 +129,19 @@ public class BoardDTOs {
     @Data @AllArgsConstructor public static class PostSearchCondition {
         private String board; private String searchCategory; private String searchQuery;
         private String period; private String sortBy;
+    }
+
+    /**
+     * 내가 쓴 게시글 목록 조회 응답 DTO
+     */
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class MyPostResponseDTO {
+        private Long id;
+        private String title;
+        private String createdAt; // "YYYY.MM.DD"
+        private int likes;
+        private int comments;
     }
 }

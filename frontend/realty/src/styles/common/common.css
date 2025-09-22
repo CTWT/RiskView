@@ -4960,6 +4960,7 @@
 .stat-label {
     font-size: 12px;
     color: #666;
+    text-align: right;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -5606,6 +5607,14 @@
     background: #f59e0b;
 }
 
+.stat-icon.purple {
+    background: #8b5cf6;
+}
+
+.stat-card.clickable {
+    cursor: pointer;
+}
+
 .stat-content {
     flex: 1;
     text-align: right;
@@ -5978,4 +5987,231 @@
     to {
         stroke-dasharray: 69 534;
     }
+}
+
+/* PG700004.tsx - 로그인 이력 페이지 스타일 */
+.login-history-container {
+    width: 100%;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.login-history-container .page-authwelcome {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1.5rem;
+    position: relative;
+}
+
+.timeline-icon-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.timeline-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4b5563;
+    font-size: 20px;
+    z-index: 1;
+}
+
+.timeline-connector {
+    width: 2px;
+    flex-grow: 1;
+    background-color: #e5e7eb;
+}
+
+.timeline-content {
+    padding: 10px 0;
+    flex-grow: 1;
+}
+
+.timeline-header {
+    margin-bottom: 0.5rem;
+}
+
+.timeline-date {
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.timeline-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    background-color: #fafafa;
+    border: 1px solid #f3f4f6;
+    border-radius: 8px;
+    padding: 12px;
+}
+
+.timeline-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.timeline-info-icon {
+    font-size: 16px;
+    color: #9ca3af;
+}
+
+/* PG700001 - 내 활동 카드 스타일 */
+.activity-card .stat-content {
+    text-align: right;
+}
+
+.activity-details {
+    display: flex;
+    justify-content: right;
+    gap: 1rem;
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+/* PG700005.tsx - 내 활동 내역 */
+.my-activity-container {
+    width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    background-color: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+}
+
+.my-activity-container .page-authwelcome {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.activity-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 24px;
+}
+
+.activity-tab {
+    padding: 12px 16px;
+    border: none;
+    background-color: transparent;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+
+.activity-tab:hover {
+    color: #111827;
+}
+
+.activity-tab.active {
+    color: #8b5cf6;
+    border-bottom-color: #8b5cf6;
+}
+
+.activity-list {
+    display: grid;
+    width: 100%;
+}
+
+.activity-list-header {
+    display: grid;
+    padding: 12px 16px;
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 14px;
+}
+
+.activity-list-item {
+    display: grid;
+    padding: 16px;
+    border-bottom: 1px solid #f3f4f6;
+    align-items: center;
+}
+
+.activity-list-item:last-child {
+    border-bottom: none;
+}
+
+/* 각 탭별 그리드 컬럼 정의 */
+.posts-list .activity-list-header,
+.posts-list .activity-list-item {
+    grid-template-columns: 4fr 1fr 1fr;
+    gap: 16px;
+}
+
+.comments-list .activity-list-header,
+.comments-list .activity-list-item {
+    grid-template-columns: 3fr 2fr 1fr;
+    gap: 16px;
+}
+
+.liked-posts-list .activity-list-header,
+.liked-posts-list .activity-list-item {
+    grid-template-columns: 3fr 1fr 1fr 1fr;
+    gap: 16px;
+}
+
+/* 컬럼별 스타일 */
+.mypage-post-title a,
+.comment-post-title a {
+    color: #1f2937;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.mypage-post-title a:hover,
+.comment-post-title a:hover {
+    text-decoration: underline;
+}
+
+.post-comments,
+.post-date,
+.comment-date,
+.post-author,
+.post-likes {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.comment-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 300px; /* Adjust as needed */
+}
+
+.empty-message {
+    text-align: center;
+    padding: 40px;
+    color: #6b7280;
 }

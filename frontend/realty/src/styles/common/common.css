@@ -217,15 +217,9 @@
 
 /* 이미지 자체에 마우스 호버 시 강조 효과 */
 .an02-upload-image-icon:hover {
-<<<<<<< HEAD
-  transform: scale(1.06);
-  /* 8% 확대 */
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-=======
     transform: scale(1.06);
     /* 8% 확대 */
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .an02-upload-guide-text {
@@ -335,19 +329,6 @@
 
 /* 각 패널 (원본 파일, OCR 텍스트) 공통 스타일 */
 .an03-pane {
-<<<<<<< HEAD
-  flex: 1;
-  /* 가용한 공간을 균등하게 분배 */
-  min-width: 300px;
-  /* 최소 너비 설정하여 너무 줄어들지 않게 함 */
-  background-color: #fff;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-=======
     flex: 1;
     /* 가용한 공간을 균등하게 분배 */
     min-width: 300px;
@@ -359,7 +340,6 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .an03-pane-title {
@@ -372,19 +352,6 @@
 }
 
 .an03-uploaded-image-preview {
-<<<<<<< HEAD
-  max-width: 100%;
-  height: auto;
-  max-height: 600px;
-  /* 미리보기 이미지 최대 높이 제한 */
-  object-fit: contain;
-  /* 이미지 비율 유지하며 컨테이너에 맞춤 */
-  border-radius: 4px;
-  border: 1px solid #f0f0f0;
-  display: block;
-  /* 이미지 하단 여백 제거 */
-  margin: 0px;
-=======
     max-width: 100%;
     height: auto;
     max-height: 600px;
@@ -396,7 +363,6 @@
     display: block;
     /* 이미지 하단 여백 제거 */
     margin: 0px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .an03-no-preview {
@@ -426,20 +392,6 @@
 }
 
 .an03-structured-data-form {
-<<<<<<< HEAD
-  width: 100%;
-  max-height: 600px;
-  overflow-y: auto;
-  /* 세로 스크롤 허용 */
-  padding: 15px;
-  border: 1px solid #f0f0f0;
-  border-radius: 4px;
-  font-size: 1em;
-  line-height: 1.6;
-  resize: vertical;
-  font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
-  box-sizing: border-box;
-=======
     width: 100%;
     max-height: 600px;
     overflow-y: auto;
@@ -452,7 +404,6 @@
     resize: vertical;
     font-family: "Malgun Gothic", "맑은 고딕", sans-serif;
     box-sizing: border-box;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .an03-structured-data-form:focus {
@@ -525,7 +476,6 @@
 }
 
 .an03-map-placeholder {
-<<<<<<< HEAD
   width: 100%;
   height: 350px;
   /* 지도 영역 높이 */
@@ -537,19 +487,6 @@
   align-items: center;
   color: #666;
   font-size: 1.2em;
-=======
-    width: 100%;
-    height: 350px;
-    /* 지도 영역 높이 */
-    background-color: #e0e0e0;
-    border: 1px solid #f0f0f0;
-    border-radius: 4px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #666;
-    font-size: 1.2em;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .an03-map-dummy {
@@ -1338,19 +1275,11 @@
 
 /* 반응형 */
 @media (max-width: 900px) {
-<<<<<<< HEAD
-  .co21-head,
-  .co21-body .co21-row {
-    grid-template-columns: 100px 1fr 100px 100px;
-    padding: 14px 14px;
-  }
-=======
     .co21-head,
     .co21-body .co21-row {
         grid-template-columns: 100px 1fr 100px 100px;
         padding: 14px 14px;
     }
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 @media (max-width: 640px) {
@@ -2517,12 +2446,6 @@
     font-size: 15px;
   }
 
-<<<<<<< HEAD
-  .authButton {
-    padding: 16px;
-    font-size: 15px;
-  }
-=======
     .authButton {
         padding: 16px;
         font-size: 15px;
@@ -2531,7 +2454,6 @@
         padding: 16px;
         font-size: 15px;
     }
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 /* PG300007.css - 추가정보 입력 페이지 스타일 */
@@ -3485,15 +3407,6 @@
 }
 
 .keyword-tag {
-<<<<<<< HEAD
-  background: none;
-  border: 1px solid #ff3d3d;
-  border-radius: 16px;
-  padding: 4px 12px;
-  font-size: 12px;
-  color: #ff3d3d;
-  white-space: nowrap;
-=======
     background: none;
     border: 1px solid #ff3d3d;
     border-radius: 16px;
@@ -3501,7 +3414,6 @@
     font-size: 12px;
     color: #ff3d3d;
     white-space: nowrap;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .Ai-divider {
@@ -3585,15 +3497,6 @@
 }
 
 .sentiment-loading .spinner {
-<<<<<<< HEAD
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #2196f3;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 15px;
-=======
     width: 40px;
     height: 40px;
     border: 4px solid #f3f3f3;
@@ -3601,7 +3504,6 @@
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin-bottom: 15px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .sentiment-loading p {
@@ -3922,15 +3824,6 @@
 }
 
 .tab-item:hover {
-<<<<<<< HEAD
-  color: #6d50ff;
-}
-
-.tab-item.active {
-  color: #6d50ff;
-  border-bottom-color: #6d50ff;
-  font-weight: 600;
-=======
     color: #6d50ff;
 }
 
@@ -3938,7 +3831,6 @@
     color: #6d50ff;
     border-bottom-color: #6d50ff;
     font-weight: 600;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .write-btn {
@@ -4163,20 +4055,6 @@
 }
 
 .board-badge-인기 {
-<<<<<<< HEAD
-  background: rgba(255, 61, 61, 0.17);
-  color: #bb3d3d;
-}
-
-.board-badge-정보 {
-  background: rgba(61, 113, 255, 0.34);
-  color: #3d71ff;
-}
-
-.board-badge-질문 {
-  background: rgba(10, 202, 138, 0.33);
-  color: #0aca8a;
-=======
     background: rgba(255, 61, 61, 0.17);
     color: #bb3d3d;
 }
@@ -4189,7 +4067,6 @@
 .board-badge-질문 {
     background: rgba(10, 202, 138, 0.33);
     color: #0aca8a;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .board-item-title {
@@ -4306,17 +4183,10 @@
 }
 
 .post-header-top {
-<<<<<<< HEAD
-  display: flex;
-  alignitems: center;
-  justifycontent: space-between;
-  gap: 12;
-=======
     display: flex;
     alignitems: center;
     justifycontent: space-between;
     gap: 12;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .post-title {
@@ -4356,11 +4226,7 @@
 }
 
 .like-btn.liked {
-<<<<<<< HEAD
-  color: #7a5af8;
-=======
     color: #7a5af8;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .post-stats {
@@ -4384,15 +4250,9 @@
 }
 
 .emotion-divider {
-<<<<<<< HEAD
-  border: none;
-  border-bottom: 0.5px solid #6d50ff;
-  margin: 12px 0;
-=======
     border: none;
     border-bottom: 0.5px solid #6d50ff;
     margin: 12px 0;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .emotion-badge {
@@ -4444,15 +4304,9 @@
 }
 
 .score-fill {
-<<<<<<< HEAD
-  height: 6px;
-  border-radius: 4px;
-  background-color: #7a5af8;
-=======
     height: 6px;
     border-radius: 4px;
     background-color: #7a5af8;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .score-fill.positive {
@@ -4532,19 +4386,11 @@
 
 .comment-save-btn,
 .comment-cancel-btn {
-<<<<<<< HEAD
-  background-color: #a290ff;
-  border-radius: 6px;
-  color: white;
-  padding: 5px 15px;
-  border: none;
-=======
     background-color: #a290ff;
     border-radius: 6px;
     color: white;
     padding: 5px 15px;
     border: none;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .comment-cancel-btn {
@@ -4588,28 +4434,6 @@
 .comment-edit-btn,
 .post-edit-btn,
 .post-delete-btn {
-<<<<<<< HEAD
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  border: none;
-  background-color: #a290ff;
-  border-radius: 6px;
-  color: white;
-  padding: 5px 15px;
-}
-
-.comment-submit-btn {
-  align-self: flex-end;
-  padding: 10px 20px;
-  background-color: #a290ff;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-=======
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -4630,7 +4454,6 @@
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s ease;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .comment-submit-btn:hover {
@@ -4692,15 +4515,9 @@
 }
 
 .sentiment-bar-fill {
-<<<<<<< HEAD
-  height: 100%;
-  background-color: #6d50ff;
-  border-radius: 5px;
-=======
     height: 100%;
     background-color: #6d50ff;
     border-radius: 5px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .sentiment-score-number {
@@ -4790,18 +4607,6 @@
 
 /* 폼 입력 요소 */
 .form-input {
-<<<<<<< HEAD
-  width: 100%;
-  padding: 16px;
-  border: 0.5px solid rgba(130, 130, 130, 0.5);
-  border-radius: 8px;
-  font-size: 16px;
-  font-family: inherit;
-  line-height: 1.5;
-  transition: all 0.2s;
-  box-sizing: border-box;
-  background: #ffffff;
-=======
     width: 100%;
     padding: 16px;
     border: 0.5px solid rgba(130, 130, 130, 0.5);
@@ -4812,7 +4617,6 @@
     transition: all 0.2s;
     box-sizing: border-box;
     background: #ffffff;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .form-textarea {
@@ -5021,19 +4825,6 @@
 }
 
 .submit-button:disabled::after {
-<<<<<<< HEAD
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-=======
     content: "";
     position: absolute;
     left: 50%;
@@ -5045,7 +4836,6 @@
     border-top: 2px solid white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 @keyframes spin {
@@ -5249,17 +5039,10 @@
 }
 
 .stat-value {
-<<<<<<< HEAD
-  font-size: 24px;
-  font-weight: 700;
-  color: #4a90e2;
-  margin-bottom: 5px;
-=======
     font-size: 24px;
     font-weight: 700;
     color: #4a90e2;
     margin-bottom: 5px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .stat-label {
@@ -5519,16 +5302,6 @@
 }
 
 .card-content::before {
-<<<<<<< HEAD
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  border-radius: 16px;
-=======
     content: "";
     position: absolute;
     top: 0;
@@ -5537,7 +5310,6 @@
     bottom: 0;
     z-index: -1;
     border-radius: 16px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 /* 카드 헤더 */
@@ -5745,13 +5517,8 @@
 
 .warning-icon,
 .status-icon {
-<<<<<<< HEAD
-  color: white;
-  margin-right: 6px;
-=======
     color: white;
     margin-right: 6px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .ai-status-wrapper {
@@ -5761,15 +5528,6 @@
 }
 
 .ai-status-badge {
-<<<<<<< HEAD
-  padding: 6px 16px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 500;
-  color: white;
-  border: 1px solid;
-  mask-composite: exclude;
-=======
     padding: 6px 16px;
     border-radius: 20px;
     font-size: 16px;
@@ -5777,7 +5535,6 @@
     color: white;
     border: 1px solid;
     mask-composite: exclude;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .white-divider {
@@ -6002,19 +5759,11 @@
 }
 
 .chart-row {
-<<<<<<< HEAD
-  display: flex;
-  grid-template-columns: 80px 1fr 40px;
-  /* 고정된 그리드 레이아웃 */
-  align-items: center;
-  gap: 20px;
-=======
     display: flex;
     grid-template-columns: 80px 1fr 40px;
     /* 고정된 그리드 레이아웃 */
     align-items: center;
     gap: 20px;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
 
 .chart-month {
@@ -6314,16 +6063,11 @@
     stroke-dasharray: 0 534;
   }
 
-<<<<<<< HEAD
+
   to {
     stroke-dasharray: 69 534;
   }
-=======
-    to {
-        stroke-dasharray: 69 534;
-    }
 }
-<<<<<<< HEAD
 
 /* PG700004.tsx - 로그인 이력 페이지 스타일 */
 .login-history-container {
@@ -6550,7 +6294,5 @@
     text-align: center;
     padding: 40px;
     color: #6b7280;
->>>>>>> 5e34adb2ab31297b35c626638a9b172c34a6e7bc
 }
-=======
->>>>>>> ec02e9d (feat : 공통함수 적용 및 회원 가입 화면 압축)
+

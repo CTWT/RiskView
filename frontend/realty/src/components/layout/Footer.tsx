@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from "react-router-dom";
 import "../components.css";
 
@@ -6,8 +5,8 @@ import "../components.css";
  * 생성자 : 이주하
  * 생성일 : 25.09.10
  * 파일명 : Footer.tsx
- * 수정자 : 
- * 수정일 : 
+ * 수정자 :
+ * 수정일 :
  * 설명 : RiskView 서비스의 하단 정보 영역을 구성하는 Footer 컴포넌트
  *        브랜드 정보, 서비스 링크, 팀원, 연락처 정보를 제공하며,
  *        각 서비스 항목 클릭 시 해당 페이지로 라우팅
@@ -18,7 +17,7 @@ const Footer = () => {
 
     /**
      * 지정한 경로로 라우팅을 수행하는 함수
-     * @param path - 이동할 페이지의 경로 
+     * @param path - 이동할 페이지의 경로
      */
     const handleNavigate = (path: string) => {
         navigate(path);
@@ -36,10 +35,30 @@ const Footer = () => {
                     <div className="footer-section">
                         <h3>서비스</h3>
                         <ul>
-                            <li onClick={() => handleNavigate("/PG100001")} style={{ cursor: "pointer" }}>계약서 분석</li>
-                            <li onClick={() => handleNavigate("/PG600001")} style={{ cursor: "pointer" }}>서비스 소개</li>
-                            <li onClick={() => handleNavigate("/PG400001")} style={{ cursor: "pointer" }}>부동산 뉴스</li>
-                            <li onClick={() => handleNavigate("/PG500001")} style={{ cursor: "pointer" }}>커뮤니티</li>
+                            <li
+                                onClick={() => handleNavigate("/PG100001")}
+                                style={{ cursor: "pointer" }}
+                            >
+                                계약서 분석
+                            </li>
+                            <li
+                                onClick={() => handleNavigate("/PG600001")}
+                                style={{ cursor: "pointer" }}
+                            >
+                                서비스 소개
+                            </li>
+                            <li
+                                onClick={() => handleNavigate("/PG400001")}
+                                style={{ cursor: "pointer" }}
+                            >
+                                부동산 뉴스
+                            </li>
+                            <li
+                                onClick={() => handleNavigate("/PG500001")}
+                                style={{ cursor: "pointer" }}
+                            >
+                                커뮤니티
+                            </li>
                         </ul>
                     </div>
                     <div className="footer-section">

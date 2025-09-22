@@ -139,7 +139,7 @@ public class EmailController {
             response.addCookie(verifiedCookie);
             logger.debug("인증 완료된 emailToken을 쿠키에 저장.");
             // 메시지와 함께 성공 응답
-            return ResponseEntity.ok().body(Map.of("message", "이메일 인증 성공!"));
+            return ResponseEntity.ok().body(Map.of("message", "이메일 인증 성공!", "code", "001"));
         }
         // 인증 실패 시
         logger.warn("이메일 인증 실패. 이메일: {}", email);

@@ -24,7 +24,7 @@ export interface ValidationResult {
 export function validateId(id: string): ValidationResult {
     const regex = /^[a-z0-9]{5,12}$/;
 
-    if (!regex.test(id.trim())) {
+    if (!regex.test(id.trim() || "")) {
         return {
             valid: false,
             message: "아이디는 5~12자의 영문 소문자 + 숫자만 가능합니다",
@@ -43,7 +43,7 @@ export function validateEmail(email: string): ValidationResult {
     const regex =
         /^(?:[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*)@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.)+[A-Za-z]{2,63}$/;
 
-    if (!regex.test(email.trim())) {
+    if (!regex.test(email.trim() || "")) {
         return { valid: false, message: "이메일 형식이 올바르지 않습니다." };
     }
 
@@ -61,7 +61,7 @@ export function validateEmail(email: string): ValidationResult {
  */
 export function validateKor(kor: string): ValidationResult {
     const regex = /^[가-힣]+$/;
-    if (!regex.test(kor.trim())) {
+    if (!regex.test(kor.trim() || "")) {
         return { valid: false, message: "한글만 입력가능합니다." };
     }
     return {
@@ -78,7 +78,7 @@ export function validateKor(kor: string): ValidationResult {
  */
 export function validateKorS(korS: string): ValidationResult {
     const regex = /^[가-힣/]+$/;
-    if (!regex.test(korS.trim())) {
+    if (!regex.test(korS.trim() || "")) {
         return { valid: false, message: "한글과 / 기호만 입력가능합니다." };
     }
     return {
@@ -95,7 +95,7 @@ export function validateKorS(korS: string): ValidationResult {
  */
 export function validateKorHN(korHN: string): ValidationResult {
     const regex = /^[가-힣0-9-]+$/;
-    if (!regex.test(korHN.trim())) {
+    if (!regex.test(korHN.trim() || "")) {
         return {
             valid: false,
             message: "한글, 숫자, - 기호만 입력가능합니다.",
@@ -107,9 +107,52 @@ export function validateKorHN(korHN: string): ValidationResult {
     };
 }
 
+/**
+ * 숫자만 입력받는 정규식
+ * 조건 : 0~9까지의 숫자의 입력
+ * @param num 입력된 0~9까지의 숫자 영역 문자열
+ * @returns boolean (정규식 일치 여부)
+ */
+export function validateNum(num: string): ValidationResult {
+    const regex = /^[0-9]/;
+    if (!regex.test(num.trim() || "")) {
+        return {
+            valid: false,
+            message: "숫자만 입력가능합니다.",
+        };
+    }
+
+    return {
+        valid: true,
+        value: num,
+    };
+}
+
+/**
+ * 닉네임 생성 정규식
+ * 조건 : 한글, 숫자, 영어 대소문자 포함 10자리 이하 문자열
+ * @param nickname 한글, 숫자, 영어 대소문자 포함 10자리 이하 문자열
+ * @returns
+ */
+export function validateNickName(nickname: string): ValidationResult {
+    const regex = /^[가-힣a-zA-Z0-9]{1,10}$/;
+
+    if (!regex.test(nickname.trim() || "")) {
+        return {
+            valid: false,
+            message:
+                "닉네임은 한글, 숫자, 영어 대소문자 조합 10자리 이하만 가능합니다.",
+        };
+    }
+    return {
+        valid: true,
+        value: nickname,
+    };
+}
+
 /** format */
 
-/**ee1
+/**
  * 숫자 3자리마다 콤마 생성
  * @param amount 입력된 값의 숫자 값
  * @returns string(replace작업)
@@ -117,7 +160,7 @@ export function validateKorHN(korHN: string): ValidationResult {
 export function formatNumberCommas(amount: string): ValidationResult {
     const regex = /^\d+$/;
 
-    if (!regex.test(amount.trim())) {
+    if (!regex.test(amount.trim() || "")) {
         return { valid: false, message: "숫자만 입력 가능합니다." };
     }
 
@@ -132,7 +175,7 @@ export function formatNumberCommas(amount: string): ValidationResult {
  */
 export function formatDate(dateStr: string): ValidationResult {
     const regex = /^(\d{4})([-/.]?)(\d{2})([-/.]?)(\d{2})$/;
-    if (!regex.test(dateStr)) {
+    if (!regex.test(dateStr || "")) {
         return { valid: false, message: "올바른 날짜 형식이 아닙니다." };
     }
 

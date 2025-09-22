@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
+import * as Common from "../../../../components/common";
+import * as UserAPI from "../../../../components/api";
 
 // Signup_InfoInputPage: 비밀번호 및 닉네임 설정 페이지
 
@@ -29,17 +31,6 @@ interface PG300006Props {
 }
 
 /**
- * API 응답 타입 정의
- */
-interface ApiResponse {
-    available: boolean;
-    message: string;
-}
-
-// 아이디 규칙: 영문 소문자/숫자/._- 조합 4~20자 (필요시 수정)
-const userIdRegex = /^[a-z0-9._-]{4,20}$/;
-
-/**
  * 회원정보 입력 컴포넌트 (비밀번호 및 닉네임 설정)
  * 사용자의 비밀번호와 닉네임을 입력받아 유효성 검사 수행,
  * 닉네임 중복 확인 후 모든 검증이 완료되면 다음 단계로 진행.
@@ -50,12 +41,11 @@ const userIdRegex = /^[a-z0-9._-]{4,20}$/;
  * @param props.onLogin - 로그인 페이지로 돌아가는 콜백 함수
  * @returns JSX.Element - 이메일(읽기전용), 비밀번호, 닉네임 입력 폼이 포함된 UI 컴포넌트
  */
-const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
+const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
     // useToast 훅 사용
     const { toast, showToast } = useToast(); // toast 상태도 가져오기
     // 아이디 중복 확인 중 여부 및 중단 제어
     const [isCheckingUserId, setIsCheckingUserId] = useState(false);
-    const userIdAbortRef = useRef<AbortController | null>(null);
     // 비밀번호 관련 상태
     const [password, setPassword] = useState(""); // 사용자가 입력한 비밀번호
     const [confirmPassword, setConfirmPassword] = useState(""); // 비밀번호 확인 입력값
@@ -72,6 +62,166 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
         null
     ); // null: 미확인, true: 유효, false: 무효
 
+    // 이메일 상태
+    const [email, setEmail] = useState(false);
+    // 이메일 코드전송 상태
+    const [send, setSend] = useState(false);
+
+    // 공통 함수 적용
+    const [form, setForm] = useState({
+        id: "",
+        email: "",
+        num: "",
+        nickname: "",
+    });
+
+    // 인풋 박스 변경점 체크
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // 인풋 박스 포커스 아웃 이벤트 발생
+    const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        switch (name) {
+            case "id": {
+                const idResult = Common.validateId(value);
+                if (idResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: idResult.value || "",
+                    }));
+                    if (name === "id") {
+                        setUserId(value);
+                    }
+                } else {
+                    showToast(idResult.message || "", { type: "error" });
+                }
+                break;
+            }
+            case "email": {
+                const emailResult = Common.validateEmail(value);
+
+                if (emailResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: emailResult.value || "",
+                    }));
+                } else {
+                    showToast(emailResult.message || "", { type: "error" });
+                }
+                break;
+            }
+            case "num": {
+                const numResult = Common.validateNum(value);
+
+                if (numResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: numResult.value || "",
+                    }));
+                } else {
+                    showToast(numResult.message || "", { type: "error" });
+                }
+                break;
+            }
+            case "nickname": {
+                const nickanemResult = Common.validateNickName(value);
+
+                if (nickanemResult.valid) {
+                    setForm((prev) => ({
+                        ...prev,
+                        [name]: nickanemResult.value || "",
+                    }));
+                    setNickname(value);
+                } else {
+                    showToast(nickanemResult.message || "", { type: "error" });
+                }
+                break;
+            }
+        }
+    };
+
+    // 이메일 전송 기능 추가
+    const handleSendEmail = async () => {
+        // 인증이 완료된 경우
+        console.log(email);
+
+        if (email) {
+            showToast("인증이 이미 완료되었습니다.", { type: "error" });
+            return;
+        }
+
+        // 아직 메일 전송 성공 안 했을 경우
+        if (!send) {
+            const emailResult = Common.validateEmail(form.email);
+
+            if (!emailResult.valid) {
+                showToast(emailResult.message!, { type: "error" });
+                return;
+            }
+
+            try {
+                const available = await UserAPI.checkEmailDuplicate(
+                    emailResult.value!
+                );
+                if (!available) {
+                    showToast("이미 사용중인 이메일 입니다.", {
+                        type: "error",
+                    });
+                    return;
+                }
+
+                const message = await UserAPI.sendVerificationEmail(
+                    emailResult.value!
+                );
+                showToast(message || "인증코드가 전송되었습니다.", {
+                    type: "success",
+                });
+
+                setSend(true);
+            } catch {
+                showToast("이메일 전송 중 오류가 발생했습니다.", {
+                    type: "error",
+                });
+            }
+            return;
+        }
+
+        // 메일 인증코드 발송 후 인증 번호 검증
+        if (send && !email) {
+            if (!form.num || form.num.length !== 6) {
+                showToast("6자리 인증번호를 입력해주세요", { type: "error" });
+                return;
+            }
+
+            try {
+                const result = await UserAPI.verifyEmailCode(
+                    form.email,
+                    form.num
+                );
+
+                if (result.code === "001") {
+                    setEmail(true);
+                    showToast(
+                        result.message || "이메일 인증이 완료되었습니다.",
+                        { type: "success" }
+                    );
+                } else {
+                    showToast(
+                        result.message || "인증번호가 올바르지 않습니다.",
+                        { type: "error" }
+                    );
+                }
+            } catch {
+                showToast("인증 처리 중 오류가 발생했습니다.", {
+                    type: "error",
+                });
+            }
+        }
+    };
+
     /**
      * 비밀번호 보기/숨기기 토글 핸들러
      */
@@ -85,91 +235,35 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
      *
      * @param userIdToCheck - 중복 여부를 확인할 아이디 문자열
      */
+
     const handleUserIdCheck = useCallback(
         async (userIdToCheck: string): Promise<boolean> => {
-            const id = userIdToCheck.trim();
-
-            if (!id) {
-                showToast("아이디를 입력해주세요.", { type: "error" });
-                setIsUserIdValid(false);
-                return false;
-            }
-
-            // 형식 사전 검증(불필요한 API 호출 방지)
-            if (!userIdRegex.test(id)) {
-                setIsUserIdValid(false);
-                showToast(
-                    "아이디는 영문 소문자, 숫자, '.', '_', '-' 포함 4~20자여야 합니다.",
-                    { type: "error" }
-                );
-                return false;
-            }
-
-            // 이전 요청이 진행 중이면 취소
-            if (userIdAbortRef.current) {
-                userIdAbortRef.current.abort();
-            }
-            const controller = new AbortController();
-            userIdAbortRef.current = controller;
-
             try {
                 setIsCheckingUserId(true);
-                const response = await fetch(
-                    `/api/user/check-userid/${encodeURIComponent(id)}`,
-                    {
-                        method: "GET",
-                        signal: controller.signal,
-                        headers: { Accept: "application/json" },
-                    }
+                const result = await UserAPI.checkUserIdDuplicate(
+                    userIdToCheck
                 );
 
-                let data: ApiResponse | null = null;
-                try {
-                    data = await response.json();
-                } catch {
-                    data = null;
-                }
-
-                if (response.ok) {
-                    if (data && data.available) {
-                        setIsUserIdValid(true);
-                        showToast("사용 가능한 아이디입니다.", {
-                            type: "success",
-                        });
-                        return true;
-                    } else {
-                        setIsUserIdValid(false);
-                        showToast(
-                            (data && data.message) ||
-                                "이미 사용 중인 아이디입니다.",
-                            { type: "error" }
-                        );
-                        return false;
-                    }
+                if (result.available) {
+                    setIsUserIdValid(true);
+                    showToast("사용 가능한 아이디 입니다.", {
+                        type: "success",
+                    });
+                    return true;
                 } else {
                     setIsUserIdValid(false);
                     showToast(
-                        (data && data.message) ||
-                            "아이디 확인 중 오류가 발생했습니다.",
-                        { type: "error" }
+                        result.message || "이미 사용 중인 아이디 입니다.",
+                        {
+                            type: "error",
+                        }
                     );
                     return false;
                 }
             } catch (error) {
-                if (
-                    typeof error === "object" && // 오류가 객체인지 확인
-                    error !== null && // null이 아닌지 확인
-                    "name" in error && // name 속성이 있는지 확인
-                    (error as { name?: string }).name === "AbortError" // AbortError인지 확인
-                ) {
-                    // 요청 중단된 경우 조용히 무시
-                    return false;
-                }
                 setIsUserIdValid(false);
-                showToast("아이디 확인 중 네트워크 오류가 발생했습니다.", {
-                    type: "error",
-                });
-                console.error("Username check error:", error);
+                showToast("아이디 확인 중 오류 발생", { type: "error" });
+                console.log("User Id check error", error);
                 return false;
             } finally {
                 setIsCheckingUserId(false);
@@ -185,56 +279,31 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
      * @param nicknameToCheck - 중복 여부를 확인할 닉네임 문자열
      */
     const handleNicknameCheck = useCallback(
-        async (nicknameToCheck: string) => {
-            // 닉네임 입력 여부 확인
-            if (!nicknameToCheck.trim()) {
-                showToast("닉네임을 입력해주세요.", { type: "error" });
-                return;
-            }
-
+        async (nicknameToCheck: string): Promise<boolean> => {
             try {
-                // 백엔드에 닉네임 중복 여부를 확인하는 API 요청을 보냄
-                const response = await fetch(
-                    `/api/user/check-nickname/${encodeURIComponent(
-                        nicknameToCheck
-                    )}`,
-                    {
-                        method: "GET",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    }
+                const result = await UserAPI.checkNickNameDuplicate(
+                    nicknameToCheck
                 );
-
-                // API 응답 데이터 가져옴
-                const data: ApiResponse = await response.json();
-
-                // API 응답이 성공적이면
-                if (response.ok) {
-                    // 사용 가능한 닉네임이라면
-                    if (data.available) {
-                        setIsNicknameValid(true);
-                        showToast("사용 가능한 닉네임입니다.", {
-                            type: "success",
-                        });
-                        return true;
-                    } else {
-                        setIsNicknameValid(false);
-                        showToast(data.message, { type: "error" });
-                        return false;
-                    }
+                console.log("nickname");
+                if (result.available) {
+                    setIsNicknameValid(true);
+                    showToast("사용 가능한 닉네임입니다.", { type: "success" });
+                    return true;
                 } else {
-                    const errorMessage =
-                        data.message || "닉네임 확인 중 오류가 발생했습니다.";
                     setIsNicknameValid(false);
-                    showToast(errorMessage, { type: "error" });
+                    showToast(
+                        result.message || "이미 사용 중인 닉네임입니다.",
+                        {
+                            type: "error",
+                        }
+                    );
                     return false;
                 }
             } catch (error) {
-                const errorMessage =
-                    "닉네임 확인 중 네트워크 오류가 발생했습니다.";
                 setIsNicknameValid(false);
-                showToast(errorMessage, { type: "error" });
+                showToast("닉네임 확인 중 오류가 발생했습니다.", {
+                    type: "error",
+                });
                 console.error("Nickname check error:", error);
                 return false;
             }
@@ -242,25 +311,26 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
         [showToast]
     );
 
+    // id 중복확인 디바운스
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
-            const id = userId.trim();
-            if (id && userIdRegex.test(id)) {
-                handleUserIdCheck(id);
-            } else if (!id) {
-                setIsUserIdValid(null);
+            if (userId.trim()) {
+                handleUserIdCheck(userId.trim());
             } else {
-                setIsUserIdValid(false);
+                setIsUserIdValid(null);
             }
         }, 500);
 
         return () => clearTimeout(delayDebounce);
     }, [userId, handleUserIdCheck]);
 
+    // nickname 중복확인 디바운스
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
             if (nickname.trim()) {
-                handleNicknameCheck(nickname);
+                handleNicknameCheck(nickname.trim());
+            } else {
+                setIsNicknameValid(null);
             }
         }, 500);
 
@@ -288,97 +358,30 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
     }, [confirmPassword, password, showToast]);
 
     /**
-     * 비밀번호 유효성 검사 함수
-     * @returns boolean - 유효하면 true, 아니면 false
-     */
-    const validatePassword = (password: string): boolean => {
-        if (password.length < 6) {
-            showToast("비밀번호는 최소 6자 이상이어야 합니다.", {
-                type: "error",
-            });
-            return false;
-        }
-        if (confirmPassword !== password) {
-            showToast("비밀번호가 일치하지 않습니다.", { type: "error" });
-            return false;
-        }
-        return true;
-    };
-
-    /**
-     * 닉네임 유효성 검사 함수
-     * @returns boolean - 유효하면 true, 아니면 false
-     */
-    const validateNickname = (): boolean => {
-        if (!nickname.trim()) {
-            showToast("닉네임을 입력해주세요.", { type: "error" });
-            return false;
-        }
-        if (!isNicknameValid) {
-            showToast("사용 불가능한 닉네임입니다.", { type: "error" });
-            return false;
-        }
-        return true;
-    };
-
-    /**
-     * 아이디 유효성 검사 함수
-     * @returns boolean - 유효하면 true, 아니면 false
-     */
-    const validateUserId = (): boolean => {
-        const id = userId.trim();
-        if (!id) {
-            showToast("아이디를 입력해주세요.", { type: "error" });
-            return false;
-        }
-        if (!userIdRegex.test(id)) {
-            showToast("아이디 형식을 확인해주세요. (영문/숫자/._- 4~20자)", {
-                type: "error",
-            });
-            return false;
-        }
-        if (isCheckingUserId) {
-            showToast("아이디 중복 확인 중입니다. 잠시만 기다려주세요.", {
-                type: "error",
-            });
-            return false;
-        }
-        if (isUserIdValid !== true) {
-            showToast("아이디 중복 확인이 필요합니다.", { type: "error" });
-            return false;
-        }
-        return true;
-    };
-
-    /**
      * 폼 제출 처리 핸들러
      * @param e 폼 이벤트 객체
      */
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        const validPassword = validatePassword(password);
-        const validNickname = validateNickname();
-
-        // 아이디 유효성/중복체크가 확실하지 않으면 서버 재확인
-        let validUserIdFinal = validateUserId();
-        if (!validUserIdFinal) {
-            // 마지막으로 규칙을 통과했다면 한 번 더 확인 시도
-            const id = userId.trim();
-            if (id && userIdRegex.test(id)) {
-                validUserIdFinal = await handleUserIdCheck(id);
-            }
-        }
-
-        if (validPassword && validNickname && validUserIdFinal) {
-            // 모든 조건 통과 시 다음 페이지로 이동
+        // 상태만 최종 확인
+        if (
+            isUserIdValid === true &&
+            isNicknameValid === true &&
+            password.length >= 6 &&
+            confirmPassword === password &&
+            email === true
+        ) {
             console.log("폼 제출 완료:", {
-                email: userEmail,
+                email: form.email,
                 password,
-                nickname,
                 userId,
+                nickname,
             });
+
             onNext({ password, userId, nickname });
+        } else {
+            showToast("입력 정보를 다시 확인해주세요.", { type: "error" });
         }
     };
 
@@ -427,28 +430,50 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
 
                 {/* 회원정보 입력 폼 */}
                 <form className="authForm" onSubmit={handleSubmit}>
-                    {/* 이메일 필드 (읽기 전용) */}
+                    {/* 이메일 필드 */}
                     <div className="authFormRow">
                         <input
-                            type="email"
-                            value={userEmail}
-                            readOnly
                             className="authInput"
-                            style={{
-                                backgroundColor: "#d9d9d9",
-                                color: "#828282",
-                                userSelect: "none",
-                            }}
-                            onMouseDown={(e) => e.preventDefault()} // 드래그 차단
+                            type="text"
+                            name="email"
+                            placeholder="이메일"
+                            value={form.email}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            disabled={email}
                         />
+                    </div>
+                    {/* 인증번호 입력 필드 */}
+                    <div className="authFormRowEmail">
+                        <input
+                            className="authInput"
+                            type="text"
+                            name="num"
+                            placeholder="인증번호"
+                            value={form.num}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
+                            maxLength={6}
+                            disabled={email}
+                        />
+                        <button
+                            type="button"
+                            className="normalButton"
+                            onClick={handleSendEmail}
+                            disabled={email}
+                        >
+                            {send ? "인증하기" : "인증코드발송"}
+                        </button>
                     </div>
 
                     {/* 아이디 입력 필드 */}
                     <div className="authFormRow">
                         <input
                             type="text"
-                            value={userId}
-                            onChange={(e) => setUserId(e.target.value)}
+                            name="id"
+                            value={form.id}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
                             placeholder="아이디"
                             className="authInput"
                         />
@@ -502,8 +527,10 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, userEmail, onLogin }) => {
                     <div className="authFormRow">
                         <input
                             type="text"
-                            value={nickname}
-                            onChange={(e) => setNickname(e.target.value)}
+                            name="nickname"
+                            value={form.nickname}
+                            onChange={handleChange}
+                            onBlur={handleBlur}
                             placeholder="닉네임"
                             className="authInput"
                         />

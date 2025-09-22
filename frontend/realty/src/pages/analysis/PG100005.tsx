@@ -29,9 +29,33 @@ interface PG100005Props {
     documentCode: string | null;
 }
 
+interface AnalysisSummaryDTO {
+  analysisReport: {
+    summary: string;
+    riskLevel: string;
+    sentimentSummary: string;
+    sentimentScore: number;
+    sentimentCategory: string;
+    sentimentEmoji: string;
+  };
+  transactionAnomaly: {
+    price: number;
+    averagePrice: number;
+    deviationPercent: number;
+    isAnomaly: boolean;
+  };
+  riskyClauses: {
+    clauseSummary: string;
+    legalRisk : string;
+    financialImpact : string;
+    operationalImpact : string;
+    recommendedAction : string;
+  }
+}
 
 const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     const [data, setData] = useState<StructuredContractDataDTO | null>(null);
+    const [summary, setSummary] = useState<AnalysisSummaryDTO | null>(null);
     const [loading, setLoading] = useState(true);
     const [err, setErr] = useState<string | null>(null);
 
@@ -50,27 +74,66 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     useEffect(() => {
         const code = documentCode ?? sessionStorage.getItem("rv_documentCode");
         if (!code) {
-            setErr(
-                "문서 코드가 없습니다. 03 단계에서 저장 후 다시 시도하세요."
-            );
+            setErr("문서 코드가 없습니다. 03 단계에서 저장 후 다시 시도하세요.");
             setLoading(false);
             return;
         }
+
         let cancelled = false;
+
         (async () => {
             try {
-                const res = await axios.get<StructuredContractDataDTO>(
-                    "http://localhost:8080/contracts",
-                    { params: { documentCode: code }, withCredentials: true }
-                );
-                if (!cancelled) setData(res.data);
+                const [contractRes, summaryRes] = await Promise.all([
+                    axios.get<StructuredContractDataDTO>(
+                        "http://localhost:8080/contracts",
+                        { params: { documentCode: code }, withCredentials: true }
+                    ),
+                    axios.get<AnalysisSummaryDTO>(
+                        "http://localhost:8080/analysisSummary",
+                        { params: { documentCode: code }, withCredentials: true }
+                    ),
+                ]);
+
+                console.log(summaryRes.data);
+
+                if (!cancelled) {
+                    setData(contractRes.data);
+                    setSummary({
+                        analysisReport: {
+                          summary: summaryRes.data.analysisReport?.summary ?? "",
+                          riskLevel: summaryRes.data.analysisReport?.riskLevel ?? "",
+                          sentimentSummary: summaryRes.data.analysisReport?.sentimentSummary ?? "",
+                          sentimentScore: summaryRes.data.analysisReport?.sentimentScore ?? 0,
+                          sentimentCategory: summaryRes.data.analysisReport?.sentimentCategory ?? "",
+                          sentimentEmoji: summaryRes.data.analysisReport?.sentimentEmoji ?? "",
+                        },
+                        riskyClauses: {
+                          clauseSummary: summaryRes.data.riskyClauses?.clauseSummary ?? "",
+                          legalRisk: summaryRes.data.riskyClauses?.legalRisk ?? "",
+                          financialImpact: summaryRes.data.riskyClauses?.financialImpact ?? "",
+                          operationalImpact: summaryRes.data.riskyClauses?.operationalImpact ?? "",
+                          recommendedAction: summaryRes.data.riskyClauses?.recommendedAction ?? "",
+                        },
+                        transactionAnomaly: {
+                          price: summaryRes.data.transactionAnomaly?.price ?? 0,
+                          averagePrice: summaryRes.data.transactionAnomaly?.averagePrice ?? 0,
+                          deviationPercent: summaryRes.data.transactionAnomaly?.deviationPercent ?? 0,
+                          isAnomaly: summaryRes.data.transactionAnomaly?.isAnomaly ?? false,
+                        },
+                      });
+                }
             } catch (e) {
-                if (!cancelled) setErr("데이터 조회 중 오류가 발생했습니다.");
+                if (!cancelled) {
+                    setErr("데이터 조회 중 오류가 발생했습니다.");
+                }
                 console.error(e);
             } finally {
-                if (!cancelled) setLoading(false);
+                if (!cancelled) {
+                    setLoading(false);
+                }
             }
         })();
+
         return () => {
             cancelled = true;
         };
@@ -143,6 +206,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             </div>
         );
     }
+
     if (err) {
         return (
             <div className="rv05-container">
@@ -150,10 +214,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             </div>
         );
     }
-    if (!data) {
+
+    // 여기서 data와 summary가 모두 있어야 페이지 렌더링
+    if (!data || !summary) {
         return (
             <div className="rv05-container">
-                <div className="rv05-card">데이터가 없습니다.</div>
+                <div className="rv05-card">데이터가 아직 준비되지 않았습니다.</div>
             </div>
         );
     }
@@ -161,12 +227,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     return (
       <div className="rv05-container">
         <CommonContainerHeader
-          subtitle="계약서 위험도 분석 결과"
-          title="AI 분석 리포트"
-          description="현재 화면은 OCR로 저장된 값 확인용 임시 레이아웃입니다. AI 분석 파트가 합류되면 위험 점수/코멘트가 추가됩니다."
+            subtitle="계약서 위험도 분석 결과"
+            title="AI 분석 리포트"
+            description="현재 화면은 OCR로 저장된 값 확인용 임시 레이아웃입니다. AI 분석 파트가 합류되면 위험 점수/코멘트가 추가됩니다."
         />
 
-        {/* 상단 요약칩 */}
+         {/* 상단 요약칩 */}
         <div className="rv05-chips">
           <div className="rv05-chip">
             <span className="rv05-chip-dot ok" />
@@ -200,16 +266,88 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
           </div>
         </div>
 
-        {/* 종합 위험 배너(임시) */}
+        {/* 종합 위험 배너 */}
         <div className="rv05-banner">
           <div>
             <div className="rv05-banner-title">종합 위험도 평가</div>
+            {/* 요약 */}
             <div className="rv05-banner-sub">
-              AI 분석 준비 중입니다. 현재는 OCR 데이터만 반영합니다.
+              요약요약요약{summary?.analysisReport?.summary ?? "-"}
+            </div>
+            {/* 감성 분석 요약 + 이모지 */}
+            <div className="rv05-banner-sub">
+              감성요약감성요약{summary?.analysisReport?.sentimentSummary ?? "-"}{" "}
+              이모지이모지{summary?.analysisReport?.sentimentEmoji ?? ""}
+            </div>
+            {/* 감성 점수 */}
+            <div className="rv05-banner-sub">
+              감성 점수: {summary?.analysisReport?.sentimentScore ?? "-"}
+              {" "}({summary?.analysisReport?.sentimentCategory ?? "-"})
             </div>
           </div>
-          <div className="rv05-badge warn">준비중</div>
+
+          <div
+            className={`rv05-badge ${
+              summary?.analysisReport?.riskLevel === "HIGH"
+                ? "danger"
+                : summary?.analysisReport?.riskLevel === "MEDIUM"
+                ? "warn"
+                : "ok"
+            }`}
+          >
+            {summary?.analysisReport?.riskLevel ?? "-"}
+          </div>
         </div>
+
+        {/* 거래 이상 감지 */}
+        <article className="rv05-card rv05-wide">
+            <h3 className="rv05-sec-title">거래 이상 감지</h3>
+            <dl className="rv05-dl">
+                <div>
+                    <dt>계약 가격</dt>
+                    <dd>{fmtNum(summary.transactionAnomaly.price)} 원</dd>
+                </div>
+                <div>
+                    <dt>평균 가격</dt>
+                    <dd>{fmtNum(summary.transactionAnomaly.averagePrice)} 원</dd>
+                </div>
+                <div>
+                    <dt>편차율</dt>
+                    <dd>{summary.transactionAnomaly.deviationPercent}%</dd>
+                </div>
+                <div>
+                    <dt>이상 여부</dt>
+                    <dd>{summary.transactionAnomaly.isAnomaly ? "이상" : "정상"}</dd>
+                </div>
+            </dl>
+        </article>
+
+        {/* 위험 조항 */}
+        <article className="rv05-card rv05-wide">
+            <h3 className="rv05-sec-title">위험 조항</h3>
+            <dl className="rv05-dl">
+                <div>
+                    <dt>조항 요약</dt>
+                    <dd>{summary.riskyClauses.clauseSummary}</dd>
+                </div>
+                <div>
+                    <dt>법적 리스크</dt>
+                    <dd>{summary.riskyClauses.legalRisk}</dd>
+                </div>
+                <div>
+                    <dt>재정적 영향</dt>
+                    <dd>{summary.riskyClauses.financialImpact}</dd>
+                </div>
+                <div>
+                    <dt>운영적 영향</dt>
+                    <dd>{summary.riskyClauses.operationalImpact}</dd>
+                </div>
+                <div>
+                    <dt>권장 조치</dt>
+                    <dd>{summary.riskyClauses.recommendedAction}</dd>
+                </div>
+            </dl>
+        </article>
 
         {/* 2열 카드 그리드 */}
         <section className="rv05-grid">

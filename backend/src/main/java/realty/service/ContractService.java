@@ -13,13 +13,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.AnalysisReportsDTO;
+import realty.domain.dto.AnalysisSummaryDTO;
 import realty.domain.dto.AnomalyDetectResult;
+import realty.domain.dto.ClauseSummaryDTO;
 import realty.domain.dto.ContractClauseDTO;
 import realty.domain.dto.ContractDTO;
 import realty.domain.dto.FinalCommitRequest;
+import realty.domain.dto.TransectionAnomalyDTO;
 import realty.domain.model.AnalysisReport;
 import realty.domain.model.ContractClause;
 import realty.domain.model.ContractClause.ClauseType;
@@ -276,6 +280,45 @@ public class ContractService {
             String message = (String) response.getBody().get("message");
             log.info("FastAPI 트리거 응답: {}", message);
         }
+    }
+
+    /**
+     * 데이터베이스에서 문서정보를 불러와 요약DTO를 만들어주는 함수
+     * @param documentCode
+     * @return
+     */
+    public AnalysisSummaryDTO getAnalysisSummary(String documentCode) {
+        ContractClause contractclause = contractClauseRepository.findByDocumentCode(documentCode)
+                                            .orElseThrow(
+                                                () -> new EntityNotFoundException("ContractClause not found with documentCode: " + documentCode)
+                                                );
+
+        ClauseSummaryDTO clauseSummaryDTO = new ClauseSummaryDTO(contractclause);
+
+        AnalysisReport analysisReport = analysisReportRepository.findByDocumentCode(documentCode)
+                                            .orElseThrow(
+                                                () -> new EntityNotFoundException("AnalysisReport not found with documentCode: " + documentCode)
+                                            );
+
+        AnalysisReportsDTO analysisReportsDTO = AnalysisReportsDTO.fromEntity(analysisReport);
+
+        String reportCode = analysisReport.getReportCode();
+        if(reportCode == null) {
+            throw new IllegalArgumentException("reportCode가 null입니다");
+        }
+
+        TransactionAnomaly transactionAnomaly = transactionAnomalyRepository.findByReportCode(reportCode)
+                                                    .orElseThrow(
+                                                    () -> new EntityNotFoundException("TransactionAnomaly not found with reportCode: " + reportCode)
+                                                );
+
+        TransectionAnomalyDTO TransactionAnomalyDTO = new TransectionAnomalyDTO(transactionAnomaly);
+
+        return AnalysisSummaryDTO.builder()
+                                    .riskyClauses(clauseSummaryDTO)
+                                    .transactionAnomaly(TransactionAnomalyDTO)
+                                    .analysisReport(analysisReportsDTO)
+                                    .build();
     }
 
 }

@@ -177,7 +177,7 @@ const PG700001: React.FC = () => {
     };
 
     return (
-        <PageContainer showBreadcrumb={true} centerContent={!(isEditingProfile || isViewingLoginHistory || isViewingMyActivities)}>
+        <PageContainer showBreadcrumb={true} centerContent={true}>
             <div className="mypage-container">
                 {isEditingProfile || isViewingLoginHistory || isViewingMyActivities ? (
                     <div className="profile-edit-wrapper">
@@ -230,7 +230,7 @@ const PG700001: React.FC = () => {
                                     </div>
 
                                     <div className="stat-card clickable" onClick={handleViewLoginHistoryClick}>
-                                        <div className="stat-icon purple">
+                                        <div className="stat-icon yellow">
                                             <FiClock />
                                         </div>
                                         <div className="stat-content">

@@ -91,6 +91,7 @@ def generate_wordcloud_image(text_data: str) -> bytes:
             max_words=2000, # 최대 단어 수
             max_font_size=150, # 최대 폰트 크기
             prefer_horizontal=0.9, # 수평 단어의 선호도
+            colormap="cool"
         )
 
         print("[WORDCLOUD] 워드클라우드 생성 시작")

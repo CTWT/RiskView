@@ -203,38 +203,6 @@ const PG400001: React.FC = () => {
             <span>분석 시간: {sentimentAnalysis.analysisTime}</span>
           </div>
         </div>
-
-        <div className="market-indicators">
-          <div className="indicator-item">
-            <div className="indicator-icon">📈</div>
-            <div className="indicator-text">
-              <div className="indicator-title">시장 영향도</div>
-              <div className="indicator-value" style={{ color: "#4CAF50" }}>
-                보통
-              </div>
-            </div>
-          </div>
-
-          <div className="indicator-item">
-            <div className="indicator-icon">😟</div>
-            <div className="indicator-text">
-              <div className="indicator-title">시장 영향도</div>
-              <div className="indicator-value" style={{ color: "#f44336" }}>
-                우려
-              </div>
-            </div>
-          </div>
-
-          <div className="indicator-item">
-            <div className="indicator-icon">🔴</div>
-            <div className="indicator-text">
-              <div className="indicator-title">거래 신호</div>
-              <div className="indicator-value" style={{ color: "#f44336" }}>
-                신중 접근
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     );
   };
@@ -464,18 +432,15 @@ const PG400001: React.FC = () => {
           </div>
 
           {/* 뉴스 목록 */}
-          <div className="news-list">
+          <>
             {/* 로딩 중 로딩 스피너 표시 현재 관호오빠 코드 로딩바 사용중 (움직임 없는지 확인)*/} 
             {loading ? (
-              <div className="loading-spinner">
-                <div className="an04-loading-card"></div> 
-
-                <div className="an04-spinner-wrapper"></div>
-                <div className="an04-spinner"></div>
+              <div className="news-loading-spinner">
+                <div className="news-spinner"></div>
                 <p>뉴스를 불러오는 중...</p>
               </div>
             ) : (
-              <div>
+              <div className="news-list">
                 {/* 뉴스 기사 목록 렌더링 */}
                 {newsData.map((news) => (
                   <article key={news.articleId} className="news-item">
@@ -566,7 +531,7 @@ const PG400001: React.FC = () => {
                 )}
               </div>
             )}
-          </div>
+          </>
         </div>
 
         {/* 오른쪽: 연관 키워드 또는 뉴스 상세 */}
@@ -576,8 +541,10 @@ const PG400001: React.FC = () => {
             {selectedNews ? (
               <div className="news-detail" ref={detailRef}>
                 <h2>{selectedNews.title}</h2>
-                <p className="news-publishedAt">{selectedNews.publishedAt}</p>
-                <p className="news-siteName">{selectedNews.siteName}</p>
+                <div className="news-meta">
+                  <span className="news-date">{selectedNews.publishedAt.split(' ')[0]}</span>
+                  {selectedNews.siteName && <span className="news-source">{selectedNews.siteName}</span>}
+                </div>
                 <p className="news-content">{selectedNews.content}</p>
 
                 <hr className="Ai-divider" />
@@ -585,7 +552,7 @@ const PG400001: React.FC = () => {
                 {/* AI 감성 분석 결과 */}
                 {sentimentLoading ? (
                   <div className="sentiment-loading">
-                    <div className="spinner"></div>
+                    <div className="news-spinner"></div>
                     <p>AI가 감성을 분석하는 중...</p>
                   </div>
                 ) : (
@@ -597,23 +564,13 @@ const PG400001: React.FC = () => {
               <>
                 <h2 className="keyword-title">연관 키워드</h2>
                 {/* 로딩 중 로딩 스피너 표시 */}
-                {keywordLoading ? (
+                {keywordLoading || !wordCloudImage ? ( // 이미지가 없으면 계속 로딩 표시
                   <div className="keyword-loading">
-                    <div className="spinner"></div>
+                    <div className="news-spinner" />
                     <p>키워드 분석 중...</p>
                   </div>
                 ) : (
-                  <>
-                    {wordCloudImage ? (
-                      <img src={wordCloudImage} alt="연관 키워드 워드클라우드" style={{ width: '100%', height: '80%' }} /> // 이미지 스타일 조정 원래 high : auto
-                    ) : (
-                      <p>워드클라우드를 표시할 수 없습니다.</p>
-                    )}
-                    <p className="keyword-description">
-                      최근 1달간 수집된 부동산 뉴스 키워드에서 추출한 주요
-                      키워드입니다.
-                    </p>
-                  </>
+                  <img src={wordCloudImage} alt="연관 키워드 워드클라우드" style={{ width: '100%', height: '80%' }} />
                 )}
               </>
             )}

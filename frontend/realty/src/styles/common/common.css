@@ -2756,7 +2756,7 @@
   justify-content: center;
   align-items: flex-start;
   display: grid;
-  grid-template-columns: 1fr 400px;
+  grid-template-columns: 1fr 1fr;
   gap: 40px;
   min-height: 600px;
   margin-top: -10px;
@@ -2798,23 +2798,53 @@
   margin-top: 10px;
 }
 
+/* 기본 탭 버튼 스타일 */
 .tab-button {
-  /* 전역 button 스타일 완전히 재설정 */
+  /* ... (기존 스타일) ... */
   all: unset;
-
-  /* 커스텀 스타일 적용 */
   display: inline-block;
   padding: 12px 20px;
   font-size: 16px;
   font-weight: 500;
   color: #666 !important;
   cursor: pointer;
-  border-bottom: 2px solid transparent !important;
-  transition: all 0.3s ease;
   background: none !important;
   border: none !important;
   text-decoration: none !important;
   box-sizing: border-box;
+  /* 중요: 포지셔닝을 위해 부모를 상대 위치로 설정 */
+  position: relative;
+  /* 중요: 밑줄이 나타날 공간을 미리 확보 */
+  margin-bottom: 4px;
+}
+
+/* 활성화된 탭 버튼 스타일 */
+.tab-button.active {
+  /* 활성화된 탭의 텍스트 색상을 강조합니다. */
+  color: #333 !important;
+}
+
+/* 활성화된 탭 버튼 스타일 */
+.tab-button.active::after {
+  /* 필수: 콘텐츠를 비워야 가상 요소가 생성됩니다. */
+  content: '';
+  /* 가상 요소의 위치를 절대 위치로 설정 */
+  position: absolute;
+  /* 밑줄의 높이와 색상 설정 */
+  height: 4px;
+  background-color: #a290ff;
+  
+  /* 밑줄의 너비를 80%로 설정 */
+  width: 80%;
+  
+  /* 밑줄을 가로 중앙에 위치시킵니다. */
+  left: 10%;
+  
+  /* 버튼의 하단에 정렬 */
+  bottom: 0;
+  
+  /* 부드러운 전환 효과 */
+  transition: all 0.3s ease;
 }
 
 /* 뉴스 목록 */
@@ -2847,7 +2877,7 @@
   display: inline-block;
   font-size: 12px;
   color: #999;
-  margin-bottom: 8px;
+  margin: 0 5px 8px 0; /* right: 5px, bottom: 8px */
   font-weight: 500;
   text-align: left;
 }
@@ -2860,6 +2890,11 @@
   margin: 0 0 10px 0;
   transition: color 0.2s ease;
   text-align: left;
+}
+/* 뉴스 상세 보기의 메타 정보(날짜, 출처)를 오른쪽 정렬 */
+.news-detail .news-meta {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .news-item:hover .news-title {
@@ -2912,16 +2947,56 @@
 .keyword-section {
   position: sticky;
   top: 20px;
-  width: 650px;
 }
 
 .keyword-card {
   background: white;
   border-radius: 12px;
-  padding: 25px;
+  padding: 0 25px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #f0f0f0;
-  min-height: 600px;
+  width: 100%;
+  min-height:480px;
+  position: relative; /* 가상 요소(::before, ::after)의 위치 기준점 */
+  height: 650px;
+  overflow-y: auto; /* 세로 스크롤이 필요할 때만 표시 */
+
+  /* 스크롤바 숨기기 */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Webkit 기반 브라우저 (Chrome, Safari) 스크롤바 숨기기 */
+.keyword-card::-webkit-scrollbar {
+  display: none;
+}
+
+/* 스크롤 영역 상단에 안개 효과 추가 */
+.keyword-card::before {
+  content: '';
+  position: sticky; /* 스크롤 시 상단에 고정 */
+  top: 0;
+  left: 0; /* 왼쪽 끝에 고정 */
+  display: block;
+  width: 100%;
+  height: 30px; /* 안개 효과의 높이 */
+  background: linear-gradient(to bottom, #ffffff 50%, rgba(255, 255, 255, 0));
+  pointer-events: none; /* 마우스 이벤트가 통과되도록 설정 */
+  z-index: 10; /* 다른 콘텐츠 위에 표시 */
+}
+
+/* 스크롤 영역 하단에 안개 효과 추가 */
+.keyword-card::after {
+  content: '';
+  position: sticky; /* 스크롤 시 하단에 고정 */
+  bottom: 0;
+  left: 0; /* 왼쪽 끝에 고정 */
+  display: block;
+  width: 100%;
+  height: 30px; /* 안개 효과의 높이 */
+  background: linear-gradient(to top, #ffffff 50%, rgba(255, 255, 255, 0));
+  pointer-events: none; /* 마우스 이벤트가 통과되도록 설정 */
+  z-index: 10;
 }
 
 .keyword-title {
@@ -2977,6 +3052,16 @@
   text-align: center;
   line-height: 1.4;
   margin: 0;
+}
+
+/* 워드클라우드 오류 아이콘 */
+.wordcloud-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80%;
+  font-size: 256px; /* 아이콘 크기 */
+  color: #e0e0e0; /* 아이콘 색상 */
 }
 
 /* AI 분석 카드 전체 */
@@ -3131,7 +3216,7 @@
 /* PG700001.tsx - 프로필 수정 화면 래퍼 */
 .profile-edit-wrapper {
   width: 100%;
-  max-width: 800px; /* PG700003의 profile-edit-layout과 동일한 너비 */
+  max-width: 1000px; /* PG700003의 profile-edit-layout과 동일한 너비 */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -3437,55 +3522,6 @@
   font-size: 14px;
 }
 
-.market-indicators {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.indicator-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
-  transition: transform 0.2s ease;
-}
-
-.indicator-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.indicator-icon {
-  font-size: 32px;
-  margin-bottom: 8px;
-}
-
-.indicator-text {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.indicator-title {
-  font-size: 12px;
-  color: #666;
-  white-space: pre-line;
-  line-height: 1.2;
-}
-
-.indicator-value {
-  font-size: 14px;
-  font-weight: bold;
-  white-space: pre-line;
-  line-height: 1.2;
-}
-
 /* 감성 분석 로딩 스타일 */
 .sentiment-loading {
   display: flex;
@@ -3574,21 +3610,43 @@
   color: #666;
 }
 
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #1976d2;
+.news-spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%; /* 부모 컨테이너의 전체 너비 */
+  height: 100%; /* 부모 컨테이너의 전체 높이 */
+  position: absolute; /* 위치를 조정하기 위해 absolute 지정 */
+  top: 0;
+  left: 0;
+}
+
+/* 뉴스 페이지 로딩 스피너 (큰 버전) */
+.news-loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%; /* 부모 높이에 맞춤 */
+  padding: 60px 20px;
+  color: #666;
+  position: relative; /* 상대 위치 설정 */
+}
+
+.news-spinner {
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  width: 128px; /* 크기 증가 */
+  height: 128px; /* 크기 증가 */
+  border: 15px solid #f3f3f3; /* 두께 증가 */
+  border-top: 15px solid #a290ff; /* 두께 증가 */
   border-radius: 50%;
   animation: spin 1s linear infinite;
+  margin-top: 170px;
+  margin-left: 150px;
   margin-bottom: 15px;
 }
 
-.loading-spinner p,
-.keyword-loading p {
-  font-size: 14px;
-  margin: 0;
-}
 
 /* 애니메이션 */
 @keyframes spin {
@@ -5571,7 +5629,7 @@
 
 /* 기본 컨테이너 */
 .mypage-container {
-  max-width: 1000px;
+  max-width: 805px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -6139,6 +6197,7 @@
 .timeline-body {
     display: flex;
     flex-direction: column;
+    width: 600px;
     gap: 0.5rem;
     background-color: #fafafa;
     border: 1px solid #f3f4f6;
@@ -6295,4 +6354,3 @@
     padding: 40px;
     color: #6b7280;
 }
-

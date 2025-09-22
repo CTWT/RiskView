@@ -3274,6 +3274,24 @@
   margin-left: auto;
 }
 
+.positive {
+  background-color: #e6f4ea;
+  border: 1px solid #5eb75e;
+  color: #2e7d32;
+}
+
+.negative {
+  background-color: #ffe9e9;
+  border: 1px solid #e05757;
+  color: #c62828;
+}
+
+.neutral {
+  background-color: #f2f2f2;
+  border: 1px solid #999;
+  color: #555;
+}
+
 .score-label {
   font-size: 14px;
   color: #666;

@@ -25,7 +25,9 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /*
@@ -45,7 +47,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class BoardService {
 
-    private static final Logger log = LoggerFactory.getLogger(BoardService.class);
+    private static final Logger logger = LoggerFactory.getLogger(BoardService.class);
 
     private final PostRepository postRepository;
     private final CommunityCommentRepository commentRepository;
@@ -58,9 +60,9 @@ public class BoardService {
      */
     @Transactional(readOnly = true)
     public Page<PostListResponseDTO> findPosts(PostSearchCondition condition, Pageable pageable) {
-        log.info("Searching for posts with condition: {} and pageable: {}", condition, pageable);
+        logger.info("Searching for posts with condition: {} and pageable: {}", condition, pageable);
         Page<Post> postPage = postRepository.findAll(PostSpecifications.withCondition(condition), pageable);
-        log.info("Found {} posts from DB for page {}", postPage.getNumberOfElements(), pageable.getPageNumber());
+        logger.info("Found {} posts from DB for page {}", postPage.getNumberOfElements(), pageable.getPageNumber());
         Page<PostListResponseDTO> dtoPage = postPage.map(post -> {
                                             String postType = calculatePostType(post); // 조회 시점 계산
                                             return mapToPostListDTO(post, postType);
@@ -98,11 +100,11 @@ public class BoardService {
      */
     @Transactional
     public PostDetailResponseDTO createPost(PostCreateRequestDTO requestDTO, String currentUserCode) {
-        log.info("Creating post with title '{}' by userCode {}", requestDTO.getTitle(), currentUserCode);
+        logger.info("Creating post with title '{}' by userCode {}", requestDTO.getTitle(), currentUserCode);
         User author = userRepository.findByUserCode(currentUserCode)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with code: " + currentUserCode));
 
-        log.info("user_code: {}", author.getUserCode());
+        logger.info("user_code: {}", author.getUserCode());
 
         String saveHTML = requestDTO.getContent();
         if(requestDTO.getImageNames() != null){
@@ -130,7 +132,7 @@ public class BoardService {
 
         Post resultEntity = postRepository.save(savedEntity);
         
-        log.info("Successfully created post with code: {}", resultEntity.getPostCode());
+        logger.info("Successfully created post with code: {}", resultEntity.getPostCode());
         return mapToPostDetailDTO(resultEntity, false);
     }
 
@@ -153,7 +155,7 @@ public class BoardService {
             
             return mapToPostDetailDTO(post, likedByMe);
     }
-
+	
     /**
      * 게시글을 삭제합니다. 작성자 본인만 삭제할 수 있도록 권한 검사가 필요합니다.
      */
@@ -240,6 +242,43 @@ public class BoardService {
         commentRepository.delete(communityComment);
     }
 
+    @Transactional(readOnly = true)
+    public List<MyPostResponseDTO> findMyPosts(String userCode) {
+        User user = userRepository.findByUserCode(userCode)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with code: " + userCode));
+        List<Post> posts = postRepository.findByAuthor(user);
+        return posts.stream()
+                .map(this::mapToMyPostResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<MyCommentResponseDTO> findMyComments(String userCode) {
+        User user = userRepository.findByUserCode(userCode)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with code: " + userCode));
+        List<CommunityComment> comments = commentRepository.findByAuthor(user);
+        return comments.stream()
+                .map(this::mapToMyCommentResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<MyLikedPostResponseDTO> findMyLikedPosts(String userCode) {
+        List<PostLike> likedPosts = postLikeRepository.findByUserCode(userCode);
+        List<String> postCodes = likedPosts.stream()
+                .map(PostLike::getPostCode)
+                .collect(Collectors.toList());
+
+        if (postCodes.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+
+        List<Post> posts = postRepository.findByPostCodeIn(postCodes);
+        return posts.stream()
+                .map(this::mapToMyLikedPostResponseDTO)
+                .collect(Collectors.toList());
+    }
+
     // --- Mapper-like helper methods ---
     private PostListResponseDTO mapToPostListDTO(Post post, String postType) {
         return new PostListResponseDTO(
@@ -279,6 +318,37 @@ public class BoardService {
                 comment.getAuthor().getUserId(),
                 formatDate(comment.getCreatedAt()),
                 comment.getContent()
+        );
+    }
+
+    private MyPostResponseDTO mapToMyPostResponseDTO(Post post) {
+        return new MyPostResponseDTO(
+                post.getId(),
+                post.getTitle(),
+                formatDate(post.getCreatedAt()),
+                post.getLikesCount(),
+                post.getCommentsCount()
+        );
+    }
+
+    private MyCommentResponseDTO mapToMyCommentResponseDTO(CommunityComment comment) {
+        return new MyCommentResponseDTO(
+                comment.getId(),
+                comment.getContent(),
+                comment.getPost().getTitle(),
+                formatDate(comment.getCreatedAt()),
+                comment.getPost().getId()
+        );
+    }
+
+    private MyLikedPostResponseDTO mapToMyLikedPostResponseDTO(Post post) {
+        return new MyLikedPostResponseDTO(
+                post.getId(),
+                post.getTitle(),
+                post.getAuthor().getUserNickname(),
+                formatDate(post.getCreatedAt()),
+                post.getLikesCount(),
+                post.getCommentsCount()
         );
     }
 
@@ -346,7 +416,25 @@ public class BoardService {
             searchStartIndex = start + replaceText.length();
         }
 
-        log.info("resultHTML : {}", resultHTML);
+        logger.info("resultHTML : {}", resultHTML);
         return resultHTML;
+    }
+
+    /**
+     * 사용자 활동 요약 정보 조회
+     * @param userCode 사용자 코드
+     * @return 게시글, 댓글, 좋아요 수
+     */
+    public Map<String, Long> getActivitySummary(String userCode) {
+        logger.debug("사용자 활동 요약 조회 시작. userCode: {}", userCode);
+        long postCount = postRepository.countByAuthorUserCode(userCode);
+        long commentCount = commentRepository.countByAuthorUserCode(userCode);
+        long likeCount = postLikeRepository.countByUserCode(userCode);
+
+        Map<String, Long> summary = new HashMap<>();
+        summary.put("postCount", postCount);
+        summary.put("commentCount", commentCount);
+        summary.put("likeCount", likeCount);
+        return summary;
     }
 }

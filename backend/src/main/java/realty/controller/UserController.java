@@ -1,10 +1,12 @@
 package realty.controller;
 
 import realty.domain.dto.UserDTO;
+import realty.domain.dto.LoginHistoryDTO;
 import realty.domain.model.User;
 import realty.service.UserService;
 import realty.service.EmailService;
 import realty.support.JwtUtil;
+import realty.service.LoginHistoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -33,6 +36,7 @@ import jakarta.servlet.http.Cookie;
  * 작성자 : 박윤성
  * 수정자 : 박윤성
  * 작성일 : 25.07.18
+ * 수정일 : 25.09.22
  * 파일명 : UserController.java
  */
 
@@ -48,6 +52,9 @@ public class UserController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private LoginHistoryService loginHistoryService;
 
     @Value("${jwt.access-token-expiration}")
     private int accessTokenExpiration;
@@ -555,5 +562,18 @@ public class UserController {
         responseBody.put("success", true);
         responseBody.put("message", "회원 탈퇴가 완료되었습니다.");
         return ResponseEntity.ok(responseBody);
+    }
+
+    /**
+     * 로그인 이력 조회
+     * @param request HTTP 요청 정보
+     * @return 응답 객체
+     */
+    @GetMapping("/login-history")
+    public ResponseEntity<List<LoginHistoryDTO>> getLoginHistory(HttpServletRequest request) {
+        logger.info("API: [GET /api/user/login-history] - 로그인 이력 조회 시작");
+        String userCode = userService.getCurrentUserCode(request);
+        List<LoginHistoryDTO> loginHistories = loginHistoryService.findByUserCode(userCode);
+        return ResponseEntity.ok(loginHistories);
     }
 }

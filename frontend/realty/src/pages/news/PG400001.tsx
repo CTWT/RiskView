@@ -497,16 +497,18 @@ const PG400001: React.FC = () => {
                 {pagination.totalPages > 1 && (
                   <div className="pagination-container">
                     {/* 앞 블록으로 이동 */}
-                    <button
-                      className={`pagination-button nav-button ${
-                        !pagination.hasPrevBlock ? "disabled" : ""
-                      }`}
-                      onClick={goToPrevBlock}
-                      disabled={!pagination.hasPrevBlock}
-                      title="이전 블록"
-                    >
-                      ≪
-                    </button>
+                    {(pagination.hasPrevBlock || pagination.hasNextBlock) && (
+                      <button
+                        className={`pagination-button nav-button ${
+                          !pagination.hasPrevBlock ? "disabled" : ""
+                        }`}
+                        onClick={goToPrevBlock}
+                        disabled={!pagination.hasPrevBlock}
+                        title="이전 블록"
+                      >
+                        ≪
+                      </button>
+                    )}
 
                     {/* 이전 페이지로 이동 */}
                     <button
@@ -548,16 +550,18 @@ const PG400001: React.FC = () => {
                     </button>
 
                     {/* 뒤 블록으로 이동 */}
-                    <button
-                      className={`pagination-button nav-button ${
-                        !pagination.hasNextBlock ? "disabled" : ""
-                      }`}
-                      onClick={goToNextBlock}
-                      disabled={!pagination.hasNextBlock}
-                      title="다음 블록"
-                    >
-                      ≫
-                    </button>
+                    {(pagination.hasPrevBlock || pagination.hasNextBlock) && (
+                      <button
+                        className={`pagination-button nav-button ${
+                          !pagination.hasNextBlock ? "disabled" : ""
+                        }`}
+                        onClick={goToNextBlock}
+                        disabled={!pagination.hasNextBlock}
+                        title="다음 블록"
+                      >
+                        ≫
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

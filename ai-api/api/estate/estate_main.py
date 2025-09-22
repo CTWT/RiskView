@@ -722,9 +722,9 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     else:
         print("❌ 편차율을 계산할 수 없습니다.")
 
-    isAnomaly = True
+    isAnomaly = False
     if risk_level != "정상":
-        isAnomaly = False
+        isAnomaly = True
 
     print(f"z-score : {round(user_z_score, 2) if user_z_score is not None else None}")
 

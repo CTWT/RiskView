@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import realty.domain.dto.BoardDTOs.CommentResponseDTO;
+import realty.domain.dto.BoardDTOs.MyCommentResponseDTO;
+import realty.domain.dto.BoardDTOs.MyLikedPostResponseDTO;
+import realty.domain.dto.BoardDTOs.MyPostResponseDTO;
 import realty.domain.dto.BoardDTOs.PostListResponseDTO;
 import realty.domain.dto.BoardDTOs.PostDetailResponseDTO;
 import realty.domain.dto.BoardDTOs.PostSearchCondition;
@@ -32,13 +35,16 @@ import realty.service.BoardService;
 import realty.service.UserService;
 
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 /*
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 : 
+ * 수정자 :
  * 작성일 : 25.09.03
+ * 수정일 : 
  * 파일명 : BoardController.java
  */
 
@@ -50,11 +56,10 @@ import java.net.URI;
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class BoardController {
-    private static final Logger log = LoggerFactory.getLogger(BoardController.class);
-    
+
+    private static final Logger logger = LoggerFactory.getLogger(BoardController.class);
     private final BoardService boardService;
     private final UserService userService;
-
     /**
      * 게시글 목록을 조건에 따라 조회합니다 (검색, 필터링, 정렬, 페이지네이션).
      * @param board 게시판 구분 ('free', 'support')
@@ -74,7 +79,7 @@ public class BoardController {
             @RequestParam(defaultValue = "최신순") String sortBy,
             Pageable pageable) {
 
-        log.info("API: getPosts - board={}, category={}, query={}, period={}, sortBy={}, pageable={}", board, searchCategory, searchQuery, period, sortBy, pageable);
+        logger.info("API: getPosts - board={}, category={}, query={}, period={}, sortBy={}, pageable={}", board, searchCategory, searchQuery, period, sortBy, pageable);
 
         Sort sort;
         switch (sortBy) {
@@ -92,9 +97,9 @@ public class BoardController {
         Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
 
         PostSearchCondition condition = new PostSearchCondition(board, searchCategory, searchQuery, period, sortBy);
-        log.debug("Constructed PostSearchCondition: {}", condition);
+        logger.debug("Constructed PostSearchCondition: {}", condition);
         Page<PostListResponseDTO> posts = boardService.findPosts(condition, sortedPageable);
-        log.info("Returning {} posts for page {}", posts.getNumberOfElements(), sortedPageable.getPageNumber());
+        logger.info("Returning {} posts for page {}", posts.getNumberOfElements(), sortedPageable.getPageNumber());
         return ResponseEntity.ok(posts);
     }
 
@@ -106,8 +111,8 @@ public class BoardController {
     @GetMapping("/{id}")
     public ResponseEntity<PostDetailResponseDTO> getPostById(@PathVariable Long id, HttpServletRequest request) {
         String userCode = userService.getCurrentUserCode(request);
-        
-        PostDetailResponseDTO detailResponseDTO 
+
+        PostDetailResponseDTO detailResponseDTO
         = boardService.getPostDetailResponseDTOByPostIdAndUserCode(id, userCode);
 
         return ResponseEntity.ok(detailResponseDTO);
@@ -120,16 +125,16 @@ public class BoardController {
      */
     @PostMapping
     public ResponseEntity<PostDetailResponseDTO> createPost(@RequestBody PostCreateRequestDTO requestDTO, HttpServletRequest request) {
-        log.info("API: createPost - title='{}'", requestDTO.getTitle());
+        logger.info("API: createPost - title='{}'", requestDTO.getTitle());
         String currentUserCode = userService.getCurrentUserCode(request); // Placeholder for testing
-        log.info("Current UserCode: {}", currentUserCode);
+        logger.info("Current UserCode: {}", currentUserCode);
         PostDetailResponseDTO createdPost = boardService.createPost(requestDTO, currentUserCode);
-        log.info("Post created with ID: {}", createdPost.getId());
+        logger.info("Post created with ID: {}", createdPost.getId());
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdPost.getId())
                 .toUri();
-        log.info("New post location URI: {}", location);
+        logger.info("New post location URI: {}", location);
         return ResponseEntity.created(location).body(createdPost);
     }
 
@@ -213,7 +218,7 @@ public class BoardController {
         String userCode = userService.getCurrentUserCode(request);
         String postCode = boardService.getPostCodeById(id);
         CommentResponseDTO commentResponseDTO = boardService.updateComment(requestDTO,postCode, commentCode, userCode);
-    
+
         return ResponseEntity.ok().body(commentResponseDTO);
     }
 
@@ -222,5 +227,60 @@ public class BoardController {
         boardService.deleteComment(commentId);
 
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 현재 로그인한 사용자가 작성한 게시글 목록을 조회합니다.
+     * @param request HTTP 요청 정보
+     * @return 내가 작성한 게시글 목록
+     */
+    @GetMapping("/my-posts")
+    public ResponseEntity<List<MyPostResponseDTO>> getMyPosts(HttpServletRequest request) { 
+        logger.info("API: [GET /api/user/my-posts] - 내가 작성한 게시글 목록 조회 시작");
+        String userCode = userService.getCurrentUserCode(request);
+        List<MyPostResponseDTO> myPosts = boardService.findMyPosts(userCode);
+        logger.info("API: [GET /api/user/my-posts] - 내가 작성한 게시글 {}건 조회 완료", myPosts.size());
+        return ResponseEntity.ok(myPosts);
+    }
+
+    /**
+     * 현재 로그인한 사용자가 작성한 댓글 목록을 조회합니다.
+     * @param request HTTP 요청 정보
+     * @return 내가 작성한 댓글 목록
+     */
+    @GetMapping("/my-comments")
+    public ResponseEntity<List<MyCommentResponseDTO>> getMyComments(HttpServletRequest request) {
+        logger.info("API: [GET /api/user/my-comments] - 내가 작성한 댓글 목록 조회 시작");
+        String userCode = userService.getCurrentUserCode(request);
+        List<MyCommentResponseDTO> myComments = boardService.findMyComments(userCode);
+        logger.info("API: [GET /api/user/my-comments] - 내가 작성한 댓글 {}건 조회 완료", myComments.size());
+        return ResponseEntity.ok(myComments);
+    }
+
+    /**
+     * 현재 로그인한 사용자가 좋아요한 게시글 목록을 조회합니다.
+     * @param request HTTP 요청 정보
+     * @return 내가 좋아요한 게시글 목록
+     */
+    @GetMapping("/my-likes")
+    public ResponseEntity<List<MyLikedPostResponseDTO>> getMyLikedPosts(HttpServletRequest request) {
+        logger.info("API: [GET /api/user/my-likes] - 내가 좋아요한 게시글 목록 조회 시작");
+        String userCode = userService.getCurrentUserCode(request);
+        List<MyLikedPostResponseDTO> myLikedPosts = boardService.findMyLikedPosts(userCode);
+        logger.info("API: [GET /api/user/my-likes] - 내가 좋아요한 게시글 {}건 조회 완료", myLikedPosts.size());
+        return ResponseEntity.ok(myLikedPosts);
+    }
+
+    /**
+     * 현재 로그인한 사용자의 활동 요약(게시글, 댓글, 좋아요 수)을 조회합니다.
+     * @param request HTTP 요청 정보
+     * @return 활동 요약 정보
+     */
+    @GetMapping("/activity-summary")
+    public ResponseEntity<Map<String, Long>> getActivitySummary(HttpServletRequest request) {
+        logger.info("API: [GET /api/posts/activity-summary] - 내 활동 요약 조회 시작");
+        String userCode = userService.getCurrentUserCode(request);
+        Map<String, Long> summary = boardService.getActivitySummary(userCode);
+        return ResponseEntity.ok(summary);
     }
 }

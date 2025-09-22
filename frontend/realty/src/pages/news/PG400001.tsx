@@ -82,6 +82,17 @@ const PG400001: React.FC = () => {
   const fetchSentimentAnalysis = async (newsId: number) => {
     console.log("감성 분석 API 호출, newsId:", newsId);
     setSentimentLoading(true);
+
+    // 현재 시간 구하기
+    const currentTime = new Date().toLocaleString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+  });
+
     try {
       // API 호출 (실제 API 엔드포인트로 변경 필요)
       const response = await fetch(`http://localhost:8080/api/board/news_articles/sentimentAnalysis/${newsId}`);
@@ -91,8 +102,16 @@ const PG400001: React.FC = () => {
       }
       const data = await response.json();
 
-      console.log("감성 분석 데이터:", data);
-      setSentimentAnalysis(data);
+      const adjustedData = {
+        ...data,
+        analysisTime: currentTime,
+      };
+      console.log("조정된 감성 분석 데이터:", adjustedData);
+      setSentimentAnalysis(adjustedData);
+
+      // console.log("감성 분석 데이터:", data);
+      // setSentimentAnalysis(data);
+
     } catch (error) {
       console.error("감성 분석 오류:", error);
     } finally {
@@ -113,13 +132,16 @@ const PG400001: React.FC = () => {
     if (!sentimentAnalysis) return null;
 
     const getSentimentColor = () => {
-      switch (sentimentAnalysis.sentimentCategory) {
+      const category = sentimentAnalysis.sentimentCategory?.trim();
+      switch (category) {
         case "긍정":
-          return "#4CAF50";
+          return "#4CAF50"; // 초록
         case "부정":
-          return "#f44336";
+          return "#f44336"; // 빨강
+        case "중립":
+          return "#FF9800"; // 주황
         default:
-          return "#FF9800";
+          return "#9E9E9E"; // 회색 
       }
     };
 
@@ -136,21 +158,14 @@ const PG400001: React.FC = () => {
 
     return (
       <div className="sentiment-analysis">
-        {/* 배너(임시) */}
-        <div className="rv05-banner">
-          <div>
-            <div className="rv05-banner-title"></div>
-          </div>
-          <div className="rv05-badge warn">준비중</div>
-        </div>
         
         <div className="sentiment-header">
           <h3>🤖 AI 감성 분석</h3>
         </div>
 
-        <div className="sentiment-alert">
+        <div className="sentiment-alert" style={{ borderColor: getSentimentColor(), backgroundColor: getSentimentColor() + "20" }}>
           <div className="sentiment-alert-header">
-            <span className="alert-icon">😰</span>
+            <span className="alert-icon">{sentimentAnalysis.sentimentEmoji}</span>
             <span className="alert-title">{getSentimentText()}</span>
             <div className="sentiment-score-container">
               <span className="score-label">감성 점수:</span>
@@ -170,9 +185,7 @@ const PG400001: React.FC = () => {
           <div className="sentiment-description">
             <h4>🧠 AI 분석 결과</h4>
             <p>
-              전세가율 상승과 전세사기 증가로 인해 시장 불안감이 높아지고
-              있습니다. 임차인들의 위험 부담이 증가하고 있어 신중한 접근이
-              필요한 상황입니다.
+              {sentimentAnalysis.summary || "요약 정보가 없습니다."}
             </p>
           </div>
 
@@ -428,6 +441,7 @@ const PG400001: React.FC = () => {
   // 렌더링
   return (
     <PageContainer showBreadcrumb={true}>
+      <div className="centered-"></div>
       <div className="news-container">
         {/* 왼쪽: 뉴스 섹션 */}
         <div className="news-section">

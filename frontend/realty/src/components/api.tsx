@@ -55,3 +55,44 @@ export const sendVerificationEmail = async (email: string) => {
     });
     return response.data.message;
 };
+
+/**
+ * 이메일 인증코드 일치 확인
+ * @param email 입력받은 이메일
+ * @param code 인증코드 일치를 위한 코드
+ * @returns
+ */
+export const verifyEmailCode = async (email: string, code: string) => {
+    const res = await apiRequest<{ code: string; message: string }>({
+        url: "/api/verify-email-code",
+        method: "POST",
+        data: { email, code },
+    });
+    return res.data;
+};
+
+/**
+ * 아이디 중복 확인 처리
+ * @param userId 입력받은 아이디
+ * @returns
+ */
+export const checkUserIdDuplicate = async (userId: string) => {
+    const response = await apiRequest<{ available: boolean; message: string }>({
+        url: `/api/user/check-userid/${encodeURIComponent(userId)}`,
+        method: "GET",
+    });
+    return response.data;
+};
+
+/**
+ * 닉네임 중복 확인 처리
+ * @param nickName 입력받은 닉네임
+ * @returns
+ */
+export const checkNickNameDuplicate = async (nickName: string) => {
+    const response = await apiRequest<{ available: boolean; message: string }>({
+        url: `/api/user/check-nickname/${encodeURIComponent(nickName)}`,
+        method: "GET",
+    });
+    return response.data;
+};

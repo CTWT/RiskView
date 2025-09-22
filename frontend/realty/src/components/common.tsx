@@ -50,7 +50,6 @@ export function validateEmail(email: string): ValidationResult {
     return {
         valid: true,
         value: email,
-        message: "올바른 이메일 형식입니다.",
     };
 }
 
@@ -126,6 +125,28 @@ export function validateNum(num: string): ValidationResult {
     return {
         valid: true,
         value: num,
+    };
+}
+
+/**
+ * 닉네임 생성 정규식
+ * 조건 : 한글, 숫자, 영어 대소문자 포함 10자리 이하 문자열
+ * @param nickname 한글, 숫자, 영어 대소문자 포함 10자리 이하 문자열
+ * @returns
+ */
+export function validateNickName(nickname: string): ValidationResult {
+    const regex = /^[가-힣a-zA-Z0-9]{1,10}$/;
+
+    if (!regex.test(nickname.trim() || "")) {
+        return {
+            valid: false,
+            message:
+                "닉네임은 한글, 숫자, 영어 대소문자 조합 10자리 이하만 가능합니다.",
+        };
+    }
+    return {
+        valid: true,
+        value: nickname,
     };
 }
 

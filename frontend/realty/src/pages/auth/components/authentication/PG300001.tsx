@@ -68,7 +68,8 @@ const PG300001: React.FC = () => {
 
         if (isSignup) {
             console.log("회원가입 모드로 시작 - authStep을 1로 설정");
-            setAuthStep(4); // 바로 회원유형 선택 페이지로
+            // setAuthStep(1); // 바로 회원유형 선택 페이지로
+            setAuthStep(4); // 바로 회원가입 페이지로 이동
             setSignupMode(true); // 회원가입 모드 활성화
         } else if (isLogin) {
             console.log("로그인 모드로 강제 설정");

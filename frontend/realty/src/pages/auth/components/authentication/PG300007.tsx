@@ -279,6 +279,8 @@ const PG300007: React.FC<PG300007Props> = ({
       */
         };
 
+        console.log("서버에 보낼 데이터 : ", finalSignupData);
+
         try {
             // 회원가입 API 호출
             const response = await fetch("/api/user/signup", {

@@ -25,8 +25,9 @@ interface PG300006Props {
         password: string;
         userId: string;
         nickname: string;
+        email: string;
     }) => void; // 데이터와 함께 다음 단계로 이동
-    userEmail: string; // 부모 컴포넌트에서 전달받은 이메일
+    // userEmail: string; // 부모 컴포넌트에서 전달받은 이메일
     onLogin: () => void; // 로그인으로 돌아가는 함수
 }
 
@@ -63,9 +64,11 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
     ); // null: 미확인, true: 유효, false: 무효
 
     // 이메일 상태
-    const [email, setEmail] = useState(false);
+    const [verify, setVerify] = useState(false);
     // 이메일 코드전송 상태
     const [send, setSend] = useState(false);
+    // 이메일
+    const [email, setEmail] = useState("");
 
     // 공통 함수 적용
     const [form, setForm] = useState({
@@ -146,9 +149,9 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
     // 이메일 전송 기능 추가
     const handleSendEmail = async () => {
         // 인증이 완료된 경우
-        console.log(email);
+        console.log(verify);
 
-        if (email) {
+        if (verify) {
             showToast("인증이 이미 완료되었습니다.", { type: "error" });
             return;
         }
@@ -190,7 +193,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
         }
 
         // 메일 인증코드 발송 후 인증 번호 검증
-        if (send && !email) {
+        if (send && !verify) {
             if (!form.num || form.num.length !== 6) {
                 showToast("6자리 인증번호를 입력해주세요", { type: "error" });
                 return;
@@ -203,21 +206,23 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                 );
 
                 if (result.code === "001") {
-                    setEmail(true);
+                    setVerify(true);
                     showToast(
                         result.message || "이메일 인증이 완료되었습니다.",
                         { type: "success" }
                     );
+                    setEmail(form.email);
                 } else {
                     showToast(
                         result.message || "인증번호가 올바르지 않습니다.",
                         { type: "error" }
                     );
                 }
-            } catch {
+            } catch (error) {
                 showToast("인증 처리 중 오류가 발생했습니다.", {
                     type: "error",
                 });
+                console.log(error);
             }
         }
     };
@@ -370,16 +375,16 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
             isNicknameValid === true &&
             password.length >= 6 &&
             confirmPassword === password &&
-            email === true
+            verify === true
         ) {
             console.log("폼 제출 완료:", {
-                email: form.email,
+                email,
                 password,
                 userId,
                 nickname,
             });
 
-            onNext({ password, userId, nickname });
+            onNext({ password, userId, nickname, email });
         } else {
             showToast("입력 정보를 다시 확인해주세요.", { type: "error" });
         }
@@ -440,7 +445,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                             value={form.email}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            disabled={email}
+                            disabled={verify}
                         />
                     </div>
                     {/* 인증번호 입력 필드 */}
@@ -454,13 +459,13 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             maxLength={6}
-                            disabled={email}
+                            disabled={verify}
                         />
                         <button
                             type="button"
                             className="normalButton"
                             onClick={handleSendEmail}
-                            disabled={email}
+                            disabled={verify}
                         >
                             {send ? "인증하기" : "인증코드발송"}
                         </button>
@@ -552,12 +557,13 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                             className="authButton"
                             disabled={
                                 isNicknameValid !== true ||
-                                !nickname.trim() ||
+                                !form.nickname.trim() ||
                                 isUserIdValid !== true ||
-                                !userId.trim() ||
+                                !form.id.trim() ||
                                 password.length < 6 ||
                                 confirmPassword !== password ||
-                                isCheckingUserId
+                                isCheckingUserId ||
+                                verify !== true
                             }
                         >
                             다음

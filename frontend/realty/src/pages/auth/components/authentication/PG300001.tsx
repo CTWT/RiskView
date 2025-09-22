@@ -125,6 +125,7 @@ const PG300001: React.FC = () => {
         password: string;
         userId: string;
         nickname: string;
+        email: string;
     }) => {
         // 입력한 회원정보 데이터 기억
         setSignupData((prev) => ({
@@ -132,6 +133,7 @@ const PG300001: React.FC = () => {
             password: data.password,
             userId: data.userId,
             userNickname: data.nickname,
+            email: data.email,
         }));
         // 다음 단계로 이동
         goToNextStep();
@@ -221,7 +223,7 @@ const PG300001: React.FC = () => {
             {authStep === 4 && (
                 <PG300006
                     onNext={handleBasicInfoSubmit}
-                    userEmail={userEmail}
+                    // userEmail={userEmail}
                     onLogin={goToLogin}
                 />
             )}

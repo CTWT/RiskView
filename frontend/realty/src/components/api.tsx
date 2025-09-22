@@ -63,12 +63,18 @@ export const sendVerificationEmail = async (email: string) => {
  * @returns
  */
 export const verifyEmailCode = async (email: string, code: string) => {
-    const res = await apiRequest<{ code: string; message: string }>({
-        url: "/api/verify-email-code",
-        method: "POST",
-        data: { email, code },
-    });
-    return res.data;
+    try {
+        const res = await apiRequest<{ code?: string; message?: string }>({
+            url: "/api/verify-email-code",
+            method: "POST",
+            data: { email, code },
+        });
+        console.log("✅ verifyEmailCode Response:", res.data);
+        return res.data;
+    } catch (err) {
+        console.error("❌ verifyEmailCode Error:", err);
+        throw err;
+    }
 };
 
 /**

@@ -1,6 +1,5 @@
 package realty.service;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +31,6 @@ import realty.domain.model.Documents;
 import realty.domain.model.FileStorageMetadata;
 import realty.domain.model.StructuredContractData;
 import realty.domain.model.TransactionAnomaly;
-import realty.domain.model.AnalysisReport.SentimentCategory;
 import realty.domain.repository.AnalysisReportRepository;
 import realty.domain.repository.ContractClauseRepository;
 import realty.domain.repository.DocumentsRepository;

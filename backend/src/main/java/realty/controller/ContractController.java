@@ -23,7 +23,7 @@ import realty.apicommunication.FileComponent;
 import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
 import realty.domain.dto.AiRiskAnalysisRequest;
-import realty.domain.dto.AnalysisSummaryDTO;
+// import realty.domain.dto.AnalysisSummaryDTO;
 import realty.domain.dto.AnomalyDetectResult;
 import realty.domain.dto.ContractClauseDTO;
 import realty.domain.dto.ContractDTO;
@@ -99,16 +99,16 @@ public class ContractController {
                 .body(dto);
     }
 
-    @GetMapping("/analysisSummary")
-    public ResponseEntity<AnalysisSummaryDTO> getSummary(
-        @RequestParam("documentCode") String documentCode) {
-            AnalysisSummaryDTO analysisSummaryDTO = contractService.getAnalysisSummary(documentCode);
+    // @GetMapping("/analysisSummary")
+    // public ResponseEntity<AnalysisSummaryDTO> getSummary(
+    //     @RequestParam("documentCode") String documentCode) {
+    //         AnalysisSummaryDTO analysisSummaryDTO = contractService.getAnalysisSummary(documentCode);
 
-            return ResponseEntity
-                    .ok()
-                    .body(analysisSummaryDTO);
+    //         return ResponseEntity
+    //                 .ok()
+    //                 .body(analysisSummaryDTO);
 
-    }
+    // }
 
     /**
      * 파일 업로드 후 OCR 실행

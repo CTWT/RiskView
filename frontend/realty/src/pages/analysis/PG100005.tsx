@@ -272,12 +272,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             <div className="rv05-banner-title">종합 위험도 평가</div>
             {/* 요약 */}
             <div className="rv05-banner-sub">
-              요약요약요약{summary?.analysisReport?.summary ?? "-"}
+              {summary?.analysisReport?.summary ?? "-"}
             </div>
             {/* 감성 분석 요약 + 이모지 */}
             <div className="rv05-banner-sub">
-              감성요약감성요약{summary?.analysisReport?.sentimentSummary ?? "-"}{" "}
-              이모지이모지{summary?.analysisReport?.sentimentEmoji ?? ""}
+              {summary?.analysisReport?.sentimentSummary ?? "-"}{" "}
+              {summary?.analysisReport?.sentimentEmoji ?? ""}
             </div>
             {/* 감성 점수 */}
             <div className="rv05-banner-sub">

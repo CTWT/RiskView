@@ -17,6 +17,9 @@ import uvicorn
 import sys, os
 from fastapi import Body, Query, Response
 from api.wordcloud.wordcloud_main import generate_wordcloud
+from ai.contract_analysis.create_report import AiRiskAnalysisRequest
+from ai.contract_analysis.create_report import AnalysisReportsDTO
+from ai.contract_analysis.create_report import analyze_with_openai
 
 
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -41,6 +44,7 @@ event_flags: Dict[str, bool] = {
     "analyze_estate": False,  # 부동산 종합 분석
     "analyze_clause": False,  # 특약사항 위험 분석
     "wordcloud": False,  # 워드클라우드
+    "create_report": False,
 }
 
 
@@ -155,6 +159,19 @@ async def analyzeClause(req: ClauseRequest):
     analysis_result = analyze_clause(req.contract_clause)
     return analysis_result
 
+@app.post("/create_report", response_model=AnalysisReportsDTO)
+async def createReport(req: AiRiskAnalysisRequest):
+    if not event_flags["create_report"]:
+        raise HTTPException(
+            status_code=403, detail="계약서 리포트 생성이 허용되지 않았습니다."
+        )
+    event_flags["create_report"] = False
+
+    clause = req.contractClauseDTO
+    anomaly = req.anomalyDetectResult
+
+    result = analyze_with_openai(anomaly=anomaly, clause=clause)
+    return result
 
 # 워드클라우드 호출
 @app.post("/wordcloud")

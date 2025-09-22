@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import realty.domain.dto.AiRiskAnalysisRequest;
 import realty.domain.dto.AnalysisReportsDTO;
 import realty.domain.dto.AnalysisSummaryDTO;
 import realty.domain.dto.AnomalyDetectResult;
@@ -171,11 +172,11 @@ public class ContractService {
         AnalysisReport analysisReport = AnalysisReport.builder()
                                                         .documentCode(documentCode)
                                                         .reportCode("not-set")
-                                                        .riskLevel("not-set")
-                                                        .sentimentCategory(SentimentCategory.긍정)
-                                                        .sentimentEmoji("!")
-                                                        .sentimentScore(new BigDecimal(100))
-                                                        .sentimentSummary("not-set")
+                                                        .riskLevel(analysisReportsDTO.getRiskLevel())
+                                                        .sentimentCategory(analysisReportsDTO.getSentimentCategory())
+                                                        .sentimentEmoji(analysisReportsDTO.getSentimentEmoji())
+                                                        .sentimentScore(analysisReportsDTO.getSentimentScore())
+                                                        .sentimentSummary(analysisReportsDTO.getSentimentSummary())
                                                         .build();
 
         AnalysisReport savedEntity = analysisReportRepository.save(analysisReport);
@@ -263,23 +264,24 @@ public class ContractService {
         return response.getBody();
     }
 
-     /**
-     * ocr결과를 이상치분석 api 요청
-     */
-    private void triggerFastApiAnalysis(String apiName) {
-        log.info("FastAPI 트리거 활성화: {}", apiName);
-        Map<String, String> triggerBody = new HashMap<>();
-        triggerBody.put("api_name", apiName);
+    public AnalysisReportsDTO createAnalysisReport(AiRiskAnalysisRequest request) {
+        log.info("분석 리포트 생성 시작");
 
-        ResponseEntity<Map> response = restTemplate.postForEntity(
-                "http://localhost:8000/trigger",
-                triggerBody,
-                Map.class);
+        triggerFastApiAnalysis("create_report");
 
-        if (response.getBody() != null) {
-            String message = (String) response.getBody().get("message");
-            log.info("FastAPI 트리거 응답: {}", message);
+        log.info("FastAPI 'create_report' 호출");
+        // post
+        ResponseEntity<AnalysisReportsDTO> response = restTemplate.postForEntity(
+                "http://localhost:8000/create_report",
+                request,
+                AnalysisReportsDTO.class);
+
+        if (response.getStatusCode().is2xxSuccessful()) {
+            log.info("분석 리포트 생성 성공. 결과: {}", response.getBody());
+        } else {
+            log.error("분석 리포트 생성 실패. 응답 코드: {}", response.getStatusCode());
         }
+        return response.getBody();
     }
 
     /**
@@ -321,4 +323,22 @@ public class ContractService {
                                     .build();
     }
 
+     /**
+     * ocr결과를 이상치분석 api 요청
+     */
+    private void triggerFastApiAnalysis(String apiName) {
+        log.info("FastAPI 트리거 활성화: {}", apiName);
+        Map<String, String> triggerBody = new HashMap<>();
+        triggerBody.put("api_name", apiName);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(
+                "http://localhost:8000/trigger",
+                triggerBody,
+                Map.class);
+
+        if (response.getBody() != null) {
+            String message = (String) response.getBody().get("message");
+            log.info("FastAPI 트리거 응답: {}", message);
+        }
+    }
 }

@@ -4,10 +4,12 @@ import java.math.BigDecimal;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import realty.domain.model.AnalysisReport;
 import realty.domain.model.AnalysisReport.SentimentCategory;
 
 @Data
+@ToString
 @Builder
 public class AnalysisReportsDTO {
     private String summary; 					// 요약 내용

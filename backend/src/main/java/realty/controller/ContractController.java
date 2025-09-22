@@ -23,6 +23,7 @@ import realty.apicommunication.FileComponent;
 import realty.apicommunication.MapComponent;
 import realty.apicommunication.OcrComponent;
 import realty.domain.dto.AiRiskAnalysisRequest;
+import realty.domain.dto.AnalysisReportsDTO;
 import realty.domain.dto.AnalysisSummaryDTO;
 import realty.domain.dto.AnomalyDetectResult;
 import realty.domain.dto.ContractClauseDTO;
@@ -174,14 +175,14 @@ public class ContractController {
      * AI 위험 분석
      */
     @PostMapping("/contracts/aiRiskAnalysis")
-    public ResponseEntity<String> analyze(
+    public ResponseEntity<AnalysisReportsDTO> createAnalysisReport(
             @RequestBody AiRiskAnalysisRequest request) {
 
         log.info("AI 리스크 분석 요청: {}", request);
 
-        // TODO 분석 로직 실행
+        AnalysisReportsDTO analysisReportsDTO = contractService.createAnalysisReport(request);
 
-        return ResponseEntity.ok("AI 위험분석 완료");
+        return ResponseEntity.ok().body(analysisReportsDTO);
     }
 
     @PostMapping("/contracts/finalCommit")
@@ -189,6 +190,7 @@ public class ContractController {
         @RequestBody FinalCommitRequest finalCommitRequest
     ){
         log.info("데이터 저장");
+        log.info("마지막 커밋 ===> {}", finalCommitRequest);
         contractService.save(finalCommitRequest);
         return ResponseEntity.ok().build();
     }

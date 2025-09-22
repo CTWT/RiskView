@@ -39,7 +39,7 @@ export interface AnalysisReportsDTO {
   sentimentEmoji: string;
 }
 export interface AiRiskAnalysisRequest {
-  ocrData: OcrDataType;
+  contractClauseDTO: ContractClauseDTO;
   anomalyDetectResult: AnomalyDetectResult;
 }
 export interface FinalCommitRequest {
@@ -91,10 +91,10 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
   };
 
   const aiRiskAnalyze = async (
-    ocrData: OcrDataType,
+    contractClauseDTO : ContractClauseDTO,
     anomalyDetectResult: AnomalyDetectResult
   ) => {
-    const payload: AiRiskAnalysisRequest = { ocrData, anomalyDetectResult };
+    const payload: AiRiskAnalysisRequest = { contractClauseDTO, anomalyDetectResult };
     const response = await axios.post<AnalysisReportsDTO>(
       "http://localhost:8080/contracts/aiRiskAnalysis",
       payload,
@@ -110,6 +110,12 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
     anomalyDetectResult: AnomalyDetectResult,
     analysisReport: AnalysisReportsDTO
   ) => {
+
+    console.log("final documentCode : ", documentCode);
+    console.log("final clauseAnalysis : ", clauseAnalysis);
+    console.log("final anomalyDetectResult : ", anomalyDetectResult);
+    console.log("final analysisReport : ", analysisReport);
+    
     const payload: FinalCommitRequest = {
       documentCode,
       contractClauseDTO: clauseAnalysis,
@@ -123,15 +129,6 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
     );
     return response.data;
   };
-
-  const dummyAnalysisReport: AnalysisReportsDTO = {
-  summary: "AI 위험분석 완료",
-  riskLevel: "LOW",                     // 예시: HIGH, MEDIUM, LOW
-  sentimentSummary: "긍정적",            // 예시 텍스트
-  sentimentScore: 0.85,                 // 예시 점수 (0~1)
-  sentimentCategory: "긍정",        // SentimentCategory enum 값 중 하나
-  sentimentEmoji: "😊"                  // 감정 표현 이모지
-};
 
   useEffect(() => {
     const runAnalysis = async () => {
@@ -160,7 +157,10 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
       setCurrentStep(3);
 
       // 4️⃣ AI 위험 요소 분석
-      const rAnalysisReport = dummyAnalysisReport//await aiRiskAnalyze(ocrData!, rAnomalyDetectResult);
+      let rAnalysisReport: AnalysisReportsDTO | null = null;
+      if (rClauseAnalysis && rAnomalyDetectResult){
+        rAnalysisReport = await aiRiskAnalyze(rClauseAnalysis, rAnomalyDetectResult);
+      }
       accumulatedProgress += 20;
       setProgress(accumulatedProgress);
       setCurrentStep(4);

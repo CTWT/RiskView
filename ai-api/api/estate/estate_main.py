@@ -359,84 +359,84 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # - 종합병원이나 지역응급의료센터는 +1.5
     # - 일반 병원의 경우 10개당 +0.2점
     # ============================================
-    hospital_count=0
-    normal_hospital_count=0
-    hospital_location_points = 0
-    hospitals = get_hospital_data(boundary=boundary_1000m) or [] # DB에서 범위 내 병원 정보 조회
-    if hospitals:
-        max_additional_points += 2.5 # 병원 점수 최대 2.5점
-        print(f"☑️ 중간 최대 점수 (병원 추가): {max_additional_points}")
-        has_general_hospital = False # 1.5점은 한 번만 추가되도록 플래그 설정
-        for hospital in hospitals:
-            lat = hospital['lat']
-            lon = hospital['lon']
-            name = hospital['name']
+    # hospital_count=0
+    # normal_hospital_count=0
+    # hospital_location_points = 0
+    # hospitals = get_hospital_data(boundary=boundary_1000m) or [] # DB에서 범위 내 병원 정보 조회
+    # if hospitals:
+    #     max_additional_points += 2.5 # 병원 점수 최대 2.5점
+    #     print(f"☑️ 중간 최대 점수 (병원 추가): {max_additional_points}")
+    #     has_general_hospital = False # 1.5점은 한 번만 추가되도록 플래그 설정
+    #     for hospital in hospitals:
+    #         lat = hospital['lat']
+    #         lon = hospital['lon']
+    #         name = hospital['name']
 
-            # 위도, 경도 유효성 체크
-            if lat is None or lon is None:
-                # print(f"{name}의 좌표 정보가 없습니다.") # 로그가 너무 많아 주석 처리
-                continue
+    #         # 위도, 경도 유효성 체크
+    #         if lat is None or lon is None:
+    #             # print(f"{name}의 좌표 정보가 없습니다.") # 로그가 너무 많아 주석 처리
+    #             continue
 
-            dist = haversine_distance(x, y, lon, lat) # (수정) haversine_distance(lat1, lon1, lat2, lon2) 순서에 맞게 인자 전달
+    #         dist = haversine_distance(x, y, lon, lat) # (수정) haversine_distance(lat1, lon1, lat2, lon2) 순서에 맞게 인자 전달
 
-            if dist <= 1000:  # 1km 이내
-                # 종합병원이나 지역응급의료센터는 1.5점 (최초 1회만)
-                if not has_general_hospital and (hospital['dutyDivNam'] == "종합병원" or hospital['dutyEmclsName'] == "지역응급의료센터"):
-                    print(f"종합병원/지역응급의료센터 {name}까지 거리: {dist:.2f}m")
-                    hospital_location_points += 1.5
-                    has_general_hospital = True
-                else: # 일반 병원
-                    # print(f"일반 병원 {name}까지 거리: {dist:.2f}m") # 로그가 너무 많아 주석 처리
-                    normal_hospital_count += 1
-                hospital_count += 1
+    #         if dist <= 1000:  # 1km 이내
+    #             # 종합병원이나 지역응급의료센터는 1.5점 (최초 1회만)
+    #             if not has_general_hospital and (hospital['dutyDivNam'] == "종합병원" or hospital['dutyEmclsName'] == "지역응급의료센터"):
+    #                 print(f"종합병원/지역응급의료센터 {name}까지 거리: {dist:.2f}m")
+    #                 hospital_location_points += 1.5
+    #                 has_general_hospital = True
+    #             else: # 일반 병원
+    #                 # print(f"일반 병원 {name}까지 거리: {dist:.2f}m") # 로그가 너무 많아 주석 처리
+    #                 normal_hospital_count += 1
+    #             hospital_count += 1
 
-        # 일반 병원 점수 계산(10개당 0.2점)
-        normal_hospital_points = min(normal_hospital_count / 10 * 0.2, 1) # 최대 1점
-        hospital_location_points += normal_hospital_points
+    #     # 일반 병원 점수 계산(10개당 0.2점)
+    #     normal_hospital_points = min(normal_hospital_count / 10 * 0.2, 1) # 최대 1점
+    #     hospital_location_points += normal_hospital_points
         
-        print(f"1km 이내 병원 개수: {hospital_count}개 (종합병원급 포함)")
-        print(f"✅ 병원 위치 점수: {hospital_location_points}\n")
-        additional_points += hospital_location_points
-    else:
-        print("❌ 병원 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+    #     print(f"1km 이내 병원 개수: {hospital_count}개 (종합병원급 포함)")
+    #     print(f"✅ 병원 위치 점수: {hospital_location_points}\n")
+    #     additional_points += hospital_location_points
+    # else:
+    #     print("❌ 병원 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
 
-    # ============================================
-    # 1km 이내 공공체육시설 여부 확인
-    # - 1km 이내 공공체육시설이 1개라도 있으면: +1점
-    # ============================================
-    facility_location_points = 0
-    facilities = get_facilities_data(boundary=boundary_1000m) or []
+    # # ============================================
+    # # 1km 이내 공공체육시설 여부 확인
+    # # - 1km 이내 공공체육시설이 1개라도 있으면: +1점
+    # # ============================================
+    # facility_location_points = 0
+    # facilities = get_facilities_data(boundary=boundary_1000m) or []
 
-    if facilities:
-        max_additional_points += 1 # 공공체육시설 점수 최대 1점
-        print(f"☑️ 중간 최대 점수 (공공체육시설 추가): {max_additional_points}")
+    # if facilities:
+    #     max_additional_points += 1 # 공공체육시설 점수 최대 1점
+    #     print(f"☑️ 중간 최대 점수 (공공체육시설 추가): {max_additional_points}")
         
-        for facility in facilities:
-            lat = facility['lat']
-            lon = facility['lon']
-            name = facility.get('name')
+    #     for facility in facilities:
+    #         lat = facility['lat']
+    #         lon = facility['lon']
+    #         name = facility.get('name')
 
-            # 위도, 경도 유효성 체크
-            if lat is None or lon is None:
-                print(f"{name}의 좌표 정보가 없습니다.")
-                continue
+    #         # 위도, 경도 유효성 체크
+    #         if lat is None or lon is None:
+    #             print(f"{name}의 좌표 정보가 없습니다.")
+    #             continue
 
-            # 거리 계산 (lat1, lon1, lat2, lon2)
-            dist = haversine_distance(y, x, lat, lon)
+    #         # 거리 계산 (lat1, lon1, lat2, lon2)
+    #         dist = haversine_distance(y, x, lat, lon)
 
-            if dist <= 1000:  # 1km 이내
-                print(f"{name}까지 거리: {dist:.2f}m (1km 이내)")
-                facility_location_points = 1
-                break  # 하나라도 찾으면 점수 부여 후 종료
+    #         if dist <= 1000:  # 1km 이내
+    #             print(f"{name}까지 거리: {dist:.2f}m (1km 이내)")
+    #             facility_location_points = 1
+    #             break  # 하나라도 찾으면 점수 부여 후 종료
 
-        if facility_location_points == 0:
-            print("⚠️ 1km 이내 공공체육시설이 없습니다.")
-        else:
-            print(f"✅ 공공체육시설 위치 점수: {facility_location_points}\n")
+    #     if facility_location_points == 0:
+    #         print("⚠️ 1km 이내 공공체육시설이 없습니다.")
+    #     else:
+    #         print(f"✅ 공공체육시설 위치 점수: {facility_location_points}\n")
 
-        additional_points += facility_location_points
-    else:
-        print("❌ 공공체육시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
+    #     additional_points += facility_location_points
+    # else:
+    #     print("❌ 공공체육시설 정보를 가져오지 못해 점수를 계산할 수 없습니다.\n")
 
 
     # ============================================

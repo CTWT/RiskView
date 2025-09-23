@@ -157,7 +157,7 @@ const PG300001: React.FC = () => {
             "이메일:",
             email,
             "emailToken:",
-            emailToken
+            emailToken ? "이메일 토큰 전달됨" : "전달되는 이메일 토큰 없음"
         );
         setResetUserId(userId);
         setResetUserEmail(email);
@@ -250,7 +250,7 @@ const PG300001: React.FC = () => {
                 <PG300009
                     onLogin={goToLogin}
                     onFindId={goToFindId}
-                    // onPasswordReset={goToVerificationCode}
+                    onPasswordReset={goToVerificationCode}
                 />
             )}
 

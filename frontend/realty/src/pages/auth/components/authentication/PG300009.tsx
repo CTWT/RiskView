@@ -30,7 +30,7 @@ interface PG300009Props {
     /** 아이디 찾기 페이지로 이동하는 콜백 함수 */
     onFindId?: () => void;
     /** 인증번호 전송 후 PG300010으로 이동하는 콜백 함수 */
-    onPasswordReset?: (userId: string, email: string) => void;
+    onPasswordReset?: (userId: string, email: string, emailToken: string) => void;
 }
 
 /**
@@ -142,8 +142,8 @@ const PG300009: React.FC<PG300009Props> = ({
 
             // 인증번호 입력 페이지로 이동 (사용자 ID와 이메일 전달)
             if (onPasswordReset) {
-                // 부모 컴포넌트에서 콜백이 제공된 경우 userId, email 정보를 가지고 인증번호 입력 페이지로 이동
-                onPasswordReset(userId.trim(), email.trim());
+                // 부모 컴포넌트에서 콜백이 제공된 경우 userId, email, token 정보를 가지고 인증번호 입력 페이지로 이동
+                onPasswordReset(userId.trim(), email.trim(), codeRequestRes.data.token);
             } else {
                 // 콜백이 없다면 기본 이동 처리: 인증번호 입력 페이지(PG300010)로 이동
                 navigate("/pg/PG300010", {

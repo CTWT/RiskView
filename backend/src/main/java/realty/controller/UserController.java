@@ -270,14 +270,13 @@ public class UserController {
         }
 
         // 아이디와 이메일이 모두 일치하는 사용자 확인
-        User foundUser = null;
-        foundUser = userService.findByUserIdAndEmail(userId.trim(), email.trim());
+        User foundUser = userService.findByUserIdAndEmail(userId.trim(), email.trim());
 
         // 사용자를 찾지 못했다면
         if (foundUser == null) {
             responseBody.put("message", "입력하신 아이디와 이메일에 해당하는 계정을 찾을 수 없습니다.");
             logger.warn("API: [POST /api/user/send-password-reset-code] - 사용자를 찾을 수 없음. userId: {}, email: {}", userId.trim(), email.trim());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseBody);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
 
         // 이메일 인증코드 발송
@@ -295,6 +294,7 @@ public class UserController {
 
         // 성공 응답
         responseBody.put("message", email + "로 인증코드를 발송했습니다.");
+        responseBody.put("token", emailToken); // 프론트엔드에 토큰 전달
         // 응답 반환
         return ResponseEntity.ok(responseBody);
     }

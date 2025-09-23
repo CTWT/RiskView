@@ -62,10 +62,10 @@ jobs:
             - name: Check JAR exists
               run: ls -al backend/build/libs
 
-            - name: Copy Backend JAR
-              run: |
-                  mkdir -p out
-                  cp backend/build/libs/*.jar out/app.jar
+            # - name: Copy Backend JAR
+            #   run: |
+            #       mkdir -p out
+            #       cp backend/build/libs/*.jar out/app.jar
 
             # 6. Python (AI 서버 압축)
             - name: Archive AI source
@@ -79,7 +79,7 @@ jobs:
                   host: ${{ env.SSH_HOST }}
                   username: ${{ env.SSH_USER }}
                   password: ${{ env.SSH_PASS }}
-                  source: "dist/**,out/app.jar,ai_src.tar.gz"
+                  source: "dist/**,backend/build/libs/app.jar,ai_src.tar.gz"
                   target: "/tmp"
 
             # 8. 서버 배포 스크립트 실행

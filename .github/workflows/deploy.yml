@@ -73,6 +73,16 @@ jobs:
               run: |
                   tar -czf ai_src.tar.gz -C ai-api .
 
+            - name: Debug - check SSH connectivity
+              run: |
+                  sudo apt-get update -y
+                  sudo apt-get install -y netcat-traditional traceroute curl
+                  echo "== Runner outbound IP =="
+                  curl -s ifconfig.me || echo "Unable to get IP"
+                  echo "== Netcat Test =="
+                  nc -zv ${{ secrets.DEV_SSH_HOST }} 22 || echo "SSH port closed"
+                  echo "== Traceroute =="
+                  traceroute -n ${{ secrets.DEV_SSH_HOST }} || true
             # 7. 산출물 서버로 복사
             - name: Copy artifacts to server
               uses: appleboy/scp-action@v0.1.7

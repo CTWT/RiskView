@@ -23,6 +23,7 @@ import java.util.List;
 @Table(name = "posts")
 @Getter
 @Setter
+@ToString
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -71,7 +72,7 @@ public class Post {
 
     // 댓글 엔티티 연관관계
     @Builder.Default
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     @OrderBy("createdAt ASC")
     private List<CommunityComment> comments = new ArrayList<>();
 

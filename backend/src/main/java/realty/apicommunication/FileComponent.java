@@ -142,19 +142,24 @@ public class FileComponent {
     }
 
     public String getStoredPath() {
-        return Paths.get(System.getProperty("user.dir"),  "src", "main", "java", "realty","storedfile" ,"savedfile")
+        // src/main/java 내부가 아닌 프로젝트 외부 폴더로 변경
+        return Paths.get(System.getProperty("user.dir"), "storedfiles", "savedfile")
                 .toString();
+    }
 
-        // TODO
-        // 클라우드 연동되면 활성화
-        // return "https://my-bucket.s3.ap-northeast-2.amazonaws.com/uploads/"; //클라우드 스토리지 URL;
+    public Path getPath(String fileName) {
+        // 저장 폴더 + 파일명
+        return Paths.get(getStoredPath(), fileName);
     }
 
     public String getTempPath() {
-        return Paths.get(System.getProperty("user.dir"),  "src", "main", "java", "realty","storedfile", "tempfile")
+        return Paths.get(System.getProperty("user.dir"), "storedfiles", "tempfile")
                 .toString();
     }
-
+    public String getPathURL() {
+        return "http://localhost:8080/api/posts/files/";
+    }
+    
     public int longtoInt(long l) {
         Long ll = l;
         return ll.intValue();

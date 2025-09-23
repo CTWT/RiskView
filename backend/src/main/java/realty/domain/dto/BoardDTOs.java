@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import java.util.List;
 
 /*
@@ -73,6 +75,7 @@ public class BoardDTOs {
      */
     @Data
     @Builder
+    @ToString
     @AllArgsConstructor
     @NoArgsConstructor
     public static class PostDetailResponseDTO {

@@ -32,7 +32,6 @@ import realty.domain.model.Documents;
 import realty.domain.model.FileStorageMetadata;
 import realty.domain.model.StructuredContractData;
 import realty.domain.model.TransactionAnomaly;
-import realty.domain.model.AnalysisReport.SentimentCategory;
 import realty.domain.repository.AnalysisReportRepository;
 import realty.domain.repository.ContractClauseRepository;
 import realty.domain.repository.DocumentsRepository;
@@ -103,17 +102,26 @@ public class ContractService {
         log.info("구조화된 계약 데이터 저장 완료. 문서 코드: {}", documentCode);
     }
 
-    private void fileStorageMetadataSave(ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO, String documentCode) {
-        log.info("파일 메타데이터 저장 시작. 문서 코드: {}", documentCode);
+    public String fileStorageMetadataSave(ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO, String entityCode) {
+        log.info("파일 메타데이터 저장 시작. 부모 코드: {}", entityCode);
+        log.info("파일 메타데이터 DTO : {}", fileStorageMetadataDTO);
         FileStorageMetadata entity = ContractDTO.FileStorageMetadataDTO.toEntity(fileStorageMetadataDTO);
-        entity.setFileCode("not-set");
-        entity.setEntityCode(documentCode);
-        FileStorageMetadata savedEntity = fileStorageMetadataRepository.save(entity);
-        fileStorageMetadataRepository.flush();
+        entity.setFileCode("not-set"); // 초기값
+        entity.setOriginalName("not-set"); // 초기값
+        entity.setEntityCode(entityCode);
 
+        // 일단 저장하여 ID 생성
+        FileStorageMetadata savedEntity = fileStorageMetadataRepository.saveAndFlush(entity);
+
+        // 고유 코드 생성
         String generateCode = "FSM" + String.format("%08d", savedEntity.getFileId());
         savedEntity.setFileCode(generateCode);
+        savedEntity.setOriginalName(generateCode + "_" + fileStorageMetadataDTO.getOriginalName());
+
         fileStorageMetadataRepository.save(savedEntity);
+        fileStorageMetadataRepository.flush();
+
+        return generateCode + "_" + fileStorageMetadataDTO.getOriginalName();
     }
 
     @Transactional

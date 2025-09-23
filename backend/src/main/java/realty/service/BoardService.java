@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import realty.apicommunication.FileComponent;
 import realty.domain.dto.BoardDTOs.*;
+import realty.domain.dto.ContractDTO.FileStorageMetadataDTO;
 import realty.domain.model.CommunityComment;
 import realty.domain.model.Post;
 import realty.domain.model.PostLike;
@@ -22,12 +23,18 @@ import realty.domain.repository.UserRepository;
 import realty.exception.AccessDeniedException;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /*
@@ -54,6 +61,7 @@ public class BoardService {
     private final PostLikeRepository postLikeRepository;
     private final UserRepository userRepository;
     private final FileComponent fileComponent;
+    private final ContractService contractService;
 
     /**
      * 게시글 목록을 조건에 따라 조회합니다.
@@ -106,20 +114,13 @@ public class BoardService {
 
         logger.info("user_code: {}", author.getUserCode());
 
-        String saveHTML = requestDTO.getContent();
-        if(requestDTO.getImageNames() != null){
-
-            // TODO
-            // 클라우드 연동되면 활성화
-            //saveHTML = convertImgSourceToCloudURL(requestDTO.getContent(), requestDTO.getImageNames());
-        }
 
         Post post = Post.builder()
                 .postCode("not-set")
                 .boardType(Post.BoardType.valueOf(requestDTO.getBoard().toUpperCase()))
                 .postType(requestDTO.getPostType())
                 .title(requestDTO.getTitle())
-                .content(saveHTML)
+                .content("not-set")
                 .tags(requestDTO.getTags() != null ? String.join(",", requestDTO.getTags()) : null)
                 .author(author)
                 .build();
@@ -130,11 +131,85 @@ public class BoardService {
         String generatedCode = "P" + String.format("%08d", savedEntity.getId());
         savedEntity.setPostCode(generatedCode);
 
+        String saveHTML = requestDTO.getContent();
+        saveHTML = uploadImageBase64ToURL(saveHTML, generatedCode);
+        logger.info("저장 HTML : {}", saveHTML);
+        savedEntity.setContent(saveHTML);
+
         Post resultEntity = postRepository.save(savedEntity);
-        
+        logger.info("resultPostEntity : {}", resultEntity);
         logger.info("Successfully created post with code: {}", resultEntity.getPostCode());
-        return mapToPostDetailDTO(resultEntity, false);
+
+        PostDetailResponseDTO response = mapToPostDetailDTO(resultEntity, false);
+        logger.info("PostDetailResponseDTO response : {}", response);
+        return response;
     }
+
+    private String uploadImageBase64ToURL(String content, String entityCode) {
+        try {
+            // 모든 <img src="data:..."> 태그 찾기
+            Pattern pattern = Pattern.compile("<img[^>]+src=\"data:image/[^\"']+\"[^>]*>");
+            Matcher matcher = pattern.matcher(content);
+
+            while (matcher.find()) {
+                String imgTag = matcher.group();
+
+                // src 추출
+                Matcher srcMatcher = Pattern.compile("src=\"([^\"]+)\"").matcher(imgTag);
+                // alt 추출 (없으면 기본 파일명 사용)
+                Matcher altMatcher = Pattern.compile("alt=\"([^\"]+)\"").matcher(imgTag);
+
+                if (srcMatcher.find()) {
+                    String base64Data = srcMatcher.group(1);
+                    String fileName = altMatcher.find() ? altMatcher.group(1) : entityCode + "_" + System.currentTimeMillis() + ".png";
+                    String safeFileName = fileName.replace(" ", "_");
+
+                    // data:image/png;base64,... 부분 분리
+                    String[] parts = base64Data.split(",");
+                    if (parts.length != 2) continue; // 잘못된 데이터면 스킵
+
+                    String mimeTypePart = parts[0]; // data:image/png;base64
+                    String imageString = parts[1];
+
+                    // 파일 타입 추출
+                    String fileType = mimeTypePart.split(";")[0].replace("data:", "");
+
+                    byte[] imageBytes = Base64.getDecoder().decode(imageString);
+                    int fileSizeKb = (int) (imageBytes.length / 1024);
+
+                    // 파일 URL 생성
+                    String storedPath = fileComponent.getStoredPath();
+                    String fileUrl = fileComponent.getPathURL() + safeFileName;
+
+                    // 파일 메타데이터 저장
+                    FileStorageMetadataDTO fileStorageMetadataDTO = FileStorageMetadataDTO.builder()
+                            .fileSizeKb(fileSizeKb)
+                            .fileType(fileType)
+                            .originalName(safeFileName)
+                            .storedPath(storedPath)
+                            .isEncrypted(false)
+                            .build();
+
+                    logger.info("originalName : {}", safeFileName);
+
+                    String resultFilename = contractService.fileStorageMetadataSave(fileStorageMetadataDTO, entityCode);
+
+                    // 실제 파일 저장
+                    Path path = Paths.get(fileComponent.getStoredPath(), resultFilename);
+                    logger.info("이미지 저장경로!!! : {}", path.toString());
+                    Files.write(path, imageBytes);
+
+                    // content 내 base64 -> URL로 교체
+                    content = content.replace(base64Data, fileUrl);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return content;
+    }
+
 
     /**
      * 게시글을 수정합니다. 작성자 본인만 수정할 수 있도록 권한 검사가 필요합니다.
@@ -394,32 +469,6 @@ public class BoardService {
         return communityComment;
     }
 
-    public String convertImgSourceToCloudURL(String originalHTML, List<String> imageNames) {
-        String resultHTML = originalHTML;
-        int searchStartIndex = 0;
-
-        for (String imageName : imageNames) {
-            // src=" 또는 src=' 위치 찾기
-            int srcIndex = resultHTML.indexOf("src=", searchStartIndex);
-            if (srcIndex == -1) break;
-
-            char quoteChar = resultHTML.charAt(srcIndex + 4); // " 또는 '
-            int start = srcIndex + 5; // src=" 바로 뒤
-            int end = resultHTML.indexOf(quoteChar, start);
-            if (end == -1) break; // 종료 따옴표 없으면 종료
-
-            String replaceText = fileComponent.getStoredPath() + imageName;
-            StringBuilder sb = new StringBuilder(resultHTML);
-            sb.replace(start, end, replaceText);
-            resultHTML = sb.toString();
-
-            searchStartIndex = start + replaceText.length();
-        }
-
-        logger.info("resultHTML : {}", resultHTML);
-        return resultHTML;
-    }
-
     /**
      * 사용자 활동 요약 정보 조회
      * @param userCode 사용자 코드
@@ -436,5 +485,9 @@ public class BoardService {
         summary.put("commentCount", commentCount);
         summary.put("likeCount", likeCount);
         return summary;
+    }
+
+    public Path getPath(String fileName) {
+        return fileComponent.getPath(fileName);
     }
 }

@@ -33,7 +33,9 @@ import realty.domain.dto.BoardDTOs.PostDetailResponseDTO;
 import realty.domain.dto.BoardDTOs.PostSearchCondition;
 import realty.domain.dto.BoardDTOs.PostCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.PostUpdateRequestDTO;
+import realty.domain.model.PostSentimentAnalysis;
 import realty.domain.dto.BoardDTOs.LikeResponseDTO;
+import realty.domain.dto.PostSentimentAnalysisDTO;
 import realty.domain.dto.BoardDTOs.CommentCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.CommentUpdateRequestDTO;
 import realty.service.BoardService;
@@ -124,6 +126,15 @@ public class BoardController {
         = boardService.getPostDetailResponseDTOByPostIdAndUserCode(id, userCode);
 
         return ResponseEntity.ok(detailResponseDTO);
+    }
+
+    @GetMapping("/sentiment/{id}")
+    public ResponseEntity<PostSentimentAnalysisDTO> getPostSentimentAnalysis(@PathVariable Long id) {
+        String postCode = boardService.getPostCodeById(id);
+        PostSentimentAnalysisDTO postSentimentAnalysisDTO
+        = boardService.getPostSentimentAnalysisByPostCode(postCode);
+
+        return ResponseEntity.ok(postSentimentAnalysisDTO);
     }
 
     /**

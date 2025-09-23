@@ -20,6 +20,7 @@ from api.wordcloud.wordcloud_main import generate_wordcloud
 from ai.contract_analysis.create_report import AiRiskAnalysisRequest
 from ai.contract_analysis.create_report import AnalysisReportsDTO
 from ai.contract_analysis.create_report import analyze_with_openai
+from ai.emotion_analysis.post_emotion_analysis import analyze_all_posts_as_json
 
 
 base_path = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +46,7 @@ event_flags: Dict[str, bool] = {
     "analyze_clause": False,  # 특약사항 위험 분석
     "wordcloud": False,  # 워드클라우드
     "create_report": False,
+    "post_emotion_analysis": False
 }
 
 
@@ -189,6 +191,14 @@ async def create_wordcloud(
     response.headers["Content-Type"] = "image/png"
     return Response(content=img_bytes, media_type="image/png")
 
+@app.post("/post_emotion_analysis")
+async def sentiment_analyze_post():
+    if not event_flags["post_emotion_analysis"]:
+        raise HTTPException(status_code=403, detail="게시판 감성 분석 실행 실패")
+    event_flags["post_emotion_analysis"] = False
+
+    result = analyze_all_posts_as_json()
+    return result
 
 if __name__ == "__main__":
     uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)

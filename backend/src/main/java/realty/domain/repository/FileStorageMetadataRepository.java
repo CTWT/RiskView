@@ -1,8 +1,11 @@
 package realty.domain.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import jakarta.transaction.Transactional;
 import realty.domain.model.FileStorageMetadata;
 
 /*
@@ -15,4 +18,8 @@ import realty.domain.model.FileStorageMetadata;
  */
 @Repository
 public interface FileStorageMetadataRepository extends JpaRepository<FileStorageMetadata, Long>{
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM FileStorageMetadata f WHERE f.postCode = :postCode")
+    void deleteByPostCode(String postCode);
 }

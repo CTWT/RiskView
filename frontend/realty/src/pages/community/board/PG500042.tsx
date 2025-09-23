@@ -841,6 +841,7 @@ const PG500042: React.FC = () => {
                 </div>
                 <div className="sentiment-bar-wrapper">
                   <span className="sentiment-score-label">감정 점수:</span>
+                  <p></p>
                   <div className="sentiment-bar-bg">
                     <div
                       className="sentiment-bar-fill"
@@ -850,49 +851,15 @@ const PG500042: React.FC = () => {
                   <span className="sentiment-score-number">82/100</span>
                 </div>
               </div>
-              <hr className="emotion-divider" />
-              <span className="emotion-badge neutral">🤖 AI 분석 결과</span>
             </div>
-
+            <p></p>
             <p className="analysis-text">
               이 게시글은 실제 경험을 바탕으로 한 유용한 정보를 담고 있습니다.
               특히 전세 계약 시 주의사항과 RiskView 서비스 사용 후기가 다른
               사용자들에게 큰 도움이 될 것으로 분석됩니다. 긍적적이고 건설적인
               내용으로 커뮤니티에 가치를 더하는 게시글입니다.
             </p>
-
-            <div className="analysis-scores">
-              <div className="score-item">
-                <span className="score-label">정보 가치</span>
-                <div className="score-bar">
-                  <div className="score-fill" style={{ width: "82%" }}></div>
-                </div>
-                <span className="score-number">82/100</span>
-              </div>
-
-              <div className="score-item">
-                <span className="score-label">특히 만족</span>
-                <div className="score-bar">
-                  <div
-                    className="score-fill positive"
-                    style={{ width: "78%" }}
-                  ></div>
-                </div>
-                <span className="score-number">매우 정확한</span>
-              </div>
-
-              <div className="score-item">
-                <span className="score-label">유용도</span>
-                <div className="score-bar">
-                  <div
-                    className="score-fill excellent"
-                    style={{ width: "91%" }}
-                  ></div>
-                </div>
-                <span className="score-number">구체 유용</span>
-              </div>
             </div>
-
             <hr className="emotion-divider" />
             <div className="analysis-footer">
               <small>
@@ -902,7 +869,6 @@ const PG500042: React.FC = () => {
                 🕐 분석 시간: 2025.08.15 오후 17:39:48
               </span>
             </div>
-          </div>
         </section>
 
         {/* 댓글 섹션 */}

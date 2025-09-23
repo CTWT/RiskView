@@ -33,14 +33,14 @@ export default function RichTextEditorWithTinyMCE({
             input.accept = "image/*";
 
             input.onchange = function () {
-              const file = input.files?.[0];
-              if (!file) return;
+            const file = input.files?.[0];
+            if (!file) return;
 
-              const url = URL.createObjectURL(file); // 브라우저가 읽을 수 있는 blob URL
-              callback(url, { alt: file.name });
+            const url = URL.createObjectURL(file); // 브라우저가 읽을 수 있는 blob URL
+            callback(url, { alt: file.name });
 
-              if (onImageUpload) onImageUpload(file.name);
-            };
+            if (onImageUpload) onImageUpload(file.name);
+          };
 
 
             input.click();

@@ -309,49 +309,49 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     # - 300m 이내: +1
     # - 1km 이내: +0.5
     # ============================================
-    park_count = 0
-    min_park_dist = float('inf')  # 가장 가까운 공원의 거리 저장
-    park_location_points = 0.0    # 공원 위치로 부터 얻는 점수
+    # park_count = 0
+    # min_park_dist = float('inf')  # 가장 가까운 공원의 거리 저장
+    # park_location_points = 0.0    # 공원 위치로 부터 얻는 점수
 
-    # boundary 활용 가능하면 거리 범위로 미리 필터링
-    # 예: boundary = (y - delta_lon, y + delta_lon, x - delta_lat, x + delta_lat)
-    # optional, 없으면 전체 공원 대상
-    parks = get_park_data(boundary=None) or []
+    # # boundary 활용 가능하면 거리 범위로 미리 필터링
+    # # 예: boundary = (y - delta_lon, y + delta_lon, x - delta_lat, x + delta_lat)
+    # # optional, 없으면 전체 공원 대상
+    # parks = get_park_data(boundary=None) or []
 
-    if parks:
-        max_additional_points += 1  # 공원 점수 최대 1점 부여
-        print(f"☑️ 중간 최대 점수 (공원 추가): {max_additional_points}")
-        for park in parks:
-            lat = park['lat']
-            lon = park['lon']
-            name = park['name']
+    # if parks:
+    #     max_additional_points += 1  # 공원 점수 최대 1점 부여
+    #     print(f"☑️ 중간 최대 점수 (공원 추가): {max_additional_points}")
+    #     for park in parks:
+    #         lat = park['lat']
+    #         lon = park['lon']
+    #         name = park['name']
 
-            # 유효성 체크
-            if lat is None or lon is None:
-                print(f"{name}의 좌표 정보가 없습니다.")
-                continue
+    #         # 유효성 체크
+    #         if lat is None or lon is None:
+    #             print(f"{name}의 좌표 정보가 없습니다.")
+    #             continue
 
-            # 거리 계산
-            dist = haversine_distance(x, y, lon, lat)  # 주의: 함수 시그니처 확인
+    #         # 거리 계산
+    #         dist = haversine_distance(x, y, lon, lat)  # 주의: 함수 시그니처 확인
 
-            if dist <= 1000:  # 1km 이내인 경우만 카운트
-                print(f"{name}까지 거리: {dist:.2f}m")
-                park_count += 1
-                if dist < min_park_dist:
-                    min_park_dist = dist
+    #         if dist <= 1000:  # 1km 이내인 경우만 카운트
+    #             print(f"{name}까지 거리: {dist:.2f}m")
+    #             park_count += 1
+    #             if dist < min_park_dist:
+    #                 min_park_dist = dist
 
-        print(f"1km 이내 공원 개수: {park_count}개")
+    #     print(f"1km 이내 공원 개수: {park_count}개")
 
-        # 가장 가까운 공원의 거리에 따라 점수
-        if min_park_dist <= 300:
-            park_location_points += 1.0
-        elif min_park_dist <= 1000:
-            park_location_points += 0.5
+    #     # 가장 가까운 공원의 거리에 따라 점수
+    #     if min_park_dist <= 300:
+    #         park_location_points += 1.0
+    #     elif min_park_dist <= 1000:
+    #         park_location_points += 0.5
 
-        print("✅ 공원 위치 점수: ", park_location_points, "\n")
-        additional_points += park_location_points
-    else:
-        print("❌ 공원 정보를 가져오지 못해 점수를 계산할 수 없습니다.")
+    #     print("✅ 공원 위치 점수: ", park_location_points, "\n")
+    #     additional_points += park_location_points
+    # else:
+    #     print("❌ 공원 정보를 가져오지 못해 점수를 계산할 수 없습니다.")
 
     # ============================================
     # 1km 이내 병원 목록 가져오기

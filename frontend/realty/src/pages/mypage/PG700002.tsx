@@ -1,12 +1,14 @@
 import React from "react";
+import { PieChart } from "react-minimal-pie-chart";
 import "../../styles/common/Common.css";
 
 /*
 * 수업명 : 가비아 2회차
 * 이름 : 이주하
 * 작성자 : 이주하
-* 수정자 : 
+* 수정자 : 박윤성
 * 작성일 : 25.09.12
+* 수정일 : 25.09.22
 * 파일명 : PG700002.tsx
 */
 
@@ -22,60 +24,44 @@ const PG700002: React.FC<{
     data: Array<{ level: string; percentage: number; color: string }>;
 }> = ({ data }) => {
 
-  // 도넛 차트를 위한 계산
-    const size = 200;
-    const strokeWidth = 30;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = 2 * Math.PI * radius;
+    // 중앙에 표시할 데이터 찾기
+    // 1. '저위험' 또는 '정상' 데이터가 있으면 그것을 사용
+    let centerData = data.find(item => item.level.toLowerCase() === '저위험' || item.level.toLowerCase() === '정상');
 
-    let cumulativePercentage = 0;
+    // 2. 없다면, 가장 높은 비율을 가진 데이터를 사용
+    if (!centerData && data.length > 0) {
+        centerData = [...data].sort((a, b) => b.percentage - a.percentage)[0];
+    }
 
-    const segments = data.map((item) => {
-        const dashArray = (item.percentage / 100) * circumference;
-        const dashOffset = (-cumulativePercentage * circumference) / 100;
-        cumulativePercentage += item.percentage;
+    // 3. 데이터가 아예 없는 경우를 대비한 기본값
+    const centerPercentage = centerData ? centerData.percentage : 0;
+    const centerLabel = centerData ? centerData.level : '분석 없음';
 
-        return {
-        ...item,
-        dashArray,
-        dashOffset,
-        };
-    });
+    // 라이브러리 형식에 맞게 데이터 변환
+    const chartData = data.map(item => ({
+        title: item.level,
+        value: item.percentage,
+        color: item.color,
+    }));
 
     return (
         <div className="risk-donut-chart">
         {/* 도넛 차트 전체 영역 */}
         <div className="risk-chart-container">
-            <svg className="risk-chart-svg" width={size} height={size}>
-            {/* 배경 원 (회색 기본 원) */}
-            <circle
-                className="risk-chart-background"
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                strokeWidth={strokeWidth}
+            <PieChart
+                data={chartData}
+                lineWidth={25} // 도넛 두께
+                startAngle={-90} // 시작 각도 (12시 방향)
+                background="#f3f4f6" // 배경 원 색상
+                animate
+                paddingAngle={19} // 세그먼트 사이 간격
+                rounded // 세그먼트 끝을 둥글게 처리
             />
-
-            {/* 위험도 세그먼트 원형 차트 */}
-            {segments.map((segment, index) => (
-                <circle
-                key={index}
-                className={`risk-chart-segment risk-segment-${index}`}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                stroke={segment.color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${segment.dashArray} ${circumference}`}
-                strokeDashoffset={segment.dashOffset}
-                />
-            ))}
-            </svg>
 
             {/* 도넛 차트 중앙 텍스트 */}
             <div className="risk-chart-center">
-            <div className="risk-chart-percentage">100%</div>
-            <div className="risk-chart-label">총 분석</div>
+            <div className="risk-chart-percentage">{centerPercentage}%</div>
+            <div className="risk-chart-label">{centerLabel}</div>
             </div>
         </div>
 
@@ -94,7 +80,7 @@ const PG700002: React.FC<{
                 className="risk-legend-percentage"
                 style={{ color: item.color }}
                 >
-                {item.percentage}%
+                {Math.round(item.percentage)}%
                 </span>
             </div>
             ))}

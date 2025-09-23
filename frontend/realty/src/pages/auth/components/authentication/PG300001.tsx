@@ -250,7 +250,7 @@ const PG300001: React.FC = () => {
                 <PG300009
                     onLogin={goToLogin}
                     onFindId={goToFindId}
-                    onPasswordReset={goToVerificationCode}
+                    // onPasswordReset={goToVerificationCode}
                 />
             )}
 

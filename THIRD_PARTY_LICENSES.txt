@@ -67,3 +67,8 @@ Author-email: liekkaskono@163.com
 License: Apache-2.0
 
 ---
+
+Library: React Minimal Pie Chart
+Version: 9.1.1
+License: MIT License  
+URL : https://github.com/toomuchdesign/react-minimal-pie-chart

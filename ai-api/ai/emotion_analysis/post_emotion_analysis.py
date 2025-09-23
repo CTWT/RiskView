@@ -3,8 +3,21 @@ from openai import OpenAI
 from dotenv import load_dotenv, find_dotenv
 import json, os, re
 import unicodedata  # 정규화
+from bs4 import BeautifulSoup  # HTML 태그 제거
 
-# 1) .env 로드 및 키 확인 - 현재 작업경로에 없는 경우, find_dotenv()로 경로 탐색
+
+#  수업명 : 가비아 2회차
+#  이름 : 유연우
+#  작성자 : 유연우
+#  수정자 :
+#  작성일 : 25.09.23
+#  파일명 : post_emotion_analysis.py
+#
+
+#  설명 : posts 테이블의 게시글을 대상으로 GPT-4o 모델을 활용한 감성 분석 수행 및 결과 저장
+
+
+# .env 로드 및 키 확인
 load_dotenv(find_dotenv())
 
 if not os.getenv("OPENAI_API_KEY"):
@@ -12,12 +25,9 @@ if not os.getenv("OPENAI_API_KEY"):
         "OPENAI_API_KEY 환경 변수가 설정되지 않았습니다. .env 파일을 확인하세요."
     )
 
-# 환경 변수에서 OpenAI API 키 가져오기
 api_key = os.getenv("OPENAI_API_KEY")
-# 2) OpenAI 클라이언트 생성
 client = OpenAI(api_key=api_key)
 
-# 3) 분석 프롬프트 (출력은 반드시 JSON만)
 BASE_PROMPT = """
 너는 부동산 커뮤니티의 게시글 내용을 분석하는 AI 감성 분석가야.
 
@@ -55,8 +65,34 @@ summary는 2문장을 반드시 채워줘.
 
 """
 
+_MD_IMG_PATTERN = re.compile(r"!\[[^\]]*\]\([^)]*\)")  # 이미지 제거용
 
-# MySQL 데이터베이스에 연결
+
+def extract_visible_text(html_or_md: str) -> str:
+    """HTML/Markdown 문자열에서 이미지/스크립트 등을 제외하고 텍스트만 추출."""
+    if not html_or_md:
+        return ""
+
+    # 이미지 패턴 제거
+    s = _MD_IMG_PATTERN.sub("", html_or_md)
+
+    # HTML 파싱
+    soup = BeautifulSoup(s, "html.parser")
+
+    # 보이지 않는/불필요한 태그 제거
+    for tag in soup(["script", "style", "noscript", "svg", "canvas"]):
+        tag.decompose()
+
+    # 이미지 태그 제거
+    for img in soup.find_all("img"):
+        img.decompose()
+
+    # 텍스트 추출
+    text = soup.get_text(separator=" ", strip=True)
+    text = " ".join(text.split())
+    return text
+
+
 def connect_db():
     try:
         connection = mysql.connector.connect(
@@ -87,7 +123,7 @@ def fetch_posts():
         conn.close()
 
 
-# 유니코드 정규화
+# 정규화
 def normalize(text: str) -> str:
     if not text:
         return ""
@@ -103,9 +139,30 @@ def normalize(text: str) -> str:
     return "\n".join([line for line in lines if line]).strip()
 
 
-# 분석 프롬프트 생성
+# 텍스트 판별
+def is_valid_text(text: str) -> bool:
+    if not text:
+        return False
+    text = extract_visible_text(text).strip()
+
+    # 최소 길이 체크
+    if len(text) < 10:
+        return False
+    # HTML 태그 제거
+    text = re.sub(r"<[^>]+>", "", text)
+    # 특수문자, 이모지, 공백만 있는 경우
+    if re.fullmatch(r"[\s\W\d_]+", text):
+        return False
+    # 광고성 키워드만 있는 경우 (옵션)
+    if any(word in text.lower() for word in ["광고", "클릭", "http", "www"]):
+        return False
+    return True
+
+
+# 프롬프트 생성
 def create_prompt(title: str, content: str) -> str:
-    return BASE_PROMPT + f'\n\n"""\n{title.strip()}\n{normalize(content)}\n"""'
+    clean_content = extract_visible_text(content)
+    return BASE_PROMPT + f'\n\n"""\n{title.strip()}\n{normalize(clean_content)}\n"""'
 
 
 # 감성 분석 실행
@@ -120,20 +177,52 @@ def analyze_sentiment(title: str, content: str):
     return json.loads(response.choices[0].message.content.strip())
 
 
+# 분석 결과 저장
+def save_analysis(post_code: str, result: dict):
+    conn = connect_db()
+    if not conn:
+        return
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO post_sentiment_analysis (
+                    analysis_code, post_code, sentiment_score, sentiment_category,
+                    sentiment_emoji, summary, analyzed_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, NOW())
+            """,
+                (
+                    f"PA{post_code[-5:]}",  # 예: post_code=POST00001 → PA00001
+                    post_code,
+                    result["sentiment_score"],
+                    result["sentiment_category"],
+                    result["sentiment_emoji"],
+                    result["summary"],
+                ),
+            )
+            conn.commit()
+    finally:
+        conn.close()
+
+
 # json 형식으로 반환
 def analyze_all_posts_as_json():
     posts = fetch_posts()
     results = []
     for post in posts:
+        title = post["title"]
+        content = post["content"]
+
         try:
-            result = analyze_sentiment(post["title"], post["content"])
+            result = analyze_sentiment(title, content)
             results.append({"post_code": post["post_code"], "analysis": result})
+            save_analysis(post["post_code"], result)
+
         except Exception as e:
             results.append({"post_code": post["post_code"], "error": str(e)})
     return results
 
 
-# # 로컬 테스트용
 # if __name__ == "__main__":
 #     # posts 테이블 전체 감성분석 실행
 #     results = analyze_all_posts_as_json()

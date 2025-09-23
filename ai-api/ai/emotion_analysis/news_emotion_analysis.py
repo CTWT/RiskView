@@ -9,13 +9,11 @@ import unicodedata  # 정규화
 #  작성자 : 유연우
 #  수정자 :
 #  작성일 : 25.09.10
-#  파일명 : emotion_analysis_gpt4o.py
+#  파일명 : news_emotion_analysis.py
 #
 
 #  설명 : GPT-4o 모델을 활용한 뉴스 기사 감정 분석 및 DB 저장
 
-
-# 1) .env 로드 및 키 확인 - 현재 작업경로에 없는 경우, find_dotenv()로 경로 탐색
 load_dotenv(find_dotenv())
 
 if not os.getenv("OPENAI_API_KEY"):
@@ -23,12 +21,10 @@ if not os.getenv("OPENAI_API_KEY"):
         "OPENAI_API_KEY 환경 변수가 설정되지 않았습니다. .env 파일을 확인하세요."
     )
 
-# 환경 변수에서 OpenAI API 키 가져오기
 api_key = os.getenv("OPENAI_API_KEY")
-# 2) OpenAI 클라이언트 생성
 client = OpenAI(api_key=api_key)
 
-# 3) 분석 프롬프트 (출력은 반드시 JSON만)
+# 3) 분석 프롬프트
 BASE_PROMPT = """
 뉴스 기사의 감정 분석을 수행하세요. 제공된 뉴스 기사 텍스트의 감정적 톤, 맥락, 그리고 관련 단서를 차근차근 분석하여 전체적인 감정(긍정, 부정, 중립)을 도출하세요. 마지막 결과는 반드시 JSON 형식으로 출력해야 하며, 코드 블록 없이 결과만 작성하세요.
 

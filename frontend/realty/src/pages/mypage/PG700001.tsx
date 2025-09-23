@@ -23,6 +23,17 @@ interface LoginHistory {
     loginTime: string;
 }
 
+interface RecentAnalysis {
+    location: string;
+    deposit: number;
+    risk: string;
+}
+
+interface RiskDistribution {
+    level: string;
+    percentage: number;
+}
+
 const PG700001: React.FC = () => {
     const [isEditingProfile, setIsEditingProfile] = useState(false);
     const [isViewingLoginHistory, setIsViewingLoginHistory] = useState(false);
@@ -30,62 +41,25 @@ const PG700001: React.FC = () => {
     const [activitySummary, setActivitySummary] = useState({ postCount: 0, commentCount: 0, likeCount: 0 });
     const [userProfile, setUserProfile] = useState({ name: '', email: '' });
     const [recentLogin, setRecentLogin] = useState<string>('');
+    const [analysisCount, setAnalysisCount] = useState(0); // 분석 횟수 상태
+    const [recentAnalysis, setRecentAnalysis] = useState<RecentAnalysis[]>([]); // 최근 분석 기록 상태
+    const [riskDistribution, setRiskDistribution] = useState<{ level: string; percentage: number; color: string }[]>([]);
 
     // 목업데이터(임시)
     const staticData = {
-        totalAnalysis: 23,
-        riskContracts: 7,
-        riskPercentage: 30,
         expectedSavings: "1,200만원",
-        avgRiskScore: 42,
         monthlyStats: [
-            { month: "2025.04", count: 17 },
-            { month: "2025.04", count: 12 },
-            { month: "2025.05", count: 8 },
-            { month: "2025.07", count: 6 },
-        ],
-        riskDistribution: [
-            { level: "저위험 (0-30점)", percentage: 39, color: "#22c55e" },
-            { level: "중위험 (31-70점)", percentage: 48, color: "#f59e0b" },
-            { level: "고위험 (71-100점)", percentage: 13, color: "#ef4444" },
-        ],
-        recentAnalysis: [
-            {
-                location: "서울 강남구 대치동",
-                amount: "12억 원",
-                risk: "중위험",
-                riskColor: "#f59e0b",
-            },
-            {
-                location: "서울 서초구 반포동",
-                amount: "15억 원",
-                risk: "중위험",
-                riskColor: "#f59e0b",
-            },
-            {
-                location: "경기 성남시 분당구",
-                amount: "8억 원",
-                risk: "저위험",
-                riskColor: "#22c55e",
-            },
-            {
-                location: "서울 마포구 상암동",
-                amount: "3억 2000만원",
-                risk: "고위험",
-                riskColor: "#ef4444",
-            },
-            {
-                location: "인천 연수구 송도동",
-                amount: "7억 4000만원",
-                risk: "저위험",
-                riskColor: "#22c55e",
-            },
+            { month: "1월", count: 10 },
+            { month: "2월", count: 12 },
+            { month: "3월", count: 8 },
+            { month: "4월", count: 15 },
+            { month: "5월", count: 17 },
         ],
     };
 
     // 시간차 계산 함수: 얼마 전에 로그인했는지 계산
     const formatRelativeTime = (timestamp: string): string => {
-        console.log("formatRelativeTime 입력값: ", timestamp)
+        console.log("formatRelativeTime 입력값: ", timestamp);
         if (!timestamp) return "기록 없음";
 
         const loginTime = new Date(timestamp);
@@ -98,6 +72,7 @@ const PG700001: React.FC = () => {
 
         const now = new Date();
         const diffInSeconds = Math.floor((now.getTime() - loginTime.getTime()) / 1000);
+        console.log("로그인 시간과 현재 시간 차이 (초 단위): ", diffInSeconds);
 
         if (diffInSeconds < 60) return "방금 전";
 
@@ -125,6 +100,7 @@ const PG700001: React.FC = () => {
         const fetchUserData = async () => {
             try {
                 const response = await axios.get("/api/user/me");
+                console.log("유저 데이터 응답: ", response.data);
                 if (response.data.success) {
                     setUserProfile({ // 프로필 정보란에 이름과 이메일 표시
                         name: response.data.user.name,
@@ -139,6 +115,7 @@ const PG700001: React.FC = () => {
         const fetchActivitySummary = async () => {
             try {
                 const response = await axios.get("/api/posts/activity-summary");
+                console.log("활동 요약 응답: ", response.data);
                 setActivitySummary(response.data);
             } catch (error) {
                 console.error("Failed to fetch activity summary:", error);
@@ -162,18 +139,104 @@ const PG700001: React.FC = () => {
             }
         };
 
+        const fetchAnalysisCount = async () => {
+            try {
+                // 현재 로그인한 사용자의 분석 횟수를 가져오는 API 호출
+                const response = await axios.get("/api/analysis/count");
+                console.log("분석 횟수 응답: ", response.data);
+                setAnalysisCount(response.data);
+            } catch (error) {
+                console.error("Failed to fetch analysis count:", error);
+            }
+        };
+
+        const fetchRecentAnalysis = async () => {
+            try {
+                const response = await axios.get<RecentAnalysis[]>("/api/analysis/recent");
+                console.log("최근 분석 기록 응답: ", response.data);
+                setRecentAnalysis(response.data);
+            } catch (error) {
+                console.error("Failed to fetch recent analysis:", error);
+                setRecentAnalysis([]); // 오류 발생 시 빈 배열로 설정
+            }
+        };
+
+        const fetchRiskDistribution = async () => {
+            try {
+                const response = await axios.get<RiskDistribution[]>("/api/analysis/risk-distribution");
+                console.log("위험도 분포 응답: ", response.data);
+
+                const getRiskColor = (level: string) => {
+                    switch (level.toLowerCase()) {
+                        case '고위험':
+                        case '치명':
+                            return "#ef4444"; // red
+                        case '중위험':
+                        case '경고':
+                        case 'medium':
+                            return "#f59e0b"; // yellow
+                        case '저위험':
+                        case '정상':
+                        default:
+                            return "#22c55e"; // green
+                    }
+                };
+
+                const chartData = response.data.map(item => ({
+                    level: item.level,
+                    percentage: item.percentage,
+                    color: getRiskColor(item.level)
+                }));
+
+                setRiskDistribution(chartData);
+
+            } catch (error) {
+                console.error("Failed to fetch risk distribution:", error);
+                setRiskDistribution([]);
+            }
+        };
+
         fetchUserData();
         fetchActivitySummary();
         fetchLoginHistory();
+        fetchAnalysisCount();
+        fetchRecentAnalysis();
+        fetchRiskDistribution();
     }, []);
 
-    const handleEditProfileClick = () => setIsEditingProfile(true);
-    const handleViewLoginHistoryClick = () => setIsViewingLoginHistory(true);
-    const handleViewMyActivitiesClick = () => setIsViewingMyActivities(true);
+    const handleEditProfileClick = () => {
+        console.log("프로필 수정 클릭");
+        setIsEditingProfile(true);
+    };
+    const handleViewLoginHistoryClick = () => {
+        console.log("로그인 기록 보기 클릭");
+        setIsViewingLoginHistory(true);
+    };
+    const handleViewMyActivitiesClick = () => {
+        console.log("내 활동 보기 클릭");
+        setIsViewingMyActivities(true);
+    };
     const handleBackClick = () => {
+        console.log("뒤로 가기 클릭");
         setIsEditingProfile(false);
         setIsViewingLoginHistory(false);
         setIsViewingMyActivities(false);
+    };
+
+    // 위험도에 따른 색상 반환 함수
+    const getRiskColor = (risk: string) => {
+        console.log(`위험도: ${risk}`);
+        switch (risk.toLowerCase()) {
+            case 'high':
+                return "#ef4444"; // red
+            case 'medium':
+                return "#f59e0b"; // yellow
+            case 'low':
+                return "#22c55e"; // green
+            default:
+                return "#9ca3af"; // gray
+
+        }
     };
 
     return (
@@ -212,9 +275,8 @@ const PG700001: React.FC = () => {
                                             <FiBarChart />
                                         </div>
                                         <div className="stat-content">
-                                            <div className="stat-number">{staticData.totalAnalysis}</div>
-                                            <div className="stat-label">이 분석 횟수</div>
-                                            <div className="stat-change">+3 이번 달</div>
+                                            <div className="stat-number">{analysisCount}건</div>
+                                            <div className="stat-label">분석 횟수</div>
                                         </div>
                                     </div>
 
@@ -260,7 +322,7 @@ const PG700001: React.FC = () => {
                                         <h3 className="chart-title">월별 분석 통계</h3>
                                         <div className="chart-subtitle">월별 분석 횟수</div>
                                         <div className="monthly-chart">
-                                            {staticData.monthlyStats.map((item, index) => (
+                                            {staticData.monthlyStats.map((item: { month: string; count: number }, index: number) => (
                                                 <div key={index} className="chart-row">
                                                     <span className="chart-month">{item.month}</span>
                                                     <div className="chart-bar-container">
@@ -273,7 +335,7 @@ const PG700001: React.FC = () => {
                                     </div>
                                     <div className="chart-card">
                                         <h3 className="chart-title">위험도 분포</h3>
-                                        <PG700002 data={staticData.riskDistribution} />
+                                        {riskDistribution.length > 0 ? <PG700002 data={riskDistribution} /> : <div className="empty-message">분석 기록이 없습니다.</div>}
                                     </div>
                                 </div>
                             </div>
@@ -287,15 +349,15 @@ const PG700001: React.FC = () => {
                                         <span className="col-risk">위험도</span>
                                     </div>
                                     <div className="table-body">
-                                        {staticData.recentAnalysis.map((item, index) => (
+                                        {recentAnalysis.length > 0 ? recentAnalysis.map((item, index) => (
                                             <div key={index} className="table-row">
                                                 <span className="col-location">{item.location}</span>
-                                                <span className="col-amount">{item.amount}</span>
-                                                <span className="col-risk risk-badge" style={{ color: item.riskColor }}>
+                                                <span className="col-amount">₩{item.deposit.toLocaleString()}</span>
+                                                <span className="col-risk risk-badge" style={{ color: getRiskColor(item.risk) }}>
                                                     {item.risk}
                                                 </span>
                                             </div>
-                                        ))}
+                                        )) : <div className="empty-message">최근 분석 기록이 없습니다.</div>}
                                     </div>
                                 </div>
                             </div>

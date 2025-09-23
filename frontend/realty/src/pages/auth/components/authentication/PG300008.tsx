@@ -173,7 +173,7 @@ const PG300008: React.FC<PG300008Props> = ({ onLogin, onFindPassword }) => {
 
                     {/* 설명 텍스트 */}
                     <p className="authDescription">
-                        가입 시 입력한 정보로 이메일을 찾을 수 있습니다
+                        가입 시 입력한 정보로 아이디를 찾을 수 있습니다
                     </p>
 
                     {/* 입력 폼 */}

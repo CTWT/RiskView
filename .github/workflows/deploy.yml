@@ -3,6 +3,7 @@ name: CI/CD Deploy
 on:
     push:
         branches: ["develop", "main"] # develop → DEV / main → PROD
+    workflow_dispatch:
 
 jobs:
     build-and-deploy:

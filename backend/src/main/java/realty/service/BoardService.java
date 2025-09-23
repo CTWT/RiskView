@@ -179,7 +179,7 @@ public class BoardService {
 
                     // 파일 URL 생성
                     String storedPath = fileComponent.getStoredPath();
-                    String fileUrl = fileComponent.getPathURL() + safeFileName;
+                    
 
                     // 파일 메타데이터 저장
                     FileStorageMetadataDTO fileStorageMetadataDTO = FileStorageMetadataDTO.builder()
@@ -193,6 +193,7 @@ public class BoardService {
                     logger.info("originalName : {}", safeFileName);
 
                     String resultFilename = contractService.fileStorageMetadataSave(fileStorageMetadataDTO, entityCode);
+                    String fileUrl = fileComponent.getPathURL() + resultFilename;
 
                     // 실제 파일 저장
                     Path path = Paths.get(fileComponent.getStoredPath(), resultFilename);

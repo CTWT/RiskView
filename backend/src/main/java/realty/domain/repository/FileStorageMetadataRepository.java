@@ -20,6 +20,6 @@ import realty.domain.model.FileStorageMetadata;
 public interface FileStorageMetadataRepository extends JpaRepository<FileStorageMetadata, Long>{
     @Transactional
     @Modifying
-    @Query("DELETE FROM FileStorageMetadata f WHERE f.postCode = :postCode")
-    void deleteByPostCode(String postCode);
+    @Query("DELETE FROM FileStorageMetadata f WHERE f.entityCode = :entityCode")
+    void deleteByEntityCode(String entityCode);
 }

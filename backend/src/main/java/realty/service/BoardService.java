@@ -10,15 +10,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import realty.apicommunication.FileComponent;
+import realty.domain.dto.PostSentimentAnalysisDTO;
 import realty.domain.dto.BoardDTOs.*;
 import realty.domain.dto.ContractDTO.FileStorageMetadataDTO;
 import realty.domain.model.CommunityComment;
 import realty.domain.model.Post;
 import realty.domain.model.PostLike;
+import realty.domain.model.PostSentimentAnalysis;
 import realty.domain.model.User;
 import realty.domain.repository.CommunityCommentRepository;
+import realty.domain.repository.FileStorageMetadataRepository;
 import realty.domain.repository.PostLikeRepository;
 import realty.domain.repository.PostRepository;
+import realty.domain.repository.PostSentimentAnalysisRepository;
 import realty.domain.repository.UserRepository;
 import realty.exception.AccessDeniedException;
 import jakarta.persistence.EntityNotFoundException;
@@ -62,6 +66,8 @@ public class BoardService {
     private final UserRepository userRepository;
     private final FileComponent fileComponent;
     private final ContractService contractService;
+    private final FileStorageMetadataRepository fileStorageMetadataRepository;
+    private final PostSentimentAnalysisRepository postSentimentAnalysisRepository;
 
     /**
      * 게시글 목록을 조건에 따라 조회합니다.
@@ -221,6 +227,10 @@ public class BoardService {
             if(false == post.getAuthor().getUserCode().equals(currentUserCode)){
                 throw new AccessDeniedException("게시글 작성자만 수정할 수 있습니다.");
             }
+
+            clearPreviousFile(postCode);
+
+            uploadImageBase64ToURL(requestDTO.getContent(), postCode);
 
             post.setTitle(requestDTO.getTitle());
             post.setContent(requestDTO.getContent());
@@ -490,5 +500,28 @@ public class BoardService {
 
     public Path getPath(String fileName) {
         return fileComponent.getPath(fileName);
+    }
+
+    public void clearPreviousFile(String postCode) {
+
+
+
+        //fileStorageMetadataRepository.deleteByPostCode(postCode);
+    }
+
+    public PostSentimentAnalysisDTO getPostSentimentAnalysisByPostCode(String postCode) {
+        Post post = postRepository.findByPostCode(postCode).orElseThrow(() -> new EntityNotFoundException("Post not found with postCode: " + postCode));
+
+        PostSentimentAnalysis postSentimentAnalysis = postSentimentAnalysisRepository.findByPost(post)
+                                                            .orElseThrow(() -> new EntityNotFoundException("PostSentimentAnalysis not found with postCode: " + postCode));
+
+        return PostSentimentAnalysisDTO.builder()
+                                        .analyzedAt(postSentimentAnalysis.getAnalyzedAt())
+                                        .sentimentCategory(postSentimentAnalysis.getSentimentCategory())
+                                        .sentimentEmoji(postSentimentAnalysis.getSentimentEmoji())
+                                        .sentimentScore(postSentimentAnalysis.getSentimentScore())
+                                        .summary(postSentimentAnalysis.getSummary())
+                                        .build();
+                                        
     }
 }

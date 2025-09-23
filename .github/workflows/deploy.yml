@@ -67,10 +67,10 @@ jobs:
                   mkdir -p out
                   cp backend/build/libs/*.jar out/app.jar
 
-                          # 6. Python (AI 서버 압축)
-                          - name: Archive AI source
-                          run: |
-                              tar -czf ai_src.tar.gz -C ai-api .
+            # 6. Python (AI 서버 압축)
+            - name: Archive AI source
+              run: |
+                  tar -czf ai_src.tar.gz -C ai-api .
 
             # 7. 산출물 서버로 복사
             - name: Copy artifacts to server

@@ -1,0 +1,89 @@
+name: CI/CD Deploy
+
+on:
+    push:
+        branches: ["develop", "main"] # develop → DEV / main → PROD
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            # 1. 저장소 코드 가져오기
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            # 2. 대상 환경 결정 (브랜치 기준)
+            - name: Decide target
+              id: pick
+              run: |
+                  if [[ "${GITHUB_REF##*/}" == "main" ]]; then
+                    echo "env=prod" >> $GITHUB_OUTPUT
+                  else
+                    echo "env=dev" >> $GITHUB_OUTPUT
+                  fi
+
+            # 3. 환경별 Secrets 세팅 (SSH 접근정보)
+            - name: Set env secrets
+              run: |
+                  if [ "${{ steps.pick.outputs.env }}" = "prod" ]; then
+                    echo "SSH_HOST=${{ secrets.PROD_SSH_HOST }}" >> $GITHUB_ENV
+                    echo "SSH_USER=${{ secrets.PROD_SSH_USER }}" >> $GITHUB_ENV
+                    echo "SSH_PASS=${{ secrets.PROD_SSH_PASS }}" >> $GITHUB_ENV
+                  else
+                    echo "SSH_HOST=${{ secrets.DEV_SSH_HOST }}" >> $GITHUB_ENV
+                    echo "SSH_USER=${{ secrets.DEV_SSH_USER }}" >> $GITHUB_ENV
+                    echo "SSH_PASS=${{ secrets.DEV_SSH_PASS }}" >> $GITHUB_ENV
+                  fi
+
+            # 4. Node.js (프론트 빌드)
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "24.4.1"
+
+            - name: Build Frontend
+              working-directory: frontend/realty
+              run: |
+                  npm ci
+                  npm run build
+            - run: mv frontend/realty/dist ./dist
+            # 5. Java (백엔드 빌드)
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: "17"
+
+            - name: Build Backend
+              working-directory: backend
+              run: ./gradlew clean build -x test
+            - run: |
+                  mkdir -p out
+                  cp backend/build/libs/*.jar out/app.jar
+
+            # 6. Python (AI 서버 압축)
+            - name: Archive AI source
+              run: |
+                  tar -czf ai_src.tar.gz -C ai-api .
+
+            # 7. 산출물 서버로 복사
+            - name: Copy artifacts to server
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ env.SSH_HOST }}
+                  username: ${{ env.SSH_USER }}
+                  password: ${{ env.SSH_PASS }}
+                  source: "dist/**,out/app.jar,ai_src.tar.gz"
+                  target: "/tmp"
+
+            # 8. 서버 배포 스크립트 실행
+            - name: Deploy on server
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ env.SSH_HOST }}
+                  username: ${{ env.SSH_USER }}
+                  password: ${{ env.SSH_PASS }}
+                  script: |
+                      chmod +x /srv/riskview/deploy.sh
+                      /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)

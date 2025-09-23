@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import useToast from "../../hooks/useToast";
-import "../../styles/common/Common.css";
+import "../../styles/common/common.css";
 import Toast from "../../components/ui/Toast";
 import axios from "axios";
 
 /*
-* 수업명 : 가비아 2회차
-* 이름 : 박윤성
-* 작성자 : 박윤성
-* 수정자 : 
-* 작성일 : 25.09.20
-* 수정일 : 
-* 파일명 : PG700003.tsx
-*/
+ * 수업명 : 가비아 2회차
+ * 이름 : 박윤성
+ * 작성자 : 박윤성
+ * 수정자 :
+ * 작성일 : 25.09.20
+ * 수정일 :
+ * 파일명 : PG700003.tsx
+ */
 
 /**
  * @file PG700003.tsx
@@ -27,7 +27,7 @@ import axios from "axios";
  * @author 박윤성
  * @version 1.0
  * @see
-*/
+ */
 
 // 사용자 프로필 데이터 구조 정의
 interface UserProfile {
@@ -62,10 +62,14 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
     const { toast, showToast } = useToast(); // 토스트 메시지 훅
     const [profile, setProfile] = useState<UserProfile | null>(null); // 사용자 프로필 상태
     const [isLoading, setIsLoading] = useState(true); // 로딩 상태
-    const [activeTab, setActiveTab] = useState<'info' | 'password' | 'deleteAccount'>('info'); // 현재 활성화된 탭 상태
+    const [activeTab, setActiveTab] = useState<
+        "info" | "password" | "deleteAccount"
+    >("info"); // 현재 활성화된 탭 상태
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false); // 회원 탈퇴 확인 모달 상태
-    const [isDeleteCompleteModalOpen, setIsDeleteCompleteModalOpen] = useState(false); // 회원 탈퇴 완료 모달 상태
-    const [isCurrentPasswordVerified, setIsCurrentPasswordVerified] = useState(false); // 현재 비밀번호 인증 여부 상태
+    const [isDeleteCompleteModalOpen, setIsDeleteCompleteModalOpen] =
+        useState(false); // 회원 탈퇴 완료 모달 상태
+    const [isCurrentPasswordVerified, setIsCurrentPasswordVerified] =
+        useState(false); // 현재 비밀번호 인증 여부 상태
 
     // 이메일 인증 관련 상태
     const [originalCreatedAt, setOriginalCreatedAt] = useState<string>(""); // 원본 가입일 정보 (수정 API 전송용)
@@ -91,11 +95,16 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                     // 날짜 형식 변환 후 프로필 상태 설정
                     setProfile({
                         ...data,
-                        createdAt: new Date(data.createdAt).toLocaleDateString(),
+                        createdAt: new Date(
+                            data.createdAt
+                        ).toLocaleDateString(),
                     });
                 }
             } catch (error) {
-                const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "알 수 없는 오류가 발생했습니다.";
                 showToast(message, { type: "error" });
             } finally {
                 if (isMounted) setIsLoading(false); // 로딩 상태 해제
@@ -111,9 +120,11 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
     }, [showToast]); // showToast는 useToast 훅에서 반환되므로 일반적으로 안정적입니다.
 
     // 입력 필드 변경 핸들러
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const handleChange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    ) => {
         const { name, value } = e.target;
-        setProfile(prev => prev ? { ...prev, [name]: value } : null);
+        setProfile((prev) => (prev ? { ...prev, [name]: value } : null));
         // 이메일 주소가 변경되면 인증 상태 초기화
         if (name === "email") {
             // 이메일이 바뀌면 인증 상태 초기화
@@ -129,9 +140,11 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         if (!profile) return;
 
         // --- 회원 탈퇴 처리 ---
-        if (activeTab === 'deleteAccount') {
+        if (activeTab === "deleteAccount") {
             if (!profile.currentPassword) {
-                showToast("회원 탈퇴를 위해 비밀번호를 입력해주세요.", { type: "error" });
+                showToast("회원 탈퇴를 위해 비밀번호를 입력해주세요.", {
+                    type: "error",
+                });
                 return;
             }
             // 비밀번호 확인 후 성공 시 탈퇴 확인 모달 표시
@@ -143,10 +156,12 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         }
 
         // --- 비밀번호 변경 관련 유효성 검사 ---
-        if (activeTab === 'password') {
+        if (activeTab === "password") {
             // 현재 비밀번호 인증 여부 확인
             if (profile.newPassword && !isCurrentPasswordVerified) {
-                showToast("현재 비밀번호를 먼저 인증해주세요.", { type: "error" });
+                showToast("현재 비밀번호를 먼저 인증해주세요.", {
+                    type: "error",
+                });
                 return;
             }
 
@@ -158,12 +173,16 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             if (profile.newPassword) {
                 // 새 비밀번호 최소 길이 검사
                 if (profile.newPassword.length < 8) {
-                    showToast("새 비밀번호는 8자 이상이어야 합니다.", { type: "error" });
+                    showToast("새 비밀번호는 8자 이상이어야 합니다.", {
+                        type: "error",
+                    });
                     return;
                 }
                 // 새 비밀번호와 확인 필드 일치 여부 검사
                 if (profile.newPassword !== profile.confirmNewPassword) {
-                    showToast("새 비밀번호가 일치하지 않습니다.", { type: "error" });
+                    showToast("새 비밀번호가 일치하지 않습니다.", {
+                        type: "error",
+                    });
                     return;
                 }
             }
@@ -175,7 +194,7 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         }
 
         // --- 사용자 정보 수정 유효성 검사 ---
-        if (activeTab === 'info') {
+        if (activeTab === "info") {
             // 이메일이 비어있는 경우
             if (!profile.email || profile.email.trim() === "") {
                 showToast("이메일을 입력해주세요.", { type: "error" });
@@ -184,7 +203,9 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             // 이메일 형식이 유효하지 않은 경우
             const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
             if (!emailRegex.test(profile.email)) {
-                showToast("유효한 이메일 형식을 입력해주세요.", { type: "error" });
+                showToast("유효한 이메일 형식을 입력해주세요.", {
+                    type: "error",
+                });
                 return;
             }
 
@@ -195,7 +216,10 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             if (profile.email !== originalEmail) {
                 // 이메일이 변경되었지만 인증되지 않은 경우
                 if (!isEmailVerified) {
-                    showToast("이메일 변경을 완료하려면 이메일 인증을 진행해주세요.", { type: "error" });
+                    showToast(
+                        "이메일 변경을 완료하려면 이메일 인증을 진행해주세요.",
+                        { type: "error" }
+                    );
                     return;
                 }
             }
@@ -209,25 +233,37 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
 
         // 서버로 프로필 업데이트 요청
         try {
-            const response = await axios.put("/api/user/mypage", {
-                ...profile,
-                createdAt: originalCreatedAt, // 서버로 보낼 때는 원본 값 사용
-            }, {
-                headers: { "Content-Type": "application/json" }
-            });
+            const response = await axios.put(
+                "/api/user/mypage",
+                {
+                    ...profile,
+                    createdAt: originalCreatedAt, // 서버로 보낼 때는 원본 값 사용
+                },
+                {
+                    headers: { "Content-Type": "application/json" },
+                }
+            );
 
             const result = response.data;
 
             if (response.status !== 200) {
-                throw new Error(result.message || "프로필 수정에 실패했습니다.");
+                throw new Error(
+                    result.message || "프로필 수정에 실패했습니다."
+                );
             }
 
-            showToast("프로필이 성공적으로 수정되었습니다.", { type: "success" });
-            setTimeout(() => { // 1초 후 이전 페이지로 이동
+            showToast("프로필이 성공적으로 수정되었습니다.", {
+                type: "success",
+            });
+            setTimeout(() => {
+                // 1초 후 이전 페이지로 이동
                 onBack();
             }, 1000); // 1초 후 뒤로가기
         } catch (error) {
-            const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "알 수 없는 오류가 발생했습니다.";
             showToast(message, { type: "error" });
         }
     };
@@ -248,7 +284,10 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             // 탈퇴 완료 모달 표시
             setIsDeleteCompleteModalOpen(true);
         } catch (error) {
-            const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "알 수 없는 오류가 발생했습니다.";
             showToast(message, { type: "error" });
         } finally {
             setIsDeleteModalOpen(false);
@@ -271,29 +310,42 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
 
         try {
             // 서버에 비밀번호 확인 요청
-            const response = await axios.post("/api/user/verify-password", {
-                currentPassword: profile.currentPassword
-            }, {
-                headers: { "Content-Type": "application/json" },
-                withCredentials: true,
-            });
+            const response = await axios.post(
+                "/api/user/verify-password",
+                {
+                    currentPassword: profile.currentPassword,
+                },
+                {
+                    headers: { "Content-Type": "application/json" },
+                    withCredentials: true,
+                }
+            );
 
             const result = response.data;
             if (response.status !== 200) {
-                showToast(result.message || "비밀번호 확인에 실패했습니다.", { type: "error" });
+                showToast(result.message || "비밀번호 확인에 실패했습니다.", {
+                    type: "error",
+                });
                 return false;
             }
 
             if (result.success) {
                 setIsCurrentPasswordVerified(true); // 인증 성공 상태 업데이트
-                showToast(result.message || "비밀번호 확인이 완료되었습니다.", { type: "success" });
+                showToast(result.message || "비밀번호 확인이 완료되었습니다.", {
+                    type: "success",
+                });
                 return true;
             } else {
-                showToast(result.message || "비밀번호가 일치하지 않습니다.", { type: "error" });
+                showToast(result.message || "비밀번호가 일치하지 않습니다.", {
+                    type: "error",
+                });
                 return false;
             }
         } catch (error) {
-            const message = error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다.";
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : "알 수 없는 오류가 발생했습니다.";
             showToast(message, { type: "error" });
             return false;
         }
@@ -314,20 +366,29 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         setIsSendingEmail(true);
         try {
             // 서버에 인증 코드 발송 요청
-            const response = await axios.post("/api/send-verification-email-code", {
-                email: profile.email
-            }, {
-                headers: { "Content-Type": "application/json" },
-                withCredentials: true,
-            });
+            const response = await axios.post(
+                "/api/send-verification-email-code",
+                {
+                    email: profile.email,
+                },
+                {
+                    headers: { "Content-Type": "application/json" },
+                    withCredentials: true,
+                }
+            );
             if (response.status === 200) {
                 const { message } = response.data as { message?: string };
-                showToast(message || "인증 메일이 전송되었습니다!", { type: "success" });
+                showToast(message || "인증 메일이 전송되었습니다!", {
+                    type: "success",
+                });
                 setHasSentEmailCode(true);
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                const errorMessage = error.response?.data?.message || error.response?.data || "처리 중 오류가 발생했습니다.";
+                const errorMessage =
+                    error.response?.data?.message ||
+                    error.response?.data ||
+                    "처리 중 오류가 발생했습니다.";
                 showToast(String(errorMessage), { type: "error" });
             } else {
                 showToast("알 수 없는 오류가 발생했습니다.", { type: "error" });
@@ -346,12 +407,17 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         setIsVerifyingCode(true);
         try {
             // 서버에 인증 코드 확인 요청
-            const response = await axios.post("/api/verify-email-code", {
-                email: profile?.email, code: verificationCode
-            }, {
-                headers: { "Content-Type": "application/json" },
-                withCredentials: true,
-            });
+            const response = await axios.post(
+                "/api/verify-email-code",
+                {
+                    email: profile?.email,
+                    code: verificationCode,
+                },
+                {
+                    headers: { "Content-Type": "application/json" },
+                    withCredentials: true,
+                }
+            );
             if (response.status === 200) {
                 const { message } = response.data as { message?: string };
                 showToast(message || "이메일 인증 성공!", { type: "success" });
@@ -359,7 +425,10 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
-                const errorMessage = error.response?.data?.message || error.response?.data || "이메일 인증 실패";
+                const errorMessage =
+                    error.response?.data?.message ||
+                    error.response?.data ||
+                    "이메일 인증 실패";
                 showToast(String(errorMessage), { type: "error" });
             } else {
                 showToast("알 수 없는 오류가 발생했습니다.", { type: "error" });
@@ -370,25 +439,37 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
     };
 
     // 회원 탈퇴 모달 UI 컴포넌트
-    const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({ isOpen, onClose, onConfirm, title, children, showCancelButton = true, confirmButtonClass = 'confirm' }) => {
+    const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({
+        isOpen,
+        onClose,
+        onConfirm,
+        title,
+        children,
+        showCancelButton = true,
+        confirmButtonClass = "confirm",
+    }) => {
         if (!isOpen) {
             return null;
         }
-    
+
         return (
             <div className="pg700003-modal-overlay">
                 <div className="pg700003-modal-content">
                     <h3 className="pg700003-modal-title">{title}</h3>
-                    <div className="pg700003-modal-body">
-                        {children}
-                    </div>
+                    <div className="pg700003-modal-body">{children}</div>
                     <div className="pg700003-modal-actions">
                         {showCancelButton && (
-                            <button onClick={onClose} className="pg700003-modal-button cancel">
+                            <button
+                                onClick={onClose}
+                                className="pg700003-modal-button cancel"
+                            >
                                 취소
                             </button>
                         )}
-                        <button onClick={onConfirm} className={`pg700003-modal-button ${confirmButtonClass}`}>
+                        <button
+                            onClick={onConfirm}
+                            className={`pg700003-modal-button ${confirmButtonClass}`}
+                        >
                             확인
                         </button>
                     </div>
@@ -396,7 +477,6 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             </div>
         );
     };
-    
 
     // 데이터 로딩 중 표시
     if (isLoading) {
@@ -412,25 +492,35 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         <div className="profile-edit-layout">
             {/* 사이드바 */}
             <div className="profile-sidebar">
-                <div className="profile-avatar"> {/* 프로필 아바타 */}
+                <div className="profile-avatar">
+                    {" "}
+                    {/* 프로필 아바타 */}
                     <span>{profile.name.charAt(0)}</span>
                 </div>
-                <nav className="profile-nav"> {/* 네비게이션 메뉴 */}
+                <nav className="profile-nav">
+                    {" "}
+                    {/* 네비게이션 메뉴 */}
                     <button
-                        className={`profile-nav-item ${activeTab === 'info' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('info')}
+                        className={`profile-nav-item ${
+                            activeTab === "info" ? "active" : ""
+                        }`}
+                        onClick={() => setActiveTab("info")}
                     >
                         사용자 정보
                     </button>
                     <button
-                        className={`profile-nav-item ${activeTab === 'password' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('password')}
+                        className={`profile-nav-item ${
+                            activeTab === "password" ? "active" : ""
+                        }`}
+                        onClick={() => setActiveTab("password")}
                     >
                         비밀번호 변경
                     </button>
                     <button
-                        className={`profile-nav-item ${activeTab === 'deleteAccount' ? 'active' : ''}`}
-                        onClick={() => setActiveTab('deleteAccount')}
+                        className={`profile-nav-item ${
+                            activeTab === "deleteAccount" ? "active" : ""
+                        }`}
+                        onClick={() => setActiveTab("deleteAccount")}
                     >
                         회원탈퇴
                     </button>
@@ -440,20 +530,46 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
             {/* 메인 콘텐츠 */}
             <div className="profile-edit-container">
                 <form onSubmit={handleSubmit} className="form-section">
-                    {activeTab === 'info' && (
-                        <> {/* 사용자 정보 수정 탭 */}
-                            <h2 className="page-authwelcome">사용자 정보 수정</h2>
+                    {activeTab === "info" && (
+                        <>
+                            {" "}
+                            {/* 사용자 정보 수정 탭 */}
+                            <h2 className="page-authwelcome">
+                                사용자 정보 수정
+                            </h2>
                             <div className="input-group">
-                                <label htmlFor="userId">아이디</label> 
-                                <input type="text" id="userId" name="userId" value={profile.userId} readOnly className="input-field readonly" />
+                                <label htmlFor="userId">아이디</label>
+                                <input
+                                    type="text"
+                                    id="userId"
+                                    name="userId"
+                                    value={profile.userId}
+                                    readOnly
+                                    className="input-field readonly"
+                                />
                             </div>
                             <div className="input-group">
                                 <label htmlFor="name">이름</label>
-                                <input type="text" id="name" name="name" value={profile.name} readOnly onChange={handleChange} className="input-field readonly" />
+                                <input
+                                    type="text"
+                                    id="name"
+                                    name="name"
+                                    value={profile.name}
+                                    readOnly
+                                    onChange={handleChange}
+                                    className="input-field readonly"
+                                />
                             </div>
                             <div className="input-group">
                                 <label htmlFor="userNickname">닉네임</label>
-                                <input type="text" id="userNickname" name="userNickname" value={profile.userNickname} onChange={handleChange} className="input-field" />
+                                <input
+                                    type="text"
+                                    id="userNickname"
+                                    name="userNickname"
+                                    value={profile.userNickname}
+                                    onChange={handleChange}
+                                    className="input-field"
+                                />
                             </div>
                             <div className="input-group">
                                 <label htmlFor="email">이메일</label>
@@ -472,39 +588,59 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                                         type="button"
                                         className="input-inner-button"
                                         onClick={handleSendEmailVerification}
-                                        disabled={isSendingEmail || isEmailVerified}
+                                        disabled={
+                                            isSendingEmail || isEmailVerified
+                                        }
                                     >
                                         {isEmailVerified ? "확인됨" : "변경"}
                                     </button>
                                 </div>
                             </div>
-                            {hasSentEmailCode && !isEmailVerified && ( // 인증 코드 발송 후, 인증 전까지 표시
-                                <div className="input-group">
-                                    <label htmlFor="emailCode">이메일 인증번호</label>
-                                    <div className="input-with-button">
-                                        <input
-                                            type="text"
-                                            id="emailCode"
-                                            name="emailCode"
-                                            value={verificationCode}
-                                            onChange={(e) => setVerificationCode(e.target.value)}
-                                            className="input-field"
-                                            placeholder="인증번호 6자리를 입력하세요"
-                                        />
-                                        <button
-                                            type="button"
-                                            className="input-inner-button"
-                                            onClick={handleVerifyEmailCode}
-                                            disabled={isVerifyingCode || !verificationCode}
-                                        >
-                                            확인
-                                        </button>
+                            {hasSentEmailCode &&
+                                !isEmailVerified && ( // 인증 코드 발송 후, 인증 전까지 표시
+                                    <div className="input-group">
+                                        <label htmlFor="emailCode">
+                                            이메일 인증번호
+                                        </label>
+                                        <div className="input-with-button">
+                                            <input
+                                                type="text"
+                                                id="emailCode"
+                                                name="emailCode"
+                                                value={verificationCode}
+                                                onChange={(e) =>
+                                                    setVerificationCode(
+                                                        e.target.value
+                                                    )
+                                                }
+                                                className="input-field"
+                                                placeholder="인증번호 6자리를 입력하세요"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="input-inner-button"
+                                                onClick={handleVerifyEmailCode}
+                                                disabled={
+                                                    isVerifyingCode ||
+                                                    !verificationCode
+                                                }
+                                            >
+                                                확인
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
+                                )}
                             <div className="input-group">
-                                <label htmlFor="preferredLanguage">선호 언어</label>
-                                <select id="preferredLanguage" name="preferredLanguage" value={profile.preferredLanguage} onChange={handleChange} className="input-field">
+                                <label htmlFor="preferredLanguage">
+                                    선호 언어
+                                </label>
+                                <select
+                                    id="preferredLanguage"
+                                    name="preferredLanguage"
+                                    value={profile.preferredLanguage}
+                                    onChange={handleChange}
+                                    className="input-field"
+                                >
                                     <option value="KO">한국어</option>
                                     <option value="EN">English</option>
                                     <option value="JP">日本語</option>
@@ -513,16 +649,27 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                             </div>
                             <div className="input-group">
                                 <label htmlFor="createdAt">가입일</label>
-                                <input type="text" id="createdAt" name="createdAt" value={profile.createdAt} readOnly className="input-field readonly" />
+                                <input
+                                    type="text"
+                                    id="createdAt"
+                                    name="createdAt"
+                                    value={profile.createdAt}
+                                    readOnly
+                                    className="input-field readonly"
+                                />
                             </div>
                         </>
                     )}
 
-                    {activeTab === 'password' && (
-                        <> {/* 비밀번호 변경 탭 */}
+                    {activeTab === "password" && (
+                        <>
+                            {" "}
+                            {/* 비밀번호 변경 탭 */}
                             <h2 className="page-authwelcome">비밀번호 변경</h2>
                             <div className="input-group">
-                                <label htmlFor="currentPassword">현재 비밀번호 확인</label>
+                                <label htmlFor="currentPassword">
+                                    현재 비밀번호 확인
+                                </label>
                                 <div className="input-with-button">
                                     <input
                                         type="password"
@@ -540,7 +687,9 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                                         onClick={handleVerifyCurrentPassword}
                                         disabled={isCurrentPasswordVerified}
                                     >
-                                        {isCurrentPasswordVerified ? "확인됨" : "확인"}
+                                        {isCurrentPasswordVerified
+                                            ? "확인됨"
+                                            : "확인"}
                                     </button>
                                 </div>
                             </div>
@@ -558,7 +707,9 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                                 />
                             </div>
                             <div className="input-group">
-                                <label htmlFor="confirmNewPassword">새 비밀번호 확인</label>
+                                <label htmlFor="confirmNewPassword">
+                                    새 비밀번호 확인
+                                </label>
                                 <input
                                     type="password"
                                     id="confirmNewPassword"
@@ -573,8 +724,10 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                         </>
                     )}
 
-                    {activeTab === 'deleteAccount' && (
-                        <> {/* 회원 탈퇴 탭 */}
+                    {activeTab === "deleteAccount" && (
+                        <>
+                            {" "}
+                            {/* 회원 탈퇴 탭 */}
                             <h2 className="page-authwelcome">회원탈퇴</h2>
                             <div className="input-group">
                                 <label htmlFor="password">비밀번호 확인</label>
@@ -583,24 +736,31 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                                     id="currentPassword"
                                     name="currentPassword"
                                     onChange={handleChange}
-                                    className="input-field" placeholder="비밀번호를 입력하세요"
+                                    className="input-field"
+                                    placeholder="비밀번호를 입력하세요"
                                 />
                             </div>
                         </>
                     )}
 
-                    <div className="authButtonWrapper"> {/* 제출 버튼 */}
+                    <div className="authButtonWrapper">
+                        {" "}
+                        {/* 제출 버튼 */}
                         <button type="submit" className="authButton submit">
-                            {activeTab === 'deleteAccount'
-                                ? '탈퇴하기'
-                                : '수정 완료'}
+                            {activeTab === "deleteAccount"
+                                ? "탈퇴하기"
+                                : "수정 완료"}
                         </button>
                     </div>
                 </form>
             </div>
 
             {/* 토스트 메시지 컴포넌트 */}
-            <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} /> 
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+            />
             {/* 회원 탈퇴 확인 모달 */}
             <DeleteAccountModal
                 isOpen={isDeleteModalOpen}

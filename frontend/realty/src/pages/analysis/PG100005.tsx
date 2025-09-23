@@ -302,6 +302,9 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         {/* 거래 이상 감지 */}
         <article className="rv05-card rv05-wide">
             <h3 className="rv05-sec-title">거래 이상 감지</h3>
+            <hr className="rv05-hr" />
+            <p></p>
+            <p></p>
             <dl className="rv05-dl">
                 <div>
                     <dt>계약 가격</dt>
@@ -325,25 +328,33 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         {/* 위험 조항 */}
         <article className="rv05-card rv05-wide">
             <h3 className="rv05-sec-title">위험 조항</h3>
+            <hr className="rv05-hr" />
+            <p></p>
+            <p></p>
             <dl className="rv05-dl">
                 <div>
                     <dt>조항 요약</dt>
+                    <p></p>
                     <dd>{summary.riskyClauses.clauseSummary}</dd>
                 </div>
                 <div>
                     <dt>법적 리스크</dt>
+                    <p></p>
                     <dd>{summary.riskyClauses.legalRisk}</dd>
                 </div>
                 <div>
                     <dt>재정적 영향</dt>
+                    <p></p>
                     <dd>{summary.riskyClauses.financialImpact}</dd>
                 </div>
                 <div>
                     <dt>운영적 영향</dt>
+                    <p></p>
                     <dd>{summary.riskyClauses.operationalImpact}</dd>
                 </div>
                 <div>
                     <dt>권장 조치</dt>
+                    <p></p>
                     <dd>{summary.riskyClauses.recommendedAction}</dd>
                 </div>
             </dl>
@@ -353,6 +364,8 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         <section className="rv05-grid">
           <article className="rv05-card">
             <h3 className="rv05-sec-title">기본 정보</h3>
+            <hr className="rv05-hr"/>
+            <p></p>
             <dl className="rv05-dl">
               <div>
                 <dt>임대할 부분</dt>
@@ -389,6 +402,8 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
 
           <article className="rv05-card">
             <h3 className="rv05-sec-title">재무 분석(기초값)</h3>
+            <hr className="rv05-hr"/>
+            <p></p>
             <dl className="rv05-dl">
               <div>
                 <dt>보증금</dt>
@@ -418,6 +433,8 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
           {/* 특약 */}
           <article className="rv05-card rv05-wide">
             <h3 className="rv05-sec-title">특약</h3>
+            <hr className="rv05-hr"/>
+            <p></p>
             <p className="rv05-special">
               {data.specialTerms?.trim() || "특약사항 없음"}
             </p>
@@ -426,6 +443,8 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
           {/* 주요 발견사항: 나머지 필드 전부 */}
           <article className="rv05-card rv05-wide">
             <h3 className="rv05-sec-title">주요 발견사항(데이터 검증용)</h3>
+            <hr className="rv05-hr"/>
+            <p></p>
             <ul className="rv05-kvlist">
               {restEntries.length === 0 ? (
                 <li className="rv05-dim">추가로 표시할 값이 없습니다.</li>

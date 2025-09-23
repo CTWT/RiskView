@@ -6,8 +6,8 @@ on:
 
 jobs:
     build-and-deploy:
-        runs-on: ubuntu-latest
-        environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }} # 브랜치별 환경 자동 지정
+        runs-on: [self-hosted, linux, x64] # 등록한 Runner 라벨과 동일해야 함
+        environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
 
         steps:
             # 1. 저장소 코드 가져오기
@@ -24,20 +24,7 @@ jobs:
                     echo "env=dev" >> $GITHUB_OUTPUT
                   fi
 
-            # 3. 환경별 Secrets 세팅 (SSH 접근정보)
-            - name: Set env secrets
-              run: |
-                  if [ "${{ steps.pick.outputs.env }}" = "prod" ]; then
-                    echo "SSH_HOST=${{ secrets.PROD_SSH_HOST }}" >> $GITHUB_ENV
-                    echo "SSH_USER=${{ secrets.PROD_SSH_USER }}" >> $GITHUB_ENV
-                    echo "SSH_PASS=${{ secrets.PROD_SSH_PASS }}" >> $GITHUB_ENV
-                  else
-                    echo "SSH_HOST=${{ secrets.DEV_SSH_HOST }}" >> $GITHUB_ENV
-                    echo "SSH_USER=${{ secrets.DEV_SSH_USER }}" >> $GITHUB_ENV
-                    echo "SSH_PASS=${{ secrets.DEV_SSH_PASS }}" >> $GITHUB_ENV
-                  fi
-
-            # 4. Node.js (프론트 빌드)
+            # 3. Node.js (프론트 빌드)
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
@@ -49,7 +36,7 @@ jobs:
                   npm ci
                   npm run build
             - run: mv frontend/realty/dist ./dist
-            # 5. Java (백엔드 빌드)
+            # 4. Java (백엔드 빌드)
             - name: Setup Java
               uses: actions/setup-java@v4
               with:
@@ -63,43 +50,13 @@ jobs:
             - name: Check JAR exists
               run: ls -al backend/build/libs
 
-            # - name: Copy Backend JAR
-            #   run: |
-            #       mkdir -p out
-            #       cp backend/build/libs/*.jar out/app.jar
-
-            # 6. Python (AI 서버 압축)
+            # 5. Python (AI 서버 압축)
             - name: Archive AI source
               run: |
                   tar -czf ai_src.tar.gz -C ai-api .
 
-            - name: Debug - check SSH connectivity
+            # 6. 서버 배포 스크립트 실행 (로컬 실행)
+            - name: Deploy locally
               run: |
-                  sudo apt-get update -y
-                  sudo apt-get install -y netcat-traditional traceroute curl
-                  echo "== Runner outbound IP =="
-                  curl -s ifconfig.me || echo "Unable to get IP"
-                  echo "== Netcat Test =="
-                  nc -zv ${{ secrets.DEV_SSH_HOST }} 22 || echo "SSH port closed"
-                  echo "== Traceroute =="
-                  traceroute -n ${{ secrets.DEV_SSH_HOST }} || true
-            # 7. 산출물 서버로 복사
-            - name: Copy artifacts to server
-              uses: appleboy/scp-action@v0.1.7
-              with:
-                  host: ${{ env.SSH_HOST }}
-                  username: ${{ env.SSH_USER }}
-                  password: ${{ env.SSH_PASS }}
-                  source: "dist/**,backend/build/libs/app.jar,ai_src.tar.gz"
-                  target: "/tmp"
-
-            # 8. 서버 배포 스크립트 실행
-            - name: Deploy on server
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                  host: ${{ env.SSH_HOST }}
-                  username: ${{ env.SSH_USER }}
-                  password: ${{ env.SSH_PASS }}
-                  script: |
-                      chmod +x /srv/riskview/deploy.sh
-                      /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)
+                  chmod +x /srv/riskview/deploy.sh
+                  /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)

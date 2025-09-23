@@ -7,6 +7,11 @@ plugins {
 group = 'realty'
 version = '0.0.1-SNAPSHOT'
 
+
+bootJar {
+    archiveFileName = "app.jar"
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)

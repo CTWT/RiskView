@@ -2,14 +2,18 @@ package realty.domain.dto;
 
 import java.math.BigDecimal;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import realty.domain.model.AnalysisReport;
 import realty.domain.model.AnalysisReport.SentimentCategory;
 
 @Data
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class AnalysisReportsDTO {
     private String summary; 					// 요약 내용

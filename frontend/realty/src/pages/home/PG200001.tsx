@@ -1,6 +1,6 @@
 // src/pages/Home/PG200001.tsx
 import { useNavigate } from "react-router-dom";
-import "../../styles/common/Common.css";
+import "../../styles/common/common.css";
 import { LuScanLine } from "react-icons/lu";
 import PG200002 from "./PG200002"; // 캐러셀 컴포넌트 import
 

@@ -150,6 +150,28 @@ export function validateNickName(nickname: string): ValidationResult {
     };
 }
 
+/**
+ * 숫자와 . 만 입력받는 정규식
+ * 조건 : 0~9 숫자와 .(dot) 기호만 허용
+ * @param value 입력된 문자열
+ * @returns
+ */
+export function validateNumDot(value: string): ValidationResult {
+    const regex = /^[0-9.]+$/;
+
+    if (!regex.test(value.trim() || "")) {
+        return {
+            valid: false,
+            message: "숫자와 . 기호만 입력 가능합니다.",
+        };
+    }
+
+    return {
+        valid: true,
+        value: value,
+    };
+}
+
 /** format */
 
 /**
@@ -172,6 +194,8 @@ export function formatNumberCommas(amount: string): ValidationResult {
 
 /**
  * 날짜 검증 및 포맷 변경 (YYYY-MM-DD)
+ * @param dateStr 입력된 날짜 형식
+ * @returns string(replace작업)
  */
 export function formatDate(dateStr: string): ValidationResult {
     const regex = /^(\d{4})([-/.]?)(\d{2})([-/.]?)(\d{2})$/;
@@ -196,4 +220,71 @@ export function formatDate(dateStr: string): ValidationResult {
     }
 
     return { valid: true, value: `${year}-${month}-${day}` };
+}
+
+/**
+ * 휴대폰 번호 전용 포멧팅(항상 하이픈 포함)
+ * 조건 : 010 ~ 시작
+ * @param phoneNum 입력받은 휴대폰 번호
+ * @returns string(replace작업)
+ */
+export function formatPhoneNum(phoneNum: string): ValidationResult {
+    // 숫자만 추출
+    const onlyNums = phoneNum.replace(/[^0-9]/g, "");
+
+    // 01X 시작만 허용
+    const regex = /^01[016789]\d{3,4}\d{4}$/;
+
+    // 자리수에 따라 포맷팅
+    let formatted = "";
+    if (onlyNums.length < 4) {
+        formatted = onlyNums;
+    } else if (onlyNums.length < 7) {
+        formatted = onlyNums.replace(/(\d{3})(\d{1,3})/, "$1-$2");
+    } else {
+        formatted = onlyNums.replace(/(\d{3})(\d{3,4})(\d{1,4})/, "$1-$2-$3");
+    }
+
+    // 최종적으로 유효성 검사
+    if (!regex.test(formatted.replace(/-/g, ""))) {
+        return {
+            valid: false,
+            message: "휴대폰 번호는 010-1234-5678 형식이어야 합니다.",
+            value: formatted,
+        };
+    }
+
+    return { valid: true, value: formatted };
+}
+
+/**
+ * 주민등록 번호 전용 포멧팅(항상 하이픈 포함)
+ * @param rrn 입력받은 주민등록번호
+ * @returns
+ */
+export function formatRRN(rrn: string): ValidationResult {
+    // 숫자만 추출
+    const onlyNums = rrn.replace(/[^0-9]/g, "");
+
+    // 자리수에 따라 포맷팅
+    let formatted = "";
+    if (onlyNums.length <= 6) {
+        formatted = onlyNums;
+    } else {
+        formatted = onlyNums.replace(/(\d{6})(\d{1,7})?/, (_, front, back) =>
+            back ? `${front}-${back}` : front
+        );
+    }
+
+    // 유효성 검사 (13자리)
+    const regex = /^\d{6}-\d{7}$/;
+    if (!regex.test(formatted)) {
+        return {
+            valid: false,
+            message: "주민등록번호는 YYMMDD-XXXXXXX 형식이어야 합니다.",
+            value: formatted,
+        };
+    }
+
+    return { valid: true, value: formatted };
 }

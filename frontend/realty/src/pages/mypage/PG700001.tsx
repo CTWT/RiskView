@@ -202,6 +202,8 @@ const PG700001: React.FC = () => {
                             return "#f59e0b"; // yellow
                         case "저위험":
                         case "정상":
+                        case "unknown":
+                            return "#9ca3af"; // gray
                         default:
                             return "#22c55e"; // green
                     }
@@ -251,10 +253,19 @@ const PG700001: React.FC = () => {
     const getRiskColor = (risk: string) => {
         console.log(`위험도: ${risk}`);
         switch (risk.toLowerCase()) {
+            case "고위험":
+            case "치명":
             case "high":
+            case "critical":
                 return "#ef4444"; // red
+            case "중위험":
+            case "경고":
             case "medium":
+            case "warning":
                 return "#f59e0b"; // yellow
+            case "unknown":
+                return "#9ca3af"; // gray
+            case "저위험":
             case "low":
                 return "#22c55e"; // green
             default:
@@ -306,7 +317,24 @@ const PG700001: React.FC = () => {
                                 </button>
                             </div>
 
+                            {/* 마이페이지 그리드 */}
                             <div className="mypage-grid">
+                                {/* 차트 그리드 */}
+                                <div className="charts-grid">
+                                    <div className="chart-card">
+                                        <h3 className="chart-title">
+                                            위험도 분포
+                                        </h3>
+                                        {riskDistribution.length > 0 ? (
+                                            <PG700002 data={riskDistribution} />
+                                        ) : (
+                                            <div className="empty-message">
+                                                분석 기록이 없습니다.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* 통계 그리드 */}
                                 <div className="stats-grid">
                                     <div className="stat-card">
                                         <div className="stat-icon blue">
@@ -321,24 +349,7 @@ const PG700001: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div className="stat-card">
-                                        <div className="stat-icon green">
-                                            <FiDollarSign />
-                                        </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number">
-                                                {staticData.expectedSavings}
-                                            </div>
-                                            <div className="stat-label">
-                                                예상 절약 금액
-                                            </div>
-                                            <div className="stat-change">
-                                                위험 회피로 절약
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                    {/* 로그인 이력 그리드 */}
                                     <div
                                         className="stat-card clickable"
                                         onClick={handleViewLoginHistoryClick}
@@ -355,7 +366,7 @@ const PG700001: React.FC = () => {
                                             </div>
                                         </div>
                                     </div>
-
+                                    {/* 활동 그리드 */}
                                     <div
                                         className="stat-card activity-card clickable"
                                         onClick={handleViewMyActivitiesClick}
@@ -397,66 +408,8 @@ const PG700001: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="charts-grid">
-                                    <div className="chart-card">
-                                        <h3 className="chart-title">
-                                            월별 분석 통계
-                                        </h3>
-                                        <div className="chart-subtitle">
-                                            월별 분석 횟수
-                                        </div>
-                                        <div className="monthly-chart">
-                                            {staticData.monthlyStats.map(
-                                                (
-                                                    item: {
-                                                        month: string;
-                                                        count: number;
-                                                    },
-                                                    index: number
-                                                ) => (
-                                                    <div
-                                                        key={index}
-                                                        className="chart-row"
-                                                    >
-                                                        <span className="chart-month">
-                                                            {item.month}
-                                                        </span>
-                                                        <div className="chart-bar-container">
-                                                            <div
-                                                                className="chart-bar"
-                                                                style={{
-                                                                    width: `${
-                                                                        (item.count /
-                                                                            17) *
-                                                                        100
-                                                                    }%`,
-                                                                }}
-                                                            ></div>
-                                                        </div>
-                                                        <span className="chart-value">
-                                                            {item.count}
-                                                        </span>
-                                                    </div>
-                                                )
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="chart-card">
-                                        <h3 className="chart-title">
-                                            위험도 분포
-                                        </h3>
-                                        {riskDistribution.length > 0 ? (
-                                            <PG700002 data={riskDistribution} />
-                                        ) : (
-                                            <div className="empty-message">
-                                                분석 기록이 없습니다.
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
                             </div>
-
+                            {/* 최근 분석 기록 그리드 */}
                             <div className="section-card recent-analysis-card">
                                 <h3 className="card-title">최근 분석 기록</h3>
                                 <div className="analysis-table">

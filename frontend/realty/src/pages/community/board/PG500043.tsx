@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import PageContainer from "../../../components/layout/PageContainer";
 import Toast from "../../../components/ui/Toast";
@@ -50,6 +50,17 @@ const PG500043: React.FC = () => {
     const location = useLocation() as ReturnType<typeof useLocation> & {
         state: PostDetailWithFlags | null;
     };
+    // 라우팅 관련 로깅: 마운트/언마운트 및 location 변경
+    useEffect(() => {
+        console.log('[PG500043] 마운트됨', { pathname: location.pathname, search: location.search, state: (location as any).state });
+        return () => {
+            console.log('[PG500043] 언마운트됨');
+        };
+    }, []);
+
+    useEffect(() => {
+        console.log('[PG500043] location 변경', { pathname: location.pathname, search: location.search, state: (location as any).state });
+    }, [location.pathname, location.search]);
     // 초기 보드 타입 결정
     const initialBoard: BoardKey =
         (new URLSearchParams(location.search).get("board") as BoardKey) ||

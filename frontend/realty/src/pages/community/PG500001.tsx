@@ -1,6 +1,6 @@
 // src/pages/community/PG500001.tsx
 
-import React from "react";
+import React, { useContext } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 // 모든 페이지 컴포넌트들을 직접 임포트
@@ -10,6 +10,7 @@ import PG500031 from "./legalDictionary/PG500031";
 import PG500041 from "./board/PG500041";
 import PG500042 from "./board/PG500042";
 import PG500043 from "./board/PG500043";
+import { AuthContext } from "../auth/components/authentication/AuthContext";
 
 /**
  * @file PG500001.tsx
@@ -29,13 +30,9 @@ import PG500043 from "./board/PG500043";
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const location = useLocation();
-  const isAuthed = Boolean(
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("idToken") ||
-    localStorage.getItem("user")
-  );
+  const { isLoggedIn } = useContext(AuthContext);
 
-  if (!isAuthed) {
+  if (!isLoggedIn) {
     return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   }
   return children;

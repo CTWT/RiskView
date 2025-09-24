@@ -317,145 +317,140 @@ const PG700001: React.FC = () => {
                                 </button>
                             </div>
 
-                            {/* 마이페이지 그리드 */}
                             <div className="mypage-grid">
                                 {/* 차트 그리드 */}
-                                <div className="charts-grid">
-                                    <div className="chart-card">
-                                        <h3 className="chart-title">
-                                            위험도 분포
-                                        </h3>
-                                        {riskDistribution.length > 0 ? (
-                                            <PG700002 data={riskDistribution} />
-                                        ) : (
-                                            <div className="empty-message">
-                                                분석 기록이 없습니다.
-                                            </div>
-                                        )}
-                                    </div>
+                                <div className="chart-card">
+                                    <h3 className="chart-title">
+                                        위험도 분포
+                                    </h3>
+                                    {riskDistribution.length > 0 ? (
+                                        <PG700002 data={riskDistribution} />
+                                    ) : (
+                                        <div className="empty-message">
+                                            분석 기록이 없습니다.
+                                        </div>
+                                    )}
                                 </div>
                                 {/* 통계 그리드 */}
-                                <div className="stats-grid">
-                                    <div className="stat-card">
-                                        <div className="stat-icon blue">
-                                            <FiBarChart />
+                                <div className="stat-card statistics-card">
+                                    <div className="stat-icon blue">
+                                        <FiBarChart />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-number">
+                                            {analysisCount}건
                                         </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number">
-                                                {analysisCount}건
-                                            </div>
-                                            <div className="stat-label">
-                                                분석 횟수
-                                            </div>
+                                        <div className="stat-label">
+                                            분석 횟수
                                         </div>
                                     </div>
-                                    {/* 로그인 이력 그리드 */}
-                                    <div
-                                        className="stat-card clickable"
-                                        onClick={handleViewLoginHistoryClick}
-                                    >
-                                        <div className="stat-icon yellow">
-                                            <FiClock />
+                                </div>
+                                {/* 최근 로그인 */}
+                                <div
+                                    className="stat-card login-card clickable"
+                                    onClick={handleViewLoginHistoryClick}
+                                >
+                                    <div className="stat-icon yellow">
+                                        <FiClock />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-number">
+                                            {recentLogin}
                                         </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number">
-                                                {recentLogin}
-                                            </div>
-                                            <div className="stat-label">
-                                                최근 로그인
-                                            </div>
+                                        <div className="stat-label">
+                                            최근 로그인
                                         </div>
                                     </div>
-                                    {/* 활동 그리드 */}
-                                    <div
-                                        className="stat-card activity-card clickable"
-                                        onClick={handleViewMyActivitiesClick}
-                                    >
-                                        <div className="stat-icon red">
-                                            <FiMessageSquare />
+                                </div>
+                                {/* 활동 내역 */}
+                                <div
+                                    className="stat-card activity-card clickable"
+                                    onClick={handleViewMyActivitiesClick}
+                                >
+                                    <div className="stat-icon red">
+                                        <FiMessageSquare />
+                                    </div>
+                                    <div className="stat-content">
+                                        <div className="stat-number">
+                                            {activitySummary.postCount +
+                                                activitySummary.commentCount}
+                                            건
                                         </div>
-                                        <div className="stat-content">
-                                            <div className="stat-number">
-                                                {activitySummary.postCount +
-                                                    activitySummary.commentCount}
-                                                건
-                                            </div>
-                                            <div className="stat-label">
-                                                내 활동
-                                            </div>
-                                            <div className="activity-details">
-                                                <span>
-                                                    게시글{" "}
-                                                    {activitySummary.postCount}
-                                                </span>
-                                                <span>
-                                                    댓글{" "}
-                                                    {
-                                                        activitySummary.commentCount
-                                                    }
-                                                </span>
-                                                <span>
-                                                    <FiHeart
-                                                        style={{
-                                                            verticalAlign:
-                                                                "middle",
-                                                            marginRight: "4px",
-                                                        }}
-                                                    />
-                                                    {activitySummary.likeCount}
-                                                </span>
-                                            </div>
+                                        <div className="stat-label">
+                                            내 활동
+                                        </div>
+                                        <div className="activity-details">
+                                            <span>
+                                                게시글{" "}
+                                                {activitySummary.postCount}
+                                            </span>
+                                            <span>
+                                                댓글{" "}
+                                                {
+                                                    activitySummary.commentCount
+                                                }
+                                            </span>
+                                            <span>
+                                                <FiHeart
+                                                    style={{
+                                                        verticalAlign:
+                                                            "middle",
+                                                        marginRight: "4px",
+                                                    }}
+                                                />
+                                                {activitySummary.likeCount}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            {/* 최근 분석 기록 그리드 */}
-                            <div className="section-card recent-analysis-card">
-                                <h3 className="card-title">최근 분석 기록</h3>
-                                <div className="analysis-table">
-                                    <div className="table-header">
-                                        <span className="col-location">
-                                            주소
-                                        </span>
-                                        <span className="col-amount">
-                                            계약금
-                                        </span>
-                                        <span className="col-risk">위험도</span>
-                                    </div>
-                                    <div className="table-body">
-                                        {recentAnalysis.length > 0 ? (
-                                            recentAnalysis.map(
-                                                (item, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="table-row"
+                        </div>
+                        {/* 최근 분석 기록 */}
+                        <div className="section-card recent-analysis-card">
+                            <h3 className="card-title">최근 분석 기록</h3>
+                            <div className="analysis-table">
+                                <div className="table-header">
+                                    <span className="col-location">
+                                        주소
+                                    </span>
+                                    <span className="col-amount">
+                                        계약금
+                                    </span>
+                                    <span className="col-risk">위험도</span>
+                                </div>
+                                <div className="table-body">
+                                    {recentAnalysis.length > 0 ? (
+                                        recentAnalysis.map(
+                                            (item, index) => (
+                                                <div
+                                                    key={index}
+                                                    className="table-row"
+                                                >
+                                                    <span className="col-location">
+                                                        {item.location}
+                                                    </span>
+                                                    <span className="col-amount">
+                                                        ₩
+                                                        {item.deposit.toLocaleString()}
+                                                    </span>
+                                                    <span
+                                                        className="col-risk risk-badge"
+                                                        style={{
+                                                            color: getRiskColor(
+                                                                item.risk
+                                                            ),
+                                                        }}
                                                     >
-                                                        <span className="col-location">
-                                                            {item.location}
-                                                        </span>
-                                                        <span className="col-amount">
-                                                            ₩
-                                                            {item.deposit.toLocaleString()}
-                                                        </span>
-                                                        <span
-                                                            className="col-risk risk-badge"
-                                                            style={{
-                                                                color: getRiskColor(
-                                                                    item.risk
-                                                                ),
-                                                            }}
-                                                        >
-                                                            {item.risk}
-                                                        </span>
-                                                    </div>
-                                                )
+                                                        {item.risk}
+                                                    </span>
+                                                </div>
                                             )
-                                        ) : (
-                                            <div className="empty-message">
-                                                최근 분석 기록이 없습니다.
-                                            </div>
-                                        )}
-                                    </div>
+                                        )
+                                    ) : (
+                                        <div className="empty-message">
+                                            최근 분석 기록이 없습니다.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

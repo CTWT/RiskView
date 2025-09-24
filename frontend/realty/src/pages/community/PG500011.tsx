@@ -83,7 +83,7 @@ const PG500011 = () => {
                 {/* 3. 하단 탭 네비게이션 및 내용 */}
                 <nav className="community-nav">
                     <NavLink
-                        to="/PG500001/announcements"
+                        to="/PG500001/PG500021"
                         className={({ isActive }) =>
                             isActive ? "nav-link active" : "nav-link"
                         }
@@ -91,7 +91,7 @@ const PG500011 = () => {
                         공지사항
                     </NavLink>
                     <NavLink
-                        to="/PG500001/legal-dictionary"
+                        to="/PG500001/PG500031"
                         className={({ isActive }) =>
                             isActive ? "nav-link active" : "nav-link"
                         }
@@ -99,7 +99,7 @@ const PG500011 = () => {
                         부동산 용어 사전
                     </NavLink>
                     <NavLink
-                        to="/PG500001/board"
+                        to="/PG500001/PG500041"
                         className={({ isActive }) =>
                             isActive ? "nav-link active" : "nav-link"
                         }

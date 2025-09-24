@@ -3359,11 +3359,13 @@
 .analysis-page-layout {
   display: flex;            /* 부모를 flex로 설정하여 자식들을 가로 배치 */
   align-items: flex-start;  /* 상단 정렬 */
-  gap: 24px;                /* 사이 간격 */
 }
 
 .analysis-sidebar-wrapper {
-  flex: 0 0 auto;           /* 사이드바 영역은 고정 폭 유지 */
+  flex-shrink: 0; /* 사이드바 너비가 줄어들지 않도록 설정 */
+  position: sticky; /* 스크롤 시에도 위치를 고정 */
+  top: 100px; /* 상단에서 100px 떨어진 위치에 고정 (헤더 높이 고려) */
+  align-self: flex-start; /* 부모 컨테이너의 상단에 정렬 */
 }
 
 /* 고정 사이드바 옵션 */
@@ -5777,7 +5779,6 @@
   margin: 0 auto;
   display: block;
   padding: 20px;
-  width: 100%;
   height: 100%;
 }
 
@@ -6525,14 +6526,32 @@
 /* PG700006.tsx - 내 분석 내역 사이드바 */
 .analysis-list-sidebar {
   width: 100%;
-  max-height: 2230px;
-  /* 스크롤이 필요한 경우를 대비한 최대 높이 */
+  max-height: 500px; /* 스크롤 영역의 최대 높이 */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-right: 8px;
-  /* 스크롤바 공간 */
+  padding-right: 8px; /* 스크롤바 공간 확보 */
+  margin-top: 100px;
+}
+
+/* Webkit 브라우저용 커스텀 스크롤바 */
+.analysis-list-sidebar::-webkit-scrollbar {
+  width: 6px; /* 스크롤바 너비 */
+}
+
+.analysis-list-sidebar::-webkit-scrollbar-track {
+  background: transparent; /* 기본적으로 트랙 숨김 */
+  border-radius: 10px;
+}
+
+.analysis-list-sidebar::-webkit-scrollbar-thumb {
+  background: transparent; /* 기본적으로 스크롤바 숨김 */
+  border-radius: 10px;
+}
+
+.analysis-sidebar-wrapper:hover .analysis-list-sidebar::-webkit-scrollbar-thumb {
+  background: #a290ff; /* 사이드바 래퍼에 호버 시 스크롤바 표시 */
 }
 
 .analysis-list-item-sidebar {

@@ -72,9 +72,6 @@ const PG700006: React.FC = () => {
             {/* 사이드바 */}
             <div className="analysis-sidebar-wrapper">
                 <div className="profile-sidebar" style={{ width: '280px', gap: '8px' }}>
-                    <div className="sidebar-header">
-                        <h3 className="chart-title">분석 목록</h3>
-                    </div>
                     <div className="analysis-list-sidebar">
                         {analysisHistory.length > 0 ? (
                             analysisHistory.map((item) => (

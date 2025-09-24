@@ -265,7 +265,7 @@
 }
 
 .breadcrumb-item:hover {
-    color: #333;
+    color: #7b68ee; /* 보라색 계열로 변경 */
 }
 
 .breadcrumb-home-link {
@@ -279,11 +279,6 @@
 }
 
 .breadcrumb-active {
-  /* 이전 스타일 제거 */
-  /* color: #333; */
-  /* font-weight: 600; */
-  /* cursor: default; */
-
   /* 새로운 스타일 적용 */
   background-color: black;
   color: white;

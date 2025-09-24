@@ -186,9 +186,9 @@
 }
 
 /* 프로그레스 바 라벨이 채워지는 바 안에 표시되지 않을 경우를 대비 */
-.progress-bar-label {
-    /* 만약 텍스트가 바 외부로 나와야 한다면 여기에 스타일 추가 */
-}
+/* .progress-bar-label {
+    만약 텍스트가 바 외부로 나와야 한다면 여기에 스타일 추가
+} */
 
 /* ocr-scan-progress - ocr모달창 담당 스타일*/
 
@@ -249,6 +249,7 @@
 .breadcrumb-item-wrapper {
     display: flex;
     align-items: center;
+    gap: 5px;
 }
 
 .breadcrumb-separator {
@@ -278,9 +279,17 @@
 }
 
 .breadcrumb-active {
-    color: #333;
-    font-weight: 600;
-    cursor: default; /* 마지막 아이템은 클릭 불가 */
+  /* 이전 스타일 제거 */
+  /* color: #333; */
+  /* font-weight: 600; */
+  /* cursor: default; */
+
+  /* 새로운 스타일 적용 */
+  background-color: black;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 9999px; /* Pill shape */
+  font-weight: 600;
 }
 
 /* CommonContainerHeader - 공통 컨테이너 헤더 담당 스타일*/
@@ -316,8 +325,8 @@
  * 생성자 : 이주하
  * 생성일 : 25.07.30
  * 파일명 : components.css
- * 수정자 :
- * 수정일 :
+ * 수정자 : 박윤성
+ * 수정일 : 25.09.25
  * 설명 : 컴포넌트 css 담당 파일
  */
 /* pageContainer - 공통 컨테이너 담당 스타일*/

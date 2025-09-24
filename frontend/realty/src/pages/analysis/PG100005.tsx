@@ -415,324 +415,326 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     }
 
     return (
-      <div className="rv05-container">
-        <CommonContainerHeader
-            subtitle={t("analysis_result_subtitle")}
-            title={t("analysis_report_title")}
-            description={displaySummary?.analysisReport?.summary || t("analysis_report_description")}
-        />
+      <div className="report-container">
+        <div className="rv05-container">
+          <CommonContainerHeader
+              subtitle={t("analysis_result_subtitle")}
+              title={t("analysis_report_title")}
+              description={displaySummary?.analysisReport?.summary || t("analysis_report_description")}
+          />
 
-         {/* 상단 요약칩 */}
-        <div className="rv05-chips">
-          <div className="rv05-chip">
-            <span className="rv05-chip-dot ok" />
-            <div>
-              <div className="rv05-chip-title">{t("analysis_complete")}</div>
-              <div className="rv05-chip-sub">
-                {now.toISOString().slice(0, 10)}{" "}
-                {now.toTimeString().slice(0, 5)}
-              </div>
-            </div>
-          </div>
-          <div className="rv05-chip">
-            <span className="rv05-chip-dot info" />
-            <div>
-              <div className="rv05-chip-title">{t("property_address")}</div>
-              <div className="rv05-chip-sub">{location}</div>
-            </div>
-          </div>
-          <div className="rv05-chip">
-            <span className="rv05-chip-dot note" />
-            <div>
-              <div className="rv05-chip-title">{t("contract_type")}</div>
-              <div className="rv05-chip-sub">
-                {currentLang !== 'KO'
-                  ? leaseType // 번역된 경우 JEONSE/MONTHLY 그대로 표시
-                  : leaseType === "JEONSE"
-                  ? t("jeonse")
-                  : leaseType === "MONTHLY"
-                  ? t("monthly")
-                  : leaseType}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 종합 위험 배너 */}
-        {loading ? (
-            <div className="rv05-banner skeleton" style={{ height: '120px', marginBottom: '24px' }}></div>
-        ) : (
-            <div className="rv05-banner">
+          {/* 상단 요약칩 */}
+          <div className="rv05-chips">
+            <div className="rv05-chip">
+              <span className="rv05-chip-dot ok" />
               <div>
-                <div className="rv05-banner-title">{t("comprehensive_risk_assessment")}</div>
-                  <div className="rv05-banner-sub">
-                      <SkeletonWrapper width="90%">{displaySummary?.analysisReport?.summary ?? "-"}</SkeletonWrapper>
-                  </div>
-                  <div className="rv05-banner-sub">
-                      <SkeletonWrapper width="70%">{displaySummary?.analysisReport?.sentimentSummary ?? "-"} {displaySummary?.analysisReport?.sentimentEmoji ?? ""}</SkeletonWrapper>
-                  </div>
-                  <div className="rv05-banner-sub">
-                      <SkeletonWrapper width="50%">
-                          {t("sentiment_score")}: {displaySummary?.analysisReport?.sentimentScore ?? "-"} ({displaySummary?.analysisReport?.sentimentCategory ?? "-"})
-                      </SkeletonWrapper>
-                  </div>
-              </div>
-              <div
-                className={`rv05-badge ${
-                  (
-                    displaySummary?.analysisReport?.riskLevel === "HIGH" ||
-                    displaySummary?.analysisReport?.riskLevel === "치명" ||
-                    displaySummary?.analysisReport?.riskLevel === "고위험" ||
-                    displaySummary?.analysisReport?.riskLevel === "高リスク"
-                  )
-                    ? "danger"
-                    : (displaySummary?.analysisReport?.riskLevel === "MEDIUM" ||
-                      displaySummary?.analysisReport?.riskLevel === "경고" ||
-                      displaySummary?.analysisReport?.riskLevel === "주의" ||
-                      displaySummary?.analysisReport?.riskLevel === "中リスク"
-                    )
-                    ? "warn"
-                    : "ok"
-                }`}
-              >
-                <SkeletonWrapper width="40px">
-                  {displaySummary?.analysisReport?.riskLevel ?? "-"}
-                </SkeletonWrapper>
-              </div>
-            </div>
-        )}
-
-        {/* 거래 이상 감지 */}
-        {loading ? (
-            <article className="rv05-card rv05-wide">
-                <div className="skeleton skeleton-title"></div>
-                <div className="skeleton skeleton-hr"></div>
-                <div className="skeleton-dl">
-                    <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
-                    <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
+                <div className="rv05-chip-title">{t("analysis_complete")}</div>
+                <div className="rv05-chip-sub">
+                  {now.toISOString().slice(0, 10)}{" "}
+                  {now.toTimeString().slice(0, 5)}
                 </div>
-            </article>
-        ) : (
-            <article className="rv05-card rv05-wide">
-                <h3 className="rv05-sec-title">{t("transaction_anomaly_detection")}</h3>
-                <hr className="rv05-hr" />
-                <p></p>
-                <p></p>
-                <dl className="rv05-dl">
-                    <div>
-                        <dt>{t("contract_price")}</dt>
-                        <dd>
-                            <SkeletonWrapper>{fmtNum(displaySummary?.transactionAnomaly?.price)} {t("currency_unit")}</SkeletonWrapper>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("average_price")}</dt>
-                        <dd>
-                            <SkeletonWrapper>{fmtNum(displaySummary?.transactionAnomaly?.averagePrice)} {t("currency_unit")}</SkeletonWrapper>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("deviation_rate")}</dt>
-                        <dd>
-                            <SkeletonWrapper width="50px">{displaySummary?.transactionAnomaly?.deviationPercent}%</SkeletonWrapper>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("anomaly_status")}</dt>
-                        <dd>
-                            <SkeletonWrapper width="60px">{displaySummary?.transactionAnomaly?.isAnomaly ? t("anomaly") : t("normal")}</SkeletonWrapper>
-                        </dd>
-                    </div>
-                </dl>
-            </article>
-        )}
-
-        {/* 위험 조항 */}
-        {loading ? (
-            <article className="rv05-card rv05-wide">
-                <div className="skeleton skeleton-title"></div>
-                <div className="skeleton skeleton-hr"></div>
-                <div className="skeleton-dl">
-                    <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
-                    <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
+              </div>
+            </div>
+            <div className="rv05-chip">
+              <span className="rv05-chip-dot info" />
+              <div>
+                <div className="rv05-chip-title">{t("property_address")}</div>
+                <div className="rv05-chip-sub">{location}</div>
+              </div>
+            </div>
+            <div className="rv05-chip">
+              <span className="rv05-chip-dot note" />
+              <div>
+                <div className="rv05-chip-title">{t("contract_type")}</div>
+                <div className="rv05-chip-sub">
+                  {currentLang !== 'KO'
+                    ? leaseType // 번역된 경우 JEONSE/MONTHLY 그대로 표시
+                    : leaseType === "JEONSE"
+                    ? t("jeonse")
+                    : leaseType === "MONTHLY"
+                    ? t("monthly")
+                    : leaseType}
                 </div>
-            </article>
-        ) : (
-            <article className="rv05-card rv05-wide">
-                <h3 className="rv05-sec-title">{t("risky_clauses")}</h3>
-                <hr className="rv05-hr" />
-                <p></p>
-                <p></p>
-                <dl className="rv05-dl">
-                    <div>
-                        <dt>{t("clause_summary")}</dt>
-                        <dd>
-                            <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.clauseSummary ?? "-"}</SkeletonBlock>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("legal_risk")}</dt>
-                        <dd>
-                            <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.legalRisk ?? "-"}</SkeletonBlock>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("financial_impact")}</dt>
-                        <dd>
-                            <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.financialImpact ?? "-"}</SkeletonBlock>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("operational_impact")}</dt>
-                        <dd>
-                            <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.operationalImpact ?? "-"}</SkeletonBlock>
-                        </dd>
-                    </div>
-                    <div>
-                        <dt>{t("recommended_action")}</dt>
-                        <dd>
-                            <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.recommendedAction ?? "-"}</SkeletonBlock>
-                        </dd>
-                    </div>
-                </dl>
-            </article>
-        )}
+              </div>
+            </div>
+          </div>
 
-        {/* 2열 카드 그리드 */}
-        <section className="rv05-grid">
-          <article className="rv05-card">
-            <h3 className="rv05-sec-title">{t("basic_information")}</h3>
-            <hr className="rv05-hr"/>
-            <p></p>
-            <dl className="rv05-dl">
-              <div>
-                <dt>{t("lease_part")}</dt>
-                <dd><SkeletonWrapper>{displayData?.leasePart ?? "-"}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("lease_period")}</dt>
-                <dd><SkeletonWrapper>{fmtDate(displayData?.leasePeriodStart)} ~ {fmtDate(displayData?.leasePeriodEnd)}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("middle_payment_date")}</dt>
-                <dd><SkeletonWrapper>{fmtDate(displayData?.middlePaymentDate)}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("balance_date")}</dt>
-                <dd><SkeletonWrapper>{fmtDate(displayData?.balanceDate)}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("rent_payment_date")}</dt>
-                <dd><SkeletonWrapper>{fmtDate(displayData?.rentDate)}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("area_land_building_lease")}</dt>
-                <dd><SkeletonWrapper>{fmtNum(displayData?.landArea)} / {fmtNum(displayData?.buildingArea)} / {fmtNum(displayData?.leaseArea)} ㎡</SkeletonWrapper></dd>
-              </div>
-            </dl>
-          </article>
-
-          <article className="rv05-card">
-            <h3 className="rv05-sec-title">{t("financial_analysis_base")}</h3>
-            <hr className="rv05-hr"/>
-            <p></p>
-            <dl className="rv05-dl">
-              <div>
-                <dt>{t("deposit")}</dt>
-                <dd><SkeletonWrapper>{fmtNum(displayData?.deposit)} {t("currency_unit")}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("down_payment")}</dt>
-                <dd><SkeletonWrapper>{fmtNum(displayData?.downPayment)} {t("currency_unit")}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("middle_payment")}</dt>
-                <dd><SkeletonWrapper>{fmtNum(displayData?.middlePayment)} {t("currency_unit")}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("balance")}</dt>
-                <dd><SkeletonWrapper>{fmtNum(displayData?.balance)} {t("currency_unit")}</SkeletonWrapper></dd>
-              </div>
-              <div>
-                <dt>{t("rent")}</dt>
-                <dd>
-                  <SkeletonWrapper>{fmtNum(displayData?.rentAmount)} {t("currency_unit")} ({displayData?.rentType ?? "-"})</SkeletonWrapper>
-                </dd>
-              </div>
-            </dl>
-          </article>
-
-          {/* 특약 */}
-          <article className="rv05-card rv05-wide">
-            <h3 className="rv05-sec-title">{t("special_terms")}</h3>
-            <hr className="rv05-hr"/>
-            <p></p>
-            <SkeletonBlock height="auto">
-              <p className="rv05-special">
-                {displayData?.specialTerms?.trim() || t("no_special_terms")}
-              </p>
-            </SkeletonBlock>
-          </article>
-
-          {/* 주요 발견사항: 나머지 필드 전부 */}
-          <article className="rv05-card rv05-wide">
-            <h3 className="rv05-sec-title">{t("key_findings_for_validation")}</h3>
-            <hr className="rv05-hr" />
-            <p></p>
-            <ul className="rv05-kvlist">
-              {restEntries.length === 0 ? (
-                <li className="rv05-dim">{t("no_additional_values")}</li>
-              ) : (
-                restEntries.map(({ label, value }, idx) => (
-                  <li key={idx}>
-                    <span>{t(label)}</span> {/* label을 i18n 키로 인식 */}
-                    <em>
-                      <SkeletonWrapper width="100px">
-                        {value === 'true' ? t('yes') : value === 'false' ? t('no') : t(value)}
-                      </SkeletonWrapper>
-                    </em>
-                  </li>
-                ))
-              )}
-            </ul>
-          </article>
-        </section>
-
-        <div className="rv05-actions">
-          {currentLang !== 'KO' ? (
-            <button className="an02-ai-analyze-start-btn" onClick={handleRevert}>
-                {t("view_original")}
-            </button>
+          {/* 종합 위험 배너 */}
+          {loading ? (
+              <div className="rv05-banner skeleton" style={{ height: '120px', marginBottom: '24px' }}></div>
           ) : (
-            <div className={`rv05-translate-dropdown ${isTranslateDropdownOpen ? 'is-open' : ''}`}>
-                <button className="an02-ai-analyze-start-btn" disabled={isTranslating} onClick={toggleTranslateDropdown} >
-                    {isTranslating ? t("translating") : t("translate_contract")}
-                </button>
-                <div className="rv05-dropdown-content">
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('EN'); }}>English</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('JP'); }}>日本語</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('ZH'); }}>中文</a>
+              <div className="rv05-banner">
+                <div>
+                  <div className="rv05-banner-title">{t("comprehensive_risk_assessment")}</div>
+                    <div className="rv05-banner-sub">
+                        <SkeletonWrapper width="90%">{displaySummary?.analysisReport?.summary ?? "-"}</SkeletonWrapper>
+                    </div>
+                    <div className="rv05-banner-sub">
+                        <SkeletonWrapper width="70%">{displaySummary?.analysisReport?.sentimentSummary ?? "-"} {displaySummary?.analysisReport?.sentimentEmoji ?? ""}</SkeletonWrapper>
+                    </div>
+                    <div className="rv05-banner-sub">
+                        <SkeletonWrapper width="50%">
+                            {t("sentiment_score")}: {displaySummary?.analysisReport?.sentimentScore ?? "-"} ({displaySummary?.analysisReport?.sentimentCategory ?? "-"})
+                        </SkeletonWrapper>
+                    </div>
                 </div>
-            </div>
+                <div
+                  className={`rv05-badge ${
+                    (
+                      displaySummary?.analysisReport?.riskLevel === "HIGH" ||
+                      displaySummary?.analysisReport?.riskLevel === "치명" ||
+                      displaySummary?.analysisReport?.riskLevel === "고위험" ||
+                      displaySummary?.analysisReport?.riskLevel === "高リスク"
+                    )
+                      ? "danger"
+                      : (displaySummary?.analysisReport?.riskLevel === "MEDIUM" ||
+                        displaySummary?.analysisReport?.riskLevel === "경고" ||
+                        displaySummary?.analysisReport?.riskLevel === "주의" ||
+                        displaySummary?.analysisReport?.riskLevel === "中リスク"
+                      )
+                      ? "warn"
+                      : "ok"
+                  }`}
+                >
+                  <SkeletonWrapper width="40px">
+                    {displaySummary?.analysisReport?.riskLevel ?? "-"}
+                  </SkeletonWrapper>
+                </div>
+              </div>
           )}
-          <button
-            className="an02-ai-analyze-start-btn"
-            onClick={() => window.history.back()}
-          >
-            {t("back")}
-          </button>
-          <button
-            className="an02-ai-analyze-start-btn"
-            onClick={handleExportPDF}
-          >
-            {t("download_pdf")}
-          </button>
-          <button
-            className="an02-ai-analyze-start-btn"
-            onClick={() => window.print()}
-          >
-            {t("print")}
-          </button>
+
+          {/* 거래 이상 감지 */}
+          {loading ? (
+              <article className="rv05-card rv05-wide">
+                  <div className="skeleton skeleton-title"></div>
+                  <div className="skeleton skeleton-hr"></div>
+                  <div className="skeleton-dl">
+                      <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
+                      <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
+                  </div>
+              </article>
+          ) : (
+              <article className="rv05-card rv05-wide">
+                  <h3 className="rv05-sec-title">{t("transaction_anomaly_detection")}</h3>
+                  <hr className="rv05-hr" />
+                  <p></p>
+                  <p></p>
+                  <dl className="rv05-dl">
+                      <div>
+                          <dt>{t("contract_price")}</dt>
+                          <dd>
+                              <SkeletonWrapper>{fmtNum(displaySummary?.transactionAnomaly?.price)} {t("currency_unit")}</SkeletonWrapper>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("average_price")}</dt>
+                          <dd>
+                              <SkeletonWrapper>{fmtNum(displaySummary?.transactionAnomaly?.averagePrice)} {t("currency_unit")}</SkeletonWrapper>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("deviation_rate")}</dt>
+                          <dd>
+                              <SkeletonWrapper width="50px">{displaySummary?.transactionAnomaly?.deviationPercent}%</SkeletonWrapper>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("anomaly_status")}</dt>
+                          <dd>
+                              <SkeletonWrapper width="60px">{displaySummary?.transactionAnomaly?.isAnomaly ? t("anomaly") : t("normal")}</SkeletonWrapper>
+                          </dd>
+                      </div>
+                  </dl>
+              </article>
+          )}
+
+          {/* 위험 조항 */}
+          {loading ? (
+              <article className="rv05-card rv05-wide">
+                  <div className="skeleton skeleton-title"></div>
+                  <div className="skeleton skeleton-hr"></div>
+                  <div className="skeleton-dl">
+                      <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
+                      <div className="skeleton skeleton-dt"></div><div className="skeleton skeleton-dd"></div>
+                  </div>
+              </article>
+          ) : (
+              <article className="rv05-card rv05-wide">
+                  <h3 className="rv05-sec-title">{t("risky_clauses")}</h3>
+                  <hr className="rv05-hr" />
+                  <p></p>
+                  <p></p>
+                  <dl className="rv05-dl">
+                      <div>
+                          <dt>{t("clause_summary")}</dt>
+                          <dd>
+                              <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.clauseSummary ?? "-"}</SkeletonBlock>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("legal_risk")}</dt>
+                          <dd>
+                              <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.legalRisk ?? "-"}</SkeletonBlock>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("financial_impact")}</dt>
+                          <dd>
+                              <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.financialImpact ?? "-"}</SkeletonBlock>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("operational_impact")}</dt>
+                          <dd>
+                              <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.operationalImpact ?? "-"}</SkeletonBlock>
+                          </dd>
+                      </div>
+                      <div>
+                          <dt>{t("recommended_action")}</dt>
+                          <dd>
+                              <SkeletonBlock height="40px">{displaySummary?.riskyClauses?.recommendedAction ?? "-"}</SkeletonBlock>
+                          </dd>
+                      </div>
+                  </dl>
+              </article>
+          )}
+
+          {/* 2열 카드 그리드 */}
+          <section className="rv05-grid">
+            <article className="rv05-card">
+              <h3 className="rv05-sec-title">{t("basic_information")}</h3>
+              <hr className="rv05-hr"/>
+              <p></p>
+              <dl className="rv05-dl">
+                <div>
+                  <dt>{t("lease_part")}</dt>
+                  <dd><SkeletonWrapper>{displayData?.leasePart ?? "-"}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("lease_period")}</dt>
+                  <dd><SkeletonWrapper>{fmtDate(displayData?.leasePeriodStart)} ~ {fmtDate(displayData?.leasePeriodEnd)}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("middle_payment_date")}</dt>
+                  <dd><SkeletonWrapper>{fmtDate(displayData?.middlePaymentDate)}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("balance_date")}</dt>
+                  <dd><SkeletonWrapper>{fmtDate(displayData?.balanceDate)}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("rent_payment_date")}</dt>
+                  <dd><SkeletonWrapper>{fmtDate(displayData?.rentDate)}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("area_land_building_lease")}</dt>
+                  <dd><SkeletonWrapper>{fmtNum(displayData?.landArea)} / {fmtNum(displayData?.buildingArea)} / {fmtNum(displayData?.leaseArea)} ㎡</SkeletonWrapper></dd>
+                </div>
+              </dl>
+            </article>
+
+            <article className="rv05-card">
+              <h3 className="rv05-sec-title">{t("financial_analysis_base")}</h3>
+              <hr className="rv05-hr"/>
+              <p></p>
+              <dl className="rv05-dl">
+                <div>
+                  <dt>{t("deposit")}</dt>
+                  <dd><SkeletonWrapper>{fmtNum(displayData?.deposit)} {t("currency_unit")}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("down_payment")}</dt>
+                  <dd><SkeletonWrapper>{fmtNum(displayData?.downPayment)} {t("currency_unit")}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("middle_payment")}</dt>
+                  <dd><SkeletonWrapper>{fmtNum(displayData?.middlePayment)} {t("currency_unit")}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("balance")}</dt>
+                  <dd><SkeletonWrapper>{fmtNum(displayData?.balance)} {t("currency_unit")}</SkeletonWrapper></dd>
+                </div>
+                <div>
+                  <dt>{t("rent")}</dt>
+                  <dd>
+                    <SkeletonWrapper>{fmtNum(displayData?.rentAmount)} {t("currency_unit")} ({displayData?.rentType ?? "-"})</SkeletonWrapper>
+                  </dd>
+                </div>
+              </dl>
+            </article>
+
+            {/* 특약 */}
+            <article className="rv05-card rv05-wide">
+              <h3 className="rv05-sec-title">{t("special_terms")}</h3>
+              <hr className="rv05-hr"/>
+              <p></p>
+              <SkeletonBlock height="auto">
+                <p className="rv05-special">
+                  {displayData?.specialTerms?.trim() || t("no_special_terms")}
+                </p>
+              </SkeletonBlock>
+            </article>
+
+            {/* 주요 발견사항: 나머지 필드 전부 */}
+            <article className="rv05-card rv05-wide">
+              <h3 className="rv05-sec-title">{t("key_findings_for_validation")}</h3>
+              <hr className="rv05-hr" />
+              <p></p>
+              <ul className="rv05-kvlist">
+                {restEntries.length === 0 ? (
+                  <li className="rv05-dim">{t("no_additional_values")}</li>
+                ) : (
+                  restEntries.map(({ label, value }, idx) => (
+                    <li key={idx}>
+                      <span>{t(label)}</span> {/* label을 i18n 키로 인식 */}
+                      <em>
+                        <SkeletonWrapper width="100px">
+                          {value === 'true' ? t('yes') : value === 'false' ? t('no') : t(value)}
+                        </SkeletonWrapper>
+                      </em>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </article>
+          </section>
+
+          <div className="rv05-actions">
+            {currentLang !== 'KO' ? (
+              <button className="an02-ai-analyze-start-btn" onClick={handleRevert}>
+                  {t("view_original")}
+              </button>
+            ) : (
+              <div className={`rv05-translate-dropdown ${isTranslateDropdownOpen ? 'is-open' : ''}`}>
+                  <button className="an02-ai-analyze-start-btn" disabled={isTranslating} onClick={toggleTranslateDropdown} >
+                      {isTranslating ? t("translating") : t("translate_contract")}
+                  </button>
+                  <div className="rv05-dropdown-content">
+                      <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('EN'); }}>English</a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('JP'); }}>日本語</a>
+                      <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('ZH'); }}>中文</a>
+                  </div>
+              </div>
+            )}
+            <button
+              className="an02-ai-analyze-start-btn"
+              onClick={() => window.history.back()}
+            >
+              {t("back")}
+            </button>
+            <button
+              className="an02-ai-analyze-start-btn"
+              onClick={handleExportPDF}
+            >
+              {t("download_pdf")}
+            </button>
+            <button
+              className="an02-ai-analyze-start-btn"
+              onClick={() => window.print()}
+            >
+              {t("print")}
+            </button>
+          </div>
         </div>
       </div>
     );

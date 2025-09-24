@@ -241,7 +241,7 @@ const PG700001: React.FC = () => {
     };
 
     return (
-        <PageContainer showBreadcrumb={true} centerContent={true}>
+        <PageContainer showBreadcrumb={true} fullWidth={!isMainPage} centerContent={isMainPage}>
             <div className="mypage-container">
                 {isMainPage ? (
                     <>
@@ -411,7 +411,7 @@ const PG700001: React.FC = () => {
                     </>
                 ) : (
                     <Routes>
-                        <Route path="PG700003" element={<PG700003 onBack={() => navigate(-1)} />} />
+                        <Route path="PG700003" element={<PG700003 onBack={() => navigate(-1)}/>}/>
                         <Route path="PG700006" element={<PG700006 />} />
                         <Route path="PG700004" element={<PG700004 />} />
                         <Route path="PG700005" element={<PG700005 />} />

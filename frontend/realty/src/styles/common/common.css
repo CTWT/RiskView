@@ -647,9 +647,14 @@
   --rv05-radius: 14px;
 }
 
-.rv05-container {
+.report-container {
   margin: 0 auto;
   padding: 24px;
+  max-width: 1030px;
+}
+
+.rv05-container {
+  margin: 0 auto;
 }
 
 .rv05-grid {
@@ -732,7 +737,7 @@
 /* 칩(상단 요약) */
 .rv05-chips {
   display: flex;
-  justify-content: center;
+  justify-content: space-between; /* 양쪽 끝으로 균등 배분 */
   gap: 12px;
   margin: 6px 0 16px;
 }
@@ -745,7 +750,7 @@
   border: 1px solid var(--rv05-border);
   padding: 12px 14px;
   border-radius: 12px;
-  min-width: 320px;
+  min-width: 290px;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 
@@ -3325,7 +3330,6 @@
   width: 100%;
   margin: 0 auto;
   display: flex;
-  flex-direction: column;
 }
 
 .profile-edit-wrapper .backTo {
@@ -3351,34 +3355,27 @@
   margin: 0 auto;
 }
 
-/* PG700003.tsx - 프로필 수정 레이아웃 */
-.analysis-viewer-layout {
-  position: relative;
-  width: 100%;
-  display: block; /* flex에서 block으로 변경 */
+/* PG700006.tsx - 분석 내역 레이아웃 (사이드바 + 보고서) */
+.analysis-page-layout {
+  display: flex;            /* 부모를 flex로 설정하여 자식들을 가로 배치 */
+  align-items: flex-start;  /* 상단 정렬 */
+  gap: 24px;                /* 사이 간격 */
 }
 
-/* PG700006.tsx - 사이드바 호버를 위한 래퍼 */
 .analysis-sidebar-wrapper {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  z-index: 20;
-  /* 다른 콘텐츠 위에 표시 */
+  flex: 0 0 auto;           /* 사이드바 영역은 고정 폭 유지 */
 }
 
-.analysis-sidebar-wrapper .profile-sidebar {
-  height: 100%;
-  transform: translateX(calc(-100% + 16px));
-  /* 기본적으로 16px만 보이도록 숨김 */
-  transition: transform 0.3s ease-in-out;
-  background-color: #ffffff;
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+/* 고정 사이드바 옵션 */
+.permanent-sidebar .profile-sidebar {
+  position: sticky;
+  top: 80px;                /* 헤더 높이에 맞춰 조절 */
 }
 
-.analysis-sidebar-wrapper:hover .profile-sidebar {
-  transform: translateX(0);
+/* 보고서 영역이 남은 공간을 차지하도록 */
+.analysis-report-container {
+  flex: 1 1 auto;
+  min-width: 0;             /* Grid/Flex 내부 콘텐츠가 넘치지 않도록 */
 }
 
 /* 사이드바 */
@@ -6308,6 +6305,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   margin: 0 auto;
+  width: 700px;
 }
 
 .login-history-container .page-authwelcome {
@@ -6527,7 +6525,7 @@
 /* PG700006.tsx - 내 분석 내역 사이드바 */
 .analysis-list-sidebar {
   width: 100%;
-  max-height: 700px;
+  max-height: 2230px;
   /* 스크롤이 필요한 경우를 대비한 최대 높이 */
   overflow-y: auto;
   display: flex;

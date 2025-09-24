@@ -68,37 +68,37 @@ const PG700006: React.FC = () => {
     }
 
     return (
-        <>
-            <div className="analysis-viewer-layout">
-                {/* Left Sidebar Wrapper (for hover trigger) */}
-                <div className="analysis-sidebar-wrapper">
-                    {/* Left Sidebar: Analysis List */}
-                    <div className="profile-sidebar" style={{ width: '280px', gap: '8px' }}>
-                        <h3 className="chart-title" style={{ textAlign: 'center', marginBottom: '16px' }}>분석 목록</h3>
-                        <div className="analysis-list-sidebar">
-                            {analysisHistory.length > 0 ? (
-                                analysisHistory.map((item) => (
-                                    <div
-                                        key={item.documentCode}
-                                        className={`analysis-list-item-sidebar ${selectedDocumentCode === item.documentCode ? 'active' : ''}`}
-                                        onClick={() => setSelectedDocumentCode(item.documentCode)}
-                                    >
-                                        <div className="analysis-item-location">{item.location}</div>
-                                        <div className="analysis-item-meta">
-                                            <span>{new Date(item.contractDate).toLocaleDateString()}</span>
-                                            <span style={{ color: getRiskColor(item.riskLevel), fontWeight: 'bold' }}>
-                                                {item.riskLevel}
-                                            </span>
-                                        </div>
+        <div className="analysis-page-layout permanent-sidebar">
+            {/* 사이드바 */}
+            <div className="analysis-sidebar-wrapper">
+                <div className="profile-sidebar" style={{ width: '280px', gap: '8px' }}>
+                    <div className="sidebar-header">
+                        <h3 className="chart-title">분석 목록</h3>
+                    </div>
+                    <div className="analysis-list-sidebar">
+                        {analysisHistory.length > 0 ? (
+                            analysisHistory.map((item) => (
+                                <div
+                                    key={item.documentCode}
+                                    className={`analysis-list-item-sidebar ${selectedDocumentCode === item.documentCode ? 'active' : ''}`}
+                                    onClick={() => setSelectedDocumentCode(item.documentCode)}
+                                >
+                                    <div className="analysis-item-location">{item.location}</div>
+                                    <div className="analysis-item-meta">
+                                        <span>{new Date(item.contractDate).toLocaleDateString()}</span>
+                                        <span style={{ color: getRiskColor(item.riskLevel), fontWeight: 'bold' }}>
+                                            {item.riskLevel}
+                                        </span>
                                     </div>
-                                ))
-                            ) : (
-                                <div className="empty-message">분석 내역이 없습니다.</div>
-                            )}
-                        </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="empty-message">분석 내역이 없습니다.</div>
+                        )}
                     </div>
                 </div>
             </div>
+
             <div className="analysis-report-container">
                 {selectedDocumentCode ? (
                     <PG100005 documentCode={selectedDocumentCode} />
@@ -108,7 +108,7 @@ const PG700006: React.FC = () => {
                     </div>
                 )}
             </div>
-        </>
+        </div>
     );
 };
 

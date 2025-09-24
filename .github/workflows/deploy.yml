@@ -56,23 +56,34 @@ jobs:
               run: |
                   tar -czf ai_src.tar.gz -C ai-api .
 
-            # 6. 산출물 서버로 복사
-            - name: Copy artifacts to server
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                  host: ${{ env.SSH_HOST }}
-                  username: ${{ env.SSH_USER }}
-                  password: ${{ env.SSH_PASS }}
-                  script: |
-                      echo "📦 Copying artifacts..."
-                      scp -r dist backend/build/libs/*.jar ai_src.tar.gz ${{ env.SSH_USER }}@${{ env.SSH_HOST }}:/tmp/
+            # 6. (SELF-HOSTED) 산출물 /tmp 로 스테이징
+            - name: Stage artifacts locally (self-hosted)
+              run: |
+                  set -e
+                  echo "📦 Stage frontend dist -> /tmp"
+                  rm -rf /tmp/dist
+                  mv ./dist /tmp/dist
 
-            # 7. 서버 배포 스크립트 실행
-            - name: Deploy on server
-              uses: appleboy/ssh-action@v1.0.3
-              with:
-                  host: ${{ env.SSH_HOST }}
-                  username: ${{ env.SSH_USER }}
-                  password: ${{ env.SSH_PASS }}
-                  script: |
-                      /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)
+                  echo "📦 Pick backend jar -> /tmp/app.jar"
+                  JAR_CANDIDATE=$(ls -1 backend/build/libs/*.jar | grep -v '\-plain\.jar' | head -n 1 || true)
+                  if [ -z "$JAR_CANDIDATE" ]; then
+                    # non-plain 이 없으면 아무거나 하나 선택
+                    JAR_CANDIDATE=$(ls -1 backend/build/libs/*.jar | head -n 1 || true)
+                  fi
+                  if [ -z "$JAR_CANDIDATE" ]; then
+                    echo "❌ JAR 파일을 찾지 못했습니다: backend/build/libs/*.jar"
+                    exit 1
+                  fi
+                  cp "$JAR_CANDIDATE" /tmp/app.jar
+                  ls -al /tmp/app.jar
+
+                  echo "📦 AI source -> /tmp/ai_src.tar.gz"
+                  mv ai_src.tar.gz /tmp/ai_src.tar.gz
+                  ls -al /tmp/ai_src.tar.gz
+
+            # 7. (SELF-HOSTED) 서버 배포 스크립트 '로컬' 실행
+            - name: Deploy locally
+              run: |
+                  echo "🚀 Deploy..."
+                  /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)
+                  echo "✅ Deploy finished"

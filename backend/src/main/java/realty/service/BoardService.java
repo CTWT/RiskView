@@ -19,7 +19,7 @@ import realty.domain.model.PostLike;
 import realty.domain.model.PostSentimentAnalysis;
 import realty.domain.model.User;
 import realty.domain.repository.CommunityCommentRepository;
-import realty.domain.repository.FileStorageMetadataRepository;
+// import realty.domain.repository.FileStorageMetadataRepository;
 import realty.domain.repository.PostLikeRepository;
 import realty.domain.repository.PostRepository;
 import realty.domain.repository.PostSentimentAnalysisRepository;
@@ -66,7 +66,7 @@ public class BoardService {
     private final UserRepository userRepository;
     private final FileComponent fileComponent;
     private final ContractService contractService;
-    private final FileStorageMetadataRepository fileStorageMetadataRepository;
+    // private final FileStorageMetadataRepository fileStorageMetadataRepository;
     private final PostSentimentAnalysisRepository postSentimentAnalysisRepository;
 
     /**

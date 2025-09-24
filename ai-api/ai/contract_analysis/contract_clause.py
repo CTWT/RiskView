@@ -10,13 +10,92 @@ import os
 import json
 import re
 import unicodedata
+from pydantic import BaseModel, Field
 from dotenv import load_dotenv, find_dotenv
-from openai import OpenAI
+import deepl
 
 # -------------------------
 # 환경 변수 로드 및 클라이언트 생성
 # -------------------------
 load_dotenv(find_dotenv())
+
+# -------------------------
+# Pydantic 모델 정의
+# -------------------------
+class ContractData(BaseModel):
+    leaseType: str | None = Field(None, description="임대 유형")
+    location: str | None = Field(None, description="소재지")
+    leasePart: str | None = Field(None, description="임대할 부분")
+    deposit: int | None = Field(None, description="보증금")
+    downPayment: int | None = Field(None, description="계약금")
+    downPaymentSigned: bool | None = Field(None, description="계약금 서명 여부")
+    middlePayment: int | None = Field(None, description="중도금")
+    middlePaymentDate: str | None = Field(None, description="중도금 지급일")
+    balance: int | None = Field(None, description="잔금")
+    balanceDate: str | None = Field(None, description="잔금 지급일")
+    rentAmount: int | None = Field(None, description="차임")
+    rentType: str | None = Field(None, description="차임 지급 방식")
+    rentDate: str | None = Field(None, description="차임 지급일")
+    leasePeriodStart: str | None = Field(None, description="임대 기간 시작")
+    leasePeriodEnd: str | None = Field(None, description="임대 기간 종료")
+    specialTerms: str | None = Field(None, description="특약사항")
+    contractDate: str | None = Field(None, description="계약일")
+    landlordName: str | None = Field(None, description="임대인 성명")
+    landlordAddress: str | None = Field(None, description="임대인 주소")
+    tenantName: str | None = Field(None, description="임차인 성명")
+    tenantAddress: str | None = Field(None, description="임차인 주소")
+    realtorName: str | None = Field(None, description="공인중개사 성명")
+    realtorAddress: str | None = Field(None, description="공인중개사 주소")
+
+def _translate_dict_values(data: dict, target_lang: str) -> dict:
+    """
+    주어진 딕셔너리의 모든 문자열 값을 DeepL을 사용하여 번역합니다.
+    재귀적으로 중첩된 딕셔너리와 리스트를 처리합니다.
+    """
+    auth_key = os.getenv("DEEPL_API_KEY")
+    if not auth_key:
+        raise RuntimeError("DEEPL_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
+
+    translator = deepl.Translator(auth_key)
+
+    # DeepL은 'EN-US'와 같은 형식을 선호하지만, 'EN'도 잘 처리합니다.
+    # 중국어의 경우 'ZH'는 간체를 의미합니다.
+    lang = target_lang.upper()
+
+    def translate_recursive(item):
+        if isinstance(item, dict):
+            return {k: translate_recursive(v) for k, v in item.items()}
+        if isinstance(item, list):
+            return [translate_recursive(elem) for elem in item]
+        if isinstance(item, str) and item.strip():
+            # 특정 값들은 번역에서 제외합니다.
+            if item in ["JEONSE", "MONTHLY", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "CRITICAL", "WARNING", "CAUTION", "선불", "후불"]:
+                return item
+            try:
+                result = translator.translate_text(item, source_lang="KO", target_lang=lang)
+                return result.text
+            except Exception as e:
+                print(f"DeepL 번역 중 오류 발생: {e} (원본 텍스트: {item})")
+                return item # 오류 발생 시 원본 텍스트 반환
+        return item
+
+    return translate_recursive(data)
+
+def translate_contract_data(data: dict, target_lang: str = "en") -> dict:
+    """
+    주어진 계약 데이터 딕셔너리의 문자열 값들을 지정된 언어로 번역합니다. (DeepL 사용)
+    """
+    if not data:
+        return data
+    return _translate_dict_values(data, target_lang)
+
+def translate_analysis_data(data: dict, target_lang: str = "en") -> dict:
+    """
+    분석 결과 데이터를 지정된 언어로 번역합니다. (DeepL 사용)
+    """
+    if not data:
+        return data
+    return _translate_dict_values(data, target_lang)
 
 # -------------------------
 # 프롬프트 (상세 riskReason 요구사항 포함)
@@ -143,7 +222,7 @@ def analyze_clause(clause_text: str, clause_title: str = None):
     clause_title: 조항 제목(옵션). 없으면 "특약사항"으로 기본값 사용.
     반환: dict (clauseType, clauseTitle, clauseValue, isRisky, riskReason)
     """
-
+    from openai import OpenAI
     API_KEY = os.getenv("OPENAI_API_KEY")
     if not API_KEY:
         raise RuntimeError("OPENAI_API_KEY가 설정되어 있지 않습니다. .env 파일을 확인하세요.")
@@ -159,26 +238,32 @@ def analyze_clause(clause_text: str, clause_title: str = None):
 
     user_prompt = BASE_PROMPT + "\n\n[조항 원문]\n" + clause_text_norm
 
-    resp = client.chat.completions.create(
-        model="gpt-4.1",
-        messages=[
-            {"role": "system", "content": "너는 계약서 특약 분석가다. 항상 임대인 관점으로 판단."},
-            {"role": "user", "content": user_prompt},
-        ],
-        temperature=0.0,
-        max_tokens=1000,  # riskReason 상세화를 위해 충분히 크게 설정
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-        seed=42,
-    )
-
-    raw = resp.choices[0].message.content
     try:
+        resp = client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=[
+                {"role": "system", "content": "너는 계약서 특약 분석가다. 항상 임대인 관점으로 판단."},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.0,
+            max_tokens=1000,  # riskReason 상세화를 위해 충분히 크게 설정
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+            seed=42,
+        )
+        raw = resp.choices[0].message.content
         parsed = try_load_json(raw)
+
     except Exception as e:
-        # 파싱 실패시 원문 출력해서 디버깅하기 좋게 예외 발생
-        raise RuntimeError(f"모델 출력 파싱 실패: {e}")
+        print(f"특약 분석 중 오류 발생 (OpenAI API 호출 또는 JSON 파싱 실패): {e}")
+        # API 호출 실패 시, 안전한 기본값으로 구성된 응답을 반환합니다.
+        parsed = {
+            "clauseType": "기타",
+            "clauseTitle": clause_title,
+            "isRisky": True,  # 분석 실패 시 보수적으로 위험하다고 판단
+            "riskReason": "요약: AI 분석 중 오류가 발생하여 상세 분석을 제공할 수 없습니다.\n법적 리스크: 원문을 직접 검토해야 합니다.\n재정적 영향: 원문을 직접 검토해야 합니다.\n운영적 영향: 원문을 직접 검토해야 합니다.\n권장 조치: 전문가의 검토를 받거나 잠시 후 다시 시도해 주세요."
+        }
 
     # 기본 보장: 필요한 키들이 있는지 확인하고, 없으면 채움
     # clauseValue는 항상 입력 원문 그대로 보장

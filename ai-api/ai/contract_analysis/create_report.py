@@ -70,31 +70,32 @@ def analyze_with_openai(anomaly: AnomalyDetectResult, clause: ContractClauseDTO)
       "sentimentEmoji": "😀|😐|⚠️"
     }}
     """
-
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are an AI risk analysis assistant."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.0  # deterministic하게
-    )
-
-    content = response.choices[0].message.content.strip()
-
-    # -----------------------------
-    # JSON 안전 추출
-    # -----------------------------
     try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are an AI risk analysis assistant."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.0  # deterministic하게
+        )
+
+        content = response.choices[0].message.content.strip()
+
         # JSON 객체만 추출
         match = re.search(r'\{.*\}', content, re.DOTALL)
         if not match:
             raise ValueError(f"OpenAI 응답에서 JSON을 찾을 수 없습니다: {content}")
         data = json.loads(match.group())
+        return AnalysisReportsDTO(**data)
     except Exception as e:
-        raise ValueError(f"JSON 파싱 실패: {str(e)} | 원본 응답: {content}")
-
-    # -----------------------------
-    # Pydantic 검증
-    # -----------------------------
-    return AnalysisReportsDTO(**data)
+        print(f"AI 리포트 생성 중 오류 발생 (OpenAI API 호출 또는 JSON 파싱 실패): {e}")
+        # API 호출 실패 시, 안전한 기본값으로 구성된 응답을 반환합니다.
+        return AnalysisReportsDTO(
+            summary="AI 종합 리포트 생성 중 오류가 발생했습니다. 거래 이상 탐지 및 특약 분석 결과는 개별적으로 확인해주세요.",
+            riskLevel="UNKNOWN",
+            sentimentSummary="감성 분석을 수행할 수 없습니다.",
+            sentimentScore=50,
+            sentimentCategory="중립",
+            sentimentEmoji="🤔"
+        )

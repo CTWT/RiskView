@@ -24,4 +24,4 @@ python-dateutil==2.9.0
 pymysql==1.1.2
 sqlalchemy==2.0.43
 chardet==5.2.0
-react-minimal-pie-chart==9.1.1
+deepl==1.22.0

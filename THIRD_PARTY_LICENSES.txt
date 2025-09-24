@@ -72,3 +72,19 @@ Library: React Minimal Pie Chart
 Version: 9.1.1
 License: MIT License  
 URL : https://github.com/toomuchdesign/react-minimal-pie-chart
+
+---
+
+Library: i18next
+Version: 25.5.2
+License: MIT License  
+URL : https://github.com/i18next/i18next
+
+---
+
+Library: react-i18next
+Version: 15.7.3
+License: MIT License  
+URL : https://github.com/i18next/react-i18next
+
+---

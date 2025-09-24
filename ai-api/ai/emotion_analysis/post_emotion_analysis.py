@@ -119,7 +119,17 @@ def fetch_posts():
         return []
     try:
         with conn.cursor(dictionary=True) as cur:
-            cur.execute("SELECT post_code, title, content FROM posts")
+            cur.execute(
+                """
+                SELECT p.post_code, p.title, p.content
+                FROM posts p
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM post_sentiment_analysis psa
+                    WHERE psa.post_code = p.post_code
+                )
+            """
+            )
             return cur.fetchall()
     finally:
         conn.close()

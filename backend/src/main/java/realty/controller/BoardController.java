@@ -170,7 +170,8 @@ public class BoardController {
         String postCode = boardService.getPostCodeById(id);
         String userCode = userService.getCurrentUserCode(request);
         PostDetailResponseDTO updatedPost = boardService.updatePost(requestDTO, postCode, userCode);
-        boardService.updateSentimentAnalysis(postCode);
+        boardService.deleteSentimentAnalysis(postCode);
+        boardService.sentimentAnalyze();
         return ResponseEntity.ok(updatedPost);
     }
 

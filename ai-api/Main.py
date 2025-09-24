@@ -1,27 +1,25 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
-from pydantic import BaseModel
+import sys, os
+import uvicorn, json
 from typing import Dict
+
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import Body, Query, Response
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from api.ocr.Server import process_file
 from api.ocr.Server import search_address
-from api.news_scraper.app.crawler.News_114 import News_114_Save
-from api.news_scraper.app.crawler.News_Yeonhap import News_Yeonhap_Save
-from api.news_scraper.app.crawler.News_Chosun import News_Chosun_Save
 from api.estate.estate_main import analyze_estate
 from api.wordcloud import wordcloud_main as wordcloud_router
 from api.wordcloud.okt_analyzer import router as okt_analyzer_router
-from api.ocr.data.LeaseContract import LeaseContract # This import is not used, can be removed if not needed elsewhere
-from ai.contract_analysis.contract_clause import analyze_clause, translate_contract_data, translate_analysis_data, ContractData
-import uvicorn
-import sys, os
-from fastapi import Body, Query, Response
 from api.wordcloud.wordcloud_main import generate_wordcloud
+from api.ocr.data.LeaseContract import LeaseContract # This import is not used, can be removed if not needed elsewhere
+
+from ai.contract_analysis.contract_clause import analyze_clause, translate_contract_data, translate_analysis_data, ContractData
 from ai.contract_analysis.create_report import AiRiskAnalysisRequest
 from ai.contract_analysis.create_report import AnalysisReportsDTO
 from ai.contract_analysis.create_report import analyze_with_openai
 from ai.emotion_analysis.post_emotion_analysis import analyze_all_posts_as_json
-
 
 base_path = os.path.dirname(os.path.abspath(__file__))
 if base_path not in sys.path:
@@ -182,14 +180,14 @@ class AnalysisSummaryDTO(BaseModel):
     riskyClauses: dict
 
 @app.post("/analysis/translate", response_model=AnalysisSummaryDTO)
-async def translate_analysis_endpoint(data: AnalysisSummaryDTO, target_lang: str = Query("en", enum=["en", "ja", "zh"])):
-    translated = translate_analysis_data(data.model_dump(exclude_none=True), target_lang=target_lang.lower())
+async def translate_analysis_endpoint(data: AnalysisSummaryDTO, target_lang: str = Query("en-us", enum=["en-us", "en", "ja", "zh"])):
+    translated = translate_analysis_data(data.model_dump(), target_lang=target_lang.lower())
     return translated
 
 @app.post("/contracts/translate", response_model=ContractData)
-async def translate_endpoint(data: ContractData, target_lang: str = Query("en", enum=["en", "ja", "zh"])):
-    translated = translate_contract_data(data.model_dump(exclude_none=True), target_lang=target_lang.lower())
-    return translated
+async def translate_endpoint(data: ContractData, target_lang: str = Query(...)):
+    translated_dict = translate_contract_data(data.model_dump(), target_lang)
+    return ContractData(**translated_dict)
 
 @app.post("/create_report", response_model=AnalysisReportsDTO)
 async def createReport(req: AiRiskAnalysisRequest):

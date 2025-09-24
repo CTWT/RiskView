@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 import os, json, re
 
 # -----------------------------
@@ -105,22 +105,18 @@ def analyze_with_openai(anomaly: AnomalyDetectResult, clause: ContractClauseDTO)
     }}
     """
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a professional legal contract risk analyst with expertise in anomaly detection and clause analysis. Provide comprehensive analysis based on both quantitative anomaly data and qualitative contract terms."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.1,  # 약간의 창의성 허용하면서도 일관성 유지
-        max_tokens=1000   # 더 상세한 분석을 위해 토큰 수 증가
-    )
-
-    content = response.choices[0].message.content.strip()
-    
-    # -----------------------------
-    # JSON 안전 추출 및 검증
-    # -----------------------------
     try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a professional legal contract risk analyst with expertise in anomaly detection and clause analysis. Provide comprehensive analysis based on both quantitative anomaly data and qualitative contract terms."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,  # 약간의 창의성 허용하면서도 일관성 유지
+            max_tokens=1000   # 더 상세한 분석을 위해 토큰 수 증가
+        )
+        content = response.choices[0].message.content.strip()
+
         # JSON 객체만 추출 (개선된 정규식 사용)
         json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', content, re.DOTALL)
         if not json_match:
@@ -128,23 +124,26 @@ def analyze_with_openai(anomaly: AnomalyDetectResult, clause: ContractClauseDTO)
         
         json_str = json_match.group()
         data = json.loads(json_str)
-        
+
         # 필수 필드 검증
         required_fields = ['summary', 'riskLevel', 'sentimentSummary', 'sentimentScore', 'sentimentCategory', 'sentimentEmoji']
         missing_fields = [field for field in required_fields if field not in data]
         if missing_fields:
             raise ValueError(f"필수 필드가 누락되었습니다: {missing_fields}")
-            
-    except json.JSONDecodeError as e:
-        raise ValueError(f"JSON 파싱 실패: {str(e)} | 추출된 JSON: {json_str if 'json_str' in locals() else 'N/A'}")
-    except Exception as e:
-        raise ValueError(f"분석 결과 처리 실패: {str(e)} | 원본 응답: {content}")
 
-    # -----------------------------
-    # Pydantic 모델 검증 및 반환
-    # -----------------------------
-    try:
         return AnalysisReportsDTO(**data)
+
+    except RateLimitError as e:
+        print(f"OpenAI API 할당량 초과 오류: {e}")
+        # API 호출 실패 시, 할당량 초과에 대한 구체적인 응답을 반환합니다.
+        return AnalysisReportsDTO(
+            summary="AI 분석 서비스의 일일 사용량을 초과했습니다. 잠시 후 다시 시도해주세요.",
+            riskLevel="UNKNOWN",
+            sentimentSummary="API 할당량 초과로 감성 분석을 수행할 수 없습니다.",
+            sentimentScore=50,
+            sentimentCategory="중립",
+            sentimentEmoji="⏳"
+        )
     except Exception as e:
         print(f"AI 리포트 생성 중 오류 발생 (OpenAI API 호출 또는 JSON 파싱 실패): {e}")
         # API 호출 실패 시, 안전한 기본값으로 구성된 응답을 반환합니다.

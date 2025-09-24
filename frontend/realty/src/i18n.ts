@@ -77,6 +77,8 @@ const resources = {
       rent: "Rent",
       prepaid: "Prepaid",
       postpaid: "Postpaid",
+      "선불": "Prepaid",
+      "후불": "Postpaid",
 
       // Special Terms
       special_terms: "Special Terms",
@@ -219,6 +221,8 @@ const resources = {
       rent: "차임",
       prepaid: "선불",
       postpaid: "후불",
+      "선불": "선불",
+      "후불": "후불",
 
       // Special Terms
       special_terms: "특약",
@@ -361,6 +365,8 @@ const resources = {
       rent: "賃料",
       prepaid: "前払い",
       postpaid: "後払い",
+      "선불": "前払い",
+      "후불": "後払い",
 
       // Special Terms
       special_terms: "特約",
@@ -497,6 +503,8 @@ const resources = {
       rent: "租金",
       prepaid: "预付",
       postpaid: "后付",
+      "선불": "预付",
+      "후불": "后付",
 
       // Special Terms
       special_terms: "特别条款",

@@ -56,8 +56,22 @@ jobs:
               run: |
                   tar -czf ai_src.tar.gz -C ai-api .
 
-            # 6. 서버 배포 스크립트 실행 (로컬 실행)
-            - name: Deploy locally
-              run: |
-                  chmod +x /srv/riskview/deploy.sh
-                  /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)
+            # 6. 산출물 서버로 복사
+            - name: Copy artifacts to server
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ env.SSH_HOST }}
+                  username: ${{ env.SSH_USER }}
+                  password: ${{ env.SSH_PASS }}
+                  source: "dist/**,backend/build/libs/*.jar,ai_src.tar.gz"
+                  target: "/tmp"
+
+            # 7. 서버 배포 스크립트 실행
+            - name: Deploy on server
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ env.SSH_HOST }}
+                  username: ${{ env.SSH_USER }}
+                  password: ${{ env.SSH_PASS }}
+                  script: |
+                      /srv/riskview/deploy.sh ${{ steps.pick.outputs.env }} $(date +%Y%m%d%H%M%S)

@@ -94,6 +94,9 @@ const resources = {
       back: "Back",
       download_pdf: "Download as PDF",
       print: "Print",
+      view_original: "View Original",
+      translating: "Translating...",
+      translate_contract: "Translate Contract",
 
       // Currency
       currency_unit: "KRW",
@@ -238,6 +241,9 @@ const resources = {
       back: "뒤로",
       download_pdf: "pdf 파일로 받기",
       print: "인쇄",
+      view_original: "원문으로 보기",
+      translating: "번역 중...",
+      translate_contract: "계약서 번역",
 
       // Currency
       currency_unit: "원",
@@ -382,6 +388,9 @@ const resources = {
       back: "戻る",
       download_pdf: "PDFでダウンロード",
       print: "印刷",
+      view_original: "原文で表示",
+      translating: "翻訳中...",
+      translate_contract: "契約書翻訳",
 
       // Currency
       currency_unit: "KRW",
@@ -520,6 +529,9 @@ const resources = {
       back: "返回",
       download_pdf: "下载PDF",
       print: "打印",
+      view_original: "查看原文",
+      translating: "翻译中...",
+      translate_contract: "翻译合同",
 
       // Currency
       currency_unit: "韩元",

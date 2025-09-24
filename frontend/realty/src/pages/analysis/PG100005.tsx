@@ -114,56 +114,49 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
 
     // 계약서 번역 핸들러
     const handleTranslate = React.useCallback(async (targetLang: 'EN' | 'JP' | 'ZH') => {
-        if (translations[targetLang]) {
-            // 이미 번역본이 있으면 상태만 변경
+        // 번역본이 없으면 API 호출
+        if (!data || !summary) return;
+        setIsTranslating(true);
+        try {
+            // Backend는 소문자 ISO 코드(en/ja/zh)를 기대하므로 매핑합니다.
+            const backendLangMap: Record<'EN' | 'JP' | 'ZH', 'en' | 'ja' | 'zh'> = {
+                EN: 'en',
+                JP: 'ja',
+                ZH: 'zh',
+            };
+            const apiLang = backendLangMap[targetLang];
+            const [contractRes, analysisRes] = await Promise.all([
+                axios.post<StructuredContractDataDTO>(
+                    'http://localhost:8000/contracts/translate',
+                    data,
+                    { params: { target_lang: apiLang } }
+                ),
+                axios.post<AnalysisSummaryDTO>(
+                    'http://localhost:8000/analysis/translate',
+                    summary,
+                    { params: { target_lang: apiLang } }
+                )
+            ]);
+
+            // AI가 일부 필드를 누락할 수 있으므로, 원본 데이터와 번역된 데이터를 병합합니다.
+            const mergedData = { ...data, ...contractRes.data };
+            const mergedSummary = { ...summary, ...analysisRes.data };
+
+            setTranslations(prev => ({
+                ...prev,
+                [targetLang]: {
+                    data: mergedData,
+                    summary: mergedSummary,
+                }
+            }));
             setCurrentLang(targetLang);
             setTranslateDropdownOpen(false);
             i18n.changeLanguage(targetLang);
-        } else {
-            // 번역본이 없으면 API 호출
-            if (!data || !summary) return;
-            setIsTranslating(true);
-            try {
-                // Backend는 소문자 ISO 코드(en/ja/zh)를 기대하므로 매핑합니다.
-                const backendLangMap: Record<'EN' | 'JP' | 'ZH', 'en' | 'ja' | 'zh'> = {
-                    EN: 'en',
-                    JP: 'ja',
-                    ZH: 'zh',
-                };
-                const apiLang = backendLangMap[targetLang];
-                const [contractRes, analysisRes] = await Promise.all([
-                    axios.post<StructuredContractDataDTO>(
-                        'http://localhost:8000/contracts/translate',
-                        data,
-                        { params: { target_lang: apiLang } }
-                    ),
-                    axios.post<AnalysisSummaryDTO>(
-                        'http://localhost:8000/analysis/translate',
-                        summary,
-                        { params: { target_lang: apiLang } }
-                    )
-                ]);
-
-                // AI가 일부 필드를 누락할 수 있으므로, 원본 데이터와 번역된 데이터를 병합합니다.
-                const mergedData = { ...data, ...contractRes.data };
-                const mergedSummary = { ...summary, ...analysisRes.data };
-
-                setTranslations(prev => ({
-                    ...prev,
-                    [targetLang]: {
-                        data: mergedData,
-                        summary: mergedSummary,
-                    }
-                }));
-                setCurrentLang(targetLang);
-                setTranslateDropdownOpen(false);
-                i18n.changeLanguage(targetLang);
-            } catch (error) {
-                console.error("번역 중 오류 발생:", error);
-                setErr("번역 서비스 호출 중 오류가 발생했습니다.");
-            } finally {
-                setIsTranslating(false);
-            }
+        } catch (error) {
+            console.error("번역 중 오류 발생:", error);
+            setErr("번역 서비스 호출 중 오류가 발생했습니다.");
+        } finally {
+            setIsTranslating(false);
         }
     }, [data, summary, translations, i18n]);
 
@@ -708,17 +701,17 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         <div className="rv05-actions">
           {currentLang !== 'KO' ? (
             <button className="an02-ai-analyze-start-btn" onClick={handleRevert}>
-                원문으로 보기
+                {t("view_original")}
             </button>
           ) : (
             <div className={`rv05-translate-dropdown ${isTranslateDropdownOpen ? 'is-open' : ''}`}>
-                <button className="an02-ai-analyze-start-btn" disabled={isTranslating} onClick={toggleTranslateDropdown}>
-                    {isTranslating ? t("번역 중...") : t("계약서 번역")}
+                <button className="an02-ai-analyze-start-btn" disabled={isTranslating} onClick={toggleTranslateDropdown} >
+                    {isTranslating ? t("translating") : t("translate_contract")}
                 </button>
                 <div className="rv05-dropdown-content">
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('EN'); }}>🇬🇧 English</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('JP'); }}>🇯🇵 日本語</a>
-                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('ZH'); }}>🇨🇳 中文</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('EN'); }}>English</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('JP'); }}>日本語</a>
+                    <a href="#" onClick={(e) => { e.preventDefault(); handleTranslate('ZH'); }}>中文</a>
                 </div>
             </div>
           )}

@@ -91,7 +91,12 @@ def _translate_dict_values(data: dict, target_lang: str) -> dict:
 
     # DeepL은 'EN-US'와 같은 형식을 선호하지만, 'EN'도 잘 처리합니다.
     # 중국어의 경우 'ZH'는 간체를 의미합니다.
-    lang = target_lang.upper()
+    # 'en'의 경우, 더 구체적인 'EN-US'를 사용하도록 명시적으로 변경하여 안정성을 높입니다.
+    lang_code = target_lang.lower()
+    if lang_code == 'en':
+        lang = 'EN-US'
+    else:
+        lang = lang_code.upper()
 
     def translate_recursive(item):
         if isinstance(item, dict):

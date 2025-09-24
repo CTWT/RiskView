@@ -32,7 +32,7 @@ interface PG100005Props {
     documentCode: string | null;
 }
 
-interface AnalysisSummaryDTO {
+export interface AnalysisSummaryDTO {
   analysisReport: { // 분석 보고서
     summary: string; // 요약
     riskLevel: string; // 위험등급
@@ -55,6 +55,7 @@ interface AnalysisSummaryDTO {
     recommendedAction : string; // 추천 조치
   }
 }
+
 
 const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     // --- 상태 관리 ---
@@ -99,6 +100,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         if (!pdfData) return;
 
         console.log("PG100005: PDF 내보내기 실행", { lang: i18n.language });
+
         const blob = await pdf(<ReportPDF data={pdfData} summary={summary}/>).toBlob();
         const url = URL.createObjectURL(blob);
 

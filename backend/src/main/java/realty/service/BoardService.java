@@ -6,20 +6,24 @@ import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import realty.apicommunication.FileComponent;
 import realty.domain.dto.PostSentimentAnalysisDTO;
 import realty.domain.dto.BoardDTOs.*;
+import realty.domain.dto.ContractDTO;
 import realty.domain.dto.ContractDTO.FileStorageMetadataDTO;
 import realty.domain.model.CommunityComment;
+import realty.domain.model.FileStorageMetadata;
 import realty.domain.model.Post;
 import realty.domain.model.PostLike;
 import realty.domain.model.PostSentimentAnalysis;
 import realty.domain.model.User;
 import realty.domain.repository.CommunityCommentRepository;
-// import realty.domain.repository.FileStorageMetadataRepository;
+import realty.domain.repository.FileStorageMetadataRepository;
 import realty.domain.repository.PostLikeRepository;
 import realty.domain.repository.PostRepository;
 import realty.domain.repository.PostSentimentAnalysisRepository;
@@ -27,6 +31,7 @@ import realty.domain.repository.UserRepository;
 import realty.exception.AccessDeniedException;
 import jakarta.persistence.EntityNotFoundException;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,8 +71,9 @@ public class BoardService {
     private final UserRepository userRepository;
     private final FileComponent fileComponent;
     private final ContractService contractService;
-    // private final FileStorageMetadataRepository fileStorageMetadataRepository;
+    private final FileStorageMetadataRepository fileStorageMetadataRepository;
     private final PostSentimentAnalysisRepository postSentimentAnalysisRepository;
+    private final RestTemplate restTemplate;
 
     /**
      * 게시글 목록을 조건에 따라 조회합니다.
@@ -151,67 +157,69 @@ public class BoardService {
         return response;
     }
 
+   /**
+     * 게시글 수정/작성 시 content 내 base64 이미지를 서버에 저장하고 URL로 변환
+     * 기존 URL 이미지는 그대로 유지
+     */
     private String uploadImageBase64ToURL(String content, String entityCode) {
         try {
-            // 모든 <img src="data:..."> 태그 찾기
-            Pattern pattern = Pattern.compile("<img[^>]+src=\"data:image/[^\"']+\"[^>]*>");
+            // <img> 태그 찾기
+            Pattern pattern = Pattern.compile("<img[^>]+src=\"([^\"]+)\"[^>]*>");
             Matcher matcher = pattern.matcher(content);
 
             while (matcher.find()) {
                 String imgTag = matcher.group();
+                String src = matcher.group(1);
 
-                // src 추출
-                Matcher srcMatcher = Pattern.compile("src=\"([^\"]+)\"").matcher(imgTag);
-                // alt 추출 (없으면 기본 파일명 사용)
-                Matcher altMatcher = Pattern.compile("alt=\"([^\"]+)\"").matcher(imgTag);
-
-                if (srcMatcher.find()) {
-                    String base64Data = srcMatcher.group(1);
-                    String fileName = altMatcher.find() ? altMatcher.group(1) : entityCode + "_" + System.currentTimeMillis() + ".png";
-                    String safeFileName = fileName.replace(" ", "_");
-
-                    // data:image/png;base64,... 부분 분리
-                    String[] parts = base64Data.split(",");
-                    if (parts.length != 2) continue; // 잘못된 데이터면 스킵
-
-                    String mimeTypePart = parts[0]; // data:image/png;base64
-                    String imageString = parts[1];
-
-                    // 파일 타입 추출
-                    String fileType = mimeTypePart.split(";")[0].replace("data:", "");
-
-                    byte[] imageBytes = Base64.getDecoder().decode(imageString);
-                    int fileSizeKb = (int) (imageBytes.length / 1024);
-
-                    // 파일 URL 생성
-                    String storedPath = fileComponent.getStoredPath();
-                    
-
-                    // 파일 메타데이터 저장
-                    FileStorageMetadataDTO fileStorageMetadataDTO = FileStorageMetadataDTO.builder()
-                            .fileSizeKb(fileSizeKb)
-                            .fileType(fileType)
-                            .originalName(safeFileName)
-                            .storedPath(storedPath)
-                            .isEncrypted(false)
-                            .build();
-
-                    logger.info("originalName : {}", safeFileName);
-
-                    String resultFilename = contractService.fileStorageMetadataSave(fileStorageMetadataDTO, entityCode);
-                    String fileUrl = fileComponent.getPathURL() + resultFilename;
-
-                    // 실제 파일 저장
-                    Path path = Paths.get(fileComponent.getStoredPath(), resultFilename);
-                    logger.info("이미지 저장경로!!! : {}", path.toString());
-                    Files.write(path, imageBytes);
-
-                    // content 내 base64 -> URL로 교체
-                    content = content.replace(base64Data, fileUrl);
+                // 이미 URL이면 건너뛰기
+                if (src.startsWith("http") || src.startsWith(fileComponent.getPathURL())) {
+                    continue;
                 }
+
+                // alt 추출 (없으면 기본 파일명)
+                Matcher altMatcher = Pattern.compile("alt=\"([^\"]+)\"").matcher(imgTag);
+                String fileName = altMatcher.find() ? altMatcher.group(1)
+                        : entityCode + "_" + System.currentTimeMillis() + ".png";
+                String safeFileName = fileName.replace(" ", "_");
+
+                // base64 분리
+                String[] parts = src.split(",");
+                if (parts.length != 2) continue;
+
+                String mimeTypePart = parts[0]; // data:image/png;base64
+                String imageString = parts[1];
+
+                String fileType = mimeTypePart.split(";")[0].replace("data:", "");
+
+                byte[] imageBytes = Base64.getDecoder().decode(imageString);
+                int fileSizeKb = (int) (imageBytes.length / 1024);
+
+                // 파일 URL 생성
+                String storedPath = fileComponent.getStoredPath();
+
+                // 파일 메타데이터 저장
+                FileStorageMetadataDTO fileStorageMetadataDTO = FileStorageMetadataDTO.builder()
+                        .fileSizeKb(fileSizeKb)
+                        .fileType(fileType)
+                        .originalName(safeFileName)
+                        .storedPath(storedPath)
+                        .isEncrypted(false)
+                        .build();
+
+                logger.info("originalName : {}", safeFileName);
+
+                String resultFilename = contractService.fileStorageMetadataSave(fileStorageMetadataDTO, entityCode);
+                String fileUrl = fileComponent.getPathURL() + resultFilename;
+
+                // 실제 파일 저장
+                Path path = Paths.get(storedPath, resultFilename);
+                Files.write(path, imageBytes);
+
+                // content 내 base64 -> URL로 교체
+                content = content.replace(src, fileUrl);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("이미지 업로드 중 오류 발생", e);
         }
 
         return content;
@@ -224,16 +232,17 @@ public class BoardService {
     public PostDetailResponseDTO updatePost(PostUpdateRequestDTO requestDTO, String postCode, String currentUserCode) {
             Post post = getPostByCode(postCode);
 
+            logger.info("requestDTO 확인 : {}", requestDTO.getContent());
+
             if(false == post.getAuthor().getUserCode().equals(currentUserCode)){
                 throw new AccessDeniedException("게시글 작성자만 수정할 수 있습니다.");
             }
 
-            clearPreviousFile(postCode);
-
-            uploadImageBase64ToURL(requestDTO.getContent(), postCode);
+            clearPreviousFile(postCode, requestDTO.getContent());
+            String content = uploadImageBase64ToURL(requestDTO.getContent(), postCode);
 
             post.setTitle(requestDTO.getTitle());
-            post.setContent(requestDTO.getContent());
+            post.setContent(content);
             post.setPostType(requestDTO.getPostType());
             post.setTags(String.join(",", requestDTO.getTags()));
 
@@ -259,6 +268,7 @@ public class BoardService {
         postLikeRepository.findByPostCode(postCode).stream().forEach(postLike -> {postLikeRepository.delete(postLike);});
         commentRepository.findByPost(post).stream().forEach(comment -> {commentRepository.delete(comment);});
 
+        deleteRelativeFile(postCode);
         postRepository.delete(post);
     }
 
@@ -502,16 +512,61 @@ public class BoardService {
         return fileComponent.getPath(fileName);
     }
 
-    public void clearPreviousFile(String postCode) {
+    /**
+     * 기존 파일 삭제: content에서 사용 중인 파일은 유지
+     */
+    public void clearPreviousFile(String postCode, String content) {
+        List<FileStorageMetadata> fileStorageMetadatas = fileStorageMetadataRepository.findByEntityCode(postCode);
 
+        for (FileStorageMetadata fileStorageMetadata : fileStorageMetadatas) {
+            String fileUrl = fileComponent.getPathURL() + fileStorageMetadata.getOriginalName();
 
+            // content에 사용 중이면 삭제하지 않음
+            if (content.contains(fileUrl)) {
+                continue;
+            }
 
-        //fileStorageMetadataRepository.deleteByPostCode(postCode);
+            String filePath = fileComponent.getStoredPath() + "\\" + fileStorageMetadata.getOriginalName();
+            logger.info("삭제 시도: {}", filePath);
+
+            File file = new File(filePath);
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    logger.warn("파일 삭제 실패: {}", filePath);
+                }
+            }
+
+            // DB에서도 삭제
+            fileStorageMetadataRepository.delete(fileStorageMetadata);
+        }
+    }
+
+    public void deleteRelativeFile(String postCode) {
+        List<FileStorageMetadata> fileStorageMetadatas = fileStorageMetadataRepository.findByEntityCode(postCode);
+
+        for (FileStorageMetadata fileStorageMetadata : fileStorageMetadatas) {
+            String filePath = fileComponent.getStoredPath() + "\\"+ fileStorageMetadata.getOriginalName();
+            logger.info("파일 삭제 시도: {}", filePath);
+
+            File file = new File(filePath);
+            if (file.exists()) {
+                boolean deleted = file.delete();
+                if (!deleted) {
+                    // 삭제 실패 시 로깅
+                    String errorLog = "파일 삭제 실패: " + filePath;
+                    logger.info(errorLog);
+                }
+            } else {
+                logger.info("파일이 존재하지 않습니다: {}", filePath);
+            }
+        }
+
+        // DB에서도 해당 entityCode 레코드 삭제
+        fileStorageMetadataRepository.deleteByEntityCode(postCode);
     }
 
     public PostSentimentAnalysisDTO getPostSentimentAnalysisByPostCode(String postCode) {
-        Post post = postRepository.findByPostCode(postCode).orElseThrow(() -> new EntityNotFoundException("Post not found with postCode: " + postCode));
-
         PostSentimentAnalysis postSentimentAnalysis = postSentimentAnalysisRepository.findByPostCode(postCode)
                                                             .orElseThrow(() -> new EntityNotFoundException("PostSentimentAnalysis not found with postCode: " + postCode));
 
@@ -523,5 +578,24 @@ public class BoardService {
                                         .summary(postSentimentAnalysis.getSummary())
                                         .build();
                                         
+    }
+
+    public void sentimentAnalyze() {
+        logger.info("FastAPI post_emotion_analysis 트리거를 활성화합니다.");
+        Map<String, String> triggerBody = new HashMap<>();
+        triggerBody.put("api_name", "post_emotion_analysis");
+        restTemplate.postForEntity("http://localhost:8000/trigger", triggerBody, Void.class);
+
+
+        restTemplate.exchange("http://localhost:8000/post_emotion_analysis", HttpMethod.POST, null, Void.class);
+    }
+
+    public void deleteSentimentAnalysis(String postCode) {
+        postSentimentAnalysisRepository.deleteByPostCode(postCode);
+    }
+
+    public void updateSentimentAnalysis(String postCode) {
+        deleteSentimentAnalysis(postCode);
+        sentimentAnalyze();
     }
 }

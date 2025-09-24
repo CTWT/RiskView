@@ -3,6 +3,7 @@ from data.MapInfo import MapInfo
 from dotenv import load_dotenv
 import sys
 import os
+import re
 
 #  수업명 : 가비아 2회차
 #  이름 : 김관호
@@ -23,6 +24,7 @@ def address_to_mapInfo(address: str) -> MapInfo:
     key = os.getenv("KAKAO_REST_API_KEY")
     headers = {"Authorization": f"KakaoAK {key}"}
     params = {"query": address}
+    print("[KakaoMap] 요청 받은 주소 : ", address)
 
     try:
         res = requests.get(url, headers=headers, params=params, timeout=10)
@@ -40,7 +42,11 @@ def address_to_mapInfo(address: str) -> MapInfo:
     data = res.json()
     docs = data.get("documents", [])
     if not docs:
-        return None
+        # 숫자(번지) 제거 후 다시 검색
+        short_address = re.sub(r"\d+$", "", address)
+        res = requests.get(url, headers=headers, params={"query": short_address}, timeout=10)
+        data = res.json()
+        docs = data.get("documents", [])
 
     mapInfo = MapInfo()
     addr = docs[0].get("road_address")

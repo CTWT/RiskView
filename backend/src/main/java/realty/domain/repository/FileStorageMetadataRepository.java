@@ -1,5 +1,7 @@
 package realty.domain.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -22,4 +24,7 @@ public interface FileStorageMetadataRepository extends JpaRepository<FileStorage
     @Modifying
     @Query("DELETE FROM FileStorageMetadata f WHERE f.entityCode = :entityCode")
     void deleteByEntityCode(String entityCode);
+
+    // 특정 entityCode를 가진 모든 요소 조회
+    List<FileStorageMetadata> findByEntityCode(String entityCode);
 }

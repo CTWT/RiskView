@@ -33,7 +33,6 @@ import realty.domain.dto.BoardDTOs.PostDetailResponseDTO;
 import realty.domain.dto.BoardDTOs.PostSearchCondition;
 import realty.domain.dto.BoardDTOs.PostCreateRequestDTO;
 import realty.domain.dto.BoardDTOs.PostUpdateRequestDTO;
-// import realty.domain.model.PostSentimentAnalysis;
 import realty.domain.dto.BoardDTOs.LikeResponseDTO;
 import realty.domain.dto.PostSentimentAnalysisDTO;
 import realty.domain.dto.BoardDTOs.CommentCreateRequestDTO;
@@ -154,6 +153,9 @@ public class BoardController {
                 .buildAndExpand(createdPost.getId())
                 .toUri();
         logger.info("New post location URI: {}", location);
+
+        boardService.sentimentAnalyze();
+        
         return ResponseEntity.created(location).body(createdPost);
     }
 
@@ -168,6 +170,7 @@ public class BoardController {
         String postCode = boardService.getPostCodeById(id);
         String userCode = userService.getCurrentUserCode(request);
         PostDetailResponseDTO updatedPost = boardService.updatePost(requestDTO, postCode, userCode);
+        boardService.updateSentimentAnalysis(postCode);
         return ResponseEntity.ok(updatedPost);
     }
 
@@ -180,6 +183,9 @@ public class BoardController {
     public ResponseEntity<Void> deletePost(@PathVariable Long id, HttpServletRequest request) {
         String postCode = boardService.getPostCodeById(id);
         String userCode = userService.getCurrentUserCode(request);
+
+        boardService.deleteSentimentAnalysis(postCode);
+
         boardService.deletePost(postCode, userCode);
 
         return ResponseEntity.ok().build();

@@ -211,13 +211,10 @@ def ocrMapping(ocrList: list[str]) -> LeaseContract:
         leaseContract.specialTerms = specialTerms
 
     text, temp = search_and_cut('본계약을증명','보관한다', text)
-    print(text)
+
     text, contractDate = search_and_cut('보관한다.', '주소', text)
     if(contractDate):
         leaseContract.contractDate = convert_string_to_date(contractDate)
-
-    print(contractDate)
-    print(leaseContract.contractDate)
 
     # 임대인 주소
     text,lessorAddress = search_and_cut('주소','임대인주민등록번호', text)

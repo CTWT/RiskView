@@ -99,7 +99,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         if (!pdfData) return;
 
         console.log("PG100005: PDF 내보내기 실행", { lang: i18n.language });
-        const blob = await pdf(<ReportPDF data={pdfData} />).toBlob();
+        const blob = await pdf(<ReportPDF data={pdfData} summary={summary}/>).toBlob();
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement("a");

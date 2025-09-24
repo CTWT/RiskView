@@ -8,4 +8,5 @@ import realty.domain.model.PostSentimentAnalysis;
 
 public interface PostSentimentAnalysisRepository extends JpaRepository<PostSentimentAnalysis, Long>{
     Optional<PostSentimentAnalysis> findByPostCode(String postCode);
+    void deleteByPostCode(String postCode);
 }

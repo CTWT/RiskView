@@ -111,7 +111,7 @@ const PG100003: React.FC<PG100003Props> = ({
         // 지도 생성
         const map = new kakaoMaps.Map(mapContainer, {
             center: new kakaoMaps.LatLng(lat, lng),
-            level: 3,
+            level: 6,
         });
 
         // 반경 1km 원 표시

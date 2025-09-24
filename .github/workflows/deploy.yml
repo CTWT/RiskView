@@ -58,13 +58,14 @@ jobs:
 
             # 6. 산출물 서버로 복사
             - name: Copy artifacts to server
-              uses: appleboy/scp-action@v0.1.7
+              uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ env.SSH_HOST }}
                   username: ${{ env.SSH_USER }}
                   password: ${{ env.SSH_PASS }}
-                  source: "dist/**,backend/build/libs/*.jar,ai_src.tar.gz"
-                  target: "/tmp"
+                  script: |
+                      echo "📦 Copying artifacts..."
+                      scp -r dist backend/build/libs/*.jar ai_src.tar.gz ${{ env.SSH_USER }}@${{ env.SSH_HOST }}:/tmp/
 
             # 7. 서버 배포 스크립트 실행
             - name: Deploy on server

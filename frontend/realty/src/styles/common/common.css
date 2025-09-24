@@ -648,7 +648,6 @@
 }
 
 .rv05-container {
-  max-width: 1080px;
   margin: 0 auto;
   padding: 24px;
 }
@@ -656,6 +655,7 @@
 .rv05-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
+  gap: 20px;
 }
 
 .rv05-hr {
@@ -667,7 +667,6 @@
 
 /* 카드 */
 .rv05-card {
-  margin: 20px;
   background: var(--rv05-bg);
   border: 1px solid var(--rv05-border);
   border-radius: var(--rv05-radius);
@@ -678,6 +677,7 @@
 
 .rv05-card.rv05-wide {
   margin-top: 20px;
+  margin-bottom: 20px;
   grid-column: span 12;
 }
 
@@ -732,7 +732,6 @@
 /* 칩(상단 요약) */
 .rv05-chips {
   display: flex;
-  flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
   margin: 6px 0 16px;
@@ -2327,19 +2326,6 @@
   color: #e74c3c;
 }
 
-.backTo {
-  color: #a290ff;
-  font-weight: 550;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  margin: 0 auto 16px auto;
-  margin-bottom: -16px;
-}
-
 /* PG300007 - 사용자 정보 입력 페이지 전용 스타일 */
 
 /* 폼 스타일 */
@@ -3027,10 +3013,10 @@
   color: #666;
   line-height: 1.5;
   margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: -webkit-box; /* For Webkit browsers */
+  -webkit-line-clamp: 2; /* For Webkit browsers */
+  -webkit-box-orient: vertical; /* For Webkit browsers */
+  line-clamp: 2; /* Standard property */
 }
 
 /* 페이지네이션 */
@@ -3337,7 +3323,6 @@
 /* PG700001.tsx - 프로필 수정 화면 래퍼 */
 .profile-edit-wrapper {
   width: 100%;
-  max-width: 1000px; /* PG700003의 profile-edit-layout과 동일한 너비 */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -3351,12 +3336,49 @@
 }
 
 /* PG700003.tsx - 프로필 수정 레이아웃 */
-.profile-edit-layout {
+.analysis-viewer-layout {
+  position: relative;
+  width: 100%;
+  display: block; /* flex에서 block으로 변경 */
+}
+
+/* PG700006.tsx - 분석 뷰어 레이아웃 */
+.profile-edit-layout { /* 기존 레이아웃은 그대로 유지 */
   display: flex;
   gap: 40px;
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+}
+
+/* PG700003.tsx - 프로필 수정 레이아웃 */
+.analysis-viewer-layout {
+  position: relative;
+  width: 100%;
+  display: block; /* flex에서 block으로 변경 */
+}
+
+/* PG700006.tsx - 사이드바 호버를 위한 래퍼 */
+.analysis-sidebar-wrapper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 20;
+  /* 다른 콘텐츠 위에 표시 */
+}
+
+.analysis-sidebar-wrapper .profile-sidebar {
+  height: 100%;
+  transform: translateX(calc(-100% + 16px));
+  /* 기본적으로 16px만 보이도록 숨김 */
+  transition: transform 0.3s ease-in-out;
+  background-color: #ffffff;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
+}
+
+.analysis-sidebar-wrapper:hover .profile-sidebar {
+  transform: translateX(0);
 }
 
 /* 사이드바 */
@@ -4267,9 +4289,10 @@
   line-height: 1.4;
   margin-bottom: 0.375rem;
   overflow: hidden;
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  display: -webkit-box; /* For Webkit browsers */
+  -webkit-line-clamp: 1; /* For Webkit browsers */
+  -webkit-box-orient: vertical; /* For Webkit browsers */
+  line-clamp: 1; /* Standard property */
 }
 
 .board-item-meta {
@@ -4364,8 +4387,8 @@
 
 .post-header-top {
   display: flex;
-  alignitems: center;
-  justifycontent: space-between;
+  align-items: center;
+  justify-content: space-between;
   gap: 12;
 }
 
@@ -5754,7 +5777,6 @@
 
 /* 기본 컨테이너 - display속성을 block으로 변경 */
 .mypage-container {
-  max-width: 805px;
   margin: 0 auto;
   display: block;
   padding: 20px;
@@ -5808,7 +5830,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 24px 32px;
-  margin-bottom: 50px;
+  margin-bottom: 30px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
@@ -5841,29 +5863,43 @@
 
 .stat-card {
   display: flex;
-  align-items: center;
+    align-items: center;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 32px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   min-height: 90px;
 }
 
 .stat-card.statistics-card {
-    grid-row: 1;
-    grid-column: 2;
+  grid-row: 1;
+  grid-column: 2;
+  background-color: #e0f2fe; /* 연한 파란색 */
 }
 
 .stat-card.login-card {
-    cursor: pointer;
-    grid-row: 2;
-    grid-column: 2;
+  cursor: pointer;
+  grid-row: 2;
+  grid-column: 2;
+  background-color: #fff9db; /* 연한 노란색 */
 }
 
 .stat-card.activity-card {
-    grid-row: 3;
-    grid-column: 2;
+  grid-row: 3;
+  grid-column: 2;
+  background-color: #fee2e2; /* 연한 빨간색 */
+}
+
+.stat-card.statistics-card {
+    background-color: #e0f2fe; /* 연한 파란색 */
+}
+
+.stat-card.login-card {
+    background-color: #fff9db; /* 연한 노란색 */
+}
+.stat-card.activity-card {
+    background-color: #fee2e2; /* 연한 빨간색 */
 }
 
 .stat-icon {
@@ -6042,7 +6078,7 @@
   border-radius: 12px;
   padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-top: 50px;
+  margin-top: 30px;
   margin-bottom: 80px;
 }
 
@@ -6267,11 +6303,11 @@
 
 /* PG700004.tsx - 로그인 이력 페이지 스타일 */
 .login-history-container {
-  width: 100%;
   padding: 20px;
   background-color: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
+  margin: 0 auto;
 }
 
 .login-history-container .page-authwelcome {
@@ -6373,7 +6409,7 @@
 /* PG700005.tsx - 내 활동 내역 */
 .my-activity-container {
   width: 800px;
-  margin: 40px auto;
+  margin: 0 auto;
   padding: 20px;
   background-color: #fff;
   border: 1px solid #e5e7eb;
@@ -6484,7 +6520,59 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 300px; /* Adjust as needed */
+  max-width: 300px;
+  /* Adjust as needed */
+}
+
+/* PG700006.tsx - 내 분석 내역 사이드바 */
+.analysis-list-sidebar {
+  width: 100%;
+  max-height: 700px;
+  /* 스크롤이 필요한 경우를 대비한 최대 높이 */
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 8px;
+  /* 스크롤바 공간 */
+}
+
+.analysis-list-item-sidebar {
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.analysis-list-item-sidebar:hover {
+  background-color: #f9fafb;
+}
+
+.analysis-list-item-sidebar.active {
+  background-color: #f3e8ff;
+  border-color: #8b5cf6;
+}
+
+.analysis-item-location {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 4px;
+}
+
+.analysis-item-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.analysis-report-container {
+  width: 100%;
+  flex-grow: 1; /* 남은 공간을 모두 차지하도록 설정 */
+  padding: 0 20px; /* 좌우 여백 추가 */
+  box-sizing: border-box;
+  min-height: auto;
 }
 
 .empty-message {

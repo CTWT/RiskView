@@ -39,15 +39,16 @@ function App() {
                                 <Route path="/" element={<PG200001 />} />
                                 {/* 메인페이지 */}
                                 <Route path="/PG100001" element={<PG100001 />} />{" "}
-                                {/* 계약서분석 페이지 */}
-                                <Route path="/PG400001" element={<PG400001 />} />{" "}
                                 {/* 부동산 뉴스 페이지 */}
-                                <Route path="/PG500001/*" element={<PG500001 />} />{" "}
+                                <Route path="/PG400001" element={<PG400001 />} />{" "}
                                 {/* 커뮤니티 페이지 */}
-                                <Route path="/PG500043" element={<PG500043 />} />{" "}
-                                <Route path="/PG600001" element={<PG600001 />} />{" "}
-                                <Route path="/PG700001" element={<PG700001 />} />{" "}
-                                
+                                <Route path="/PG500001/*" element={<PG500001 />} />
+                                <Route path="/PG500043" element={<PG500043 />} />
+                                {/* 서비스 소개 페이지 */}
+                                <Route path="/PG600001" element={<PG600001 />} />
+                                {/* 마이페이지 */}
+                                <Route path="/PG700001/*" element={<PG700001 />} />
+
                                 {/* 공통함수 테스트 페이지 */}
                                 <Route path="/CommonTest" element={<CommonTest />} />{" "}
                             </Routes>

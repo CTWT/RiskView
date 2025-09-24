@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Map;
+import realty.domain.dto.AnalysisHistoryDTO;
 import realty.domain.dto.RecentAnalysisDTO;
 import realty.domain.model.AnalysisReport;
 
@@ -52,4 +53,16 @@ public interface AnalysisRepository extends JpaRepository<AnalysisReport, Long> 
     @Query("SELECT new map(ar.riskLevel as riskLevel, COUNT(ar) as count) FROM AnalysisReport ar " +
            "JOIN Documents d ON ar.documentCode = d.documentCode WHERE d.userCode = :userCode GROUP BY ar.riskLevel")
     List<Map<String, Object>> countRiskLevelsByUserCode(@Param("userCode") String userCode);
+
+    /**
+     * 특정 사용자의 전체 분석 기록을 조회합니다. (내 분석 보기용)
+     * @param userCode 사용자 고유 코드.
+     * @return 분석 기록 DTO 리스트 (생성일 내림차순).
+     */
+    @Query("SELECT new realty.domain.dto.AnalysisHistoryDTO(d.documentCode, scd.location, scd.contractDate, ar.riskLevel) " +
+           "FROM AnalysisReport ar " +
+           "JOIN Documents d ON ar.documentCode = d.documentCode " +
+           "JOIN StructuredContractData scd ON d.documentCode = scd.documentcode " +
+           "WHERE d.userCode = :userCode ORDER BY ar.createdAt DESC")
+    List<AnalysisHistoryDTO> findAnalysisHistoryByUserCode(@Param("userCode") String userCode);
 }

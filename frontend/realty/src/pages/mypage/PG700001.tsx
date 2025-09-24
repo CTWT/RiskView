@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
-import {
-    FiBarChart,
-    FiMessageSquare,
-    FiHeart,
-    FiDollarSign,
-    FiClock,
-    FiChevronLeft,
-} from "react-icons/fi";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { FiBarChart, FiMessageSquare, FiHeart, FiClock } from "react-icons/fi";
 import "../../styles/common/common.css";
 import PageContainer from "../../components/layout/PageContainer";
 import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
@@ -14,6 +8,7 @@ import PG700002 from "./PG700002";
 import PG700003 from "./PG700003";
 import PG700004 from "./PG700004";
 import PG700005 from "./PG700005"; // 내 활동 내역 컴포넌트 임포트
+import PG700006 from "./PG700006"; // 내 분석 내역 컴포넌트 임포트
 import axios from "axios";
 
 /*
@@ -42,9 +37,6 @@ interface RiskDistribution {
 }
 
 const PG700001: React.FC = () => {
-    const [isEditingProfile, setIsEditingProfile] = useState(false);
-    const [isViewingLoginHistory, setIsViewingLoginHistory] = useState(false);
-    const [isViewingMyActivities, setIsViewingMyActivities] = useState(false);
     const [activitySummary, setActivitySummary] = useState({
         postCount: 0,
         commentCount: 0,
@@ -57,18 +49,12 @@ const PG700001: React.FC = () => {
     const [riskDistribution, setRiskDistribution] = useState<
         { level: string; percentage: number; color: string }[]
     >([]);
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    // 목업데이터(임시)
-    const staticData = {
-        expectedSavings: "1,200만원",
-        monthlyStats: [
-            { month: "1월", count: 10 },
-            { month: "2월", count: 12 },
-            { month: "3월", count: 8 },
-            { month: "4월", count: 15 },
-            { month: "5월", count: 17 },
-        ],
-    };
+    // 현재 경로가 마이페이지의 메인 화면인지 확인합니다.
+    // location.pathname이 '/mypage' 또는 '/mypage/'일 때 isMainPage는 true가 됩니다.
+    const isMainPage = location.pathname === "/PG700001" || location.pathname === "/PG700001/";
 
     // 시간차 계산 함수: 얼마 전에 로그인했는지 계산
     const formatRelativeTime = (timestamp: string): string => {
@@ -230,25 +216,6 @@ const PG700001: React.FC = () => {
         fetchRiskDistribution();
     }, []);
 
-    const handleEditProfileClick = () => {
-        console.log("프로필 수정 클릭");
-        setIsEditingProfile(true);
-    };
-    const handleViewLoginHistoryClick = () => {
-        console.log("로그인 기록 보기 클릭");
-        setIsViewingLoginHistory(true);
-    };
-    const handleViewMyActivitiesClick = () => {
-        console.log("내 활동 보기 클릭");
-        setIsViewingMyActivities(true);
-    };
-    const handleBackClick = () => {
-        console.log("뒤로 가기 클릭");
-        setIsEditingProfile(false);
-        setIsViewingLoginHistory(false);
-        setIsViewingMyActivities(false);
-    };
-
     // 위험도에 따른 색상 반환 함수
     const getRiskColor = (risk: string) => {
         console.log(`위험도: ${risk}`);
@@ -276,23 +243,7 @@ const PG700001: React.FC = () => {
     return (
         <PageContainer showBreadcrumb={true} centerContent={true}>
             <div className="mypage-container">
-                {isEditingProfile ||
-                isViewingLoginHistory ||
-                isViewingMyActivities ? (
-                    <div className="profile-edit-wrapper">
-                        <p onClick={handleBackClick} className="backTo">
-                            <FiChevronLeft />
-                            뒤로가기
-                        </p>
-                        {isEditingProfile ? (
-                            <PG700003 onBack={handleBackClick} />
-                        ) : isViewingLoginHistory ? (
-                            <PG700004 />
-                        ) : (
-                            <PG700005 />
-                        )}
-                    </div>
-                ) : (
+                {isMainPage ? (
                     <>
                         <CommonContainerHeader
                             subtitle="마이페이지"
@@ -311,7 +262,7 @@ const PG700001: React.FC = () => {
                                 </div>
                                 <button
                                     className="profile-edit-btn"
-                                    onClick={handleEditProfileClick}
+                                    onClick={() => navigate("PG700003")}
                                 >
                                     프로필 수정
                                 </button>
@@ -331,8 +282,11 @@ const PG700001: React.FC = () => {
                                         </div>
                                     )}
                                 </div>
-                                {/* 통계 그리드 */}
-                                <div className="stat-card statistics-card">
+                                {/* 분석 그리드 */}
+                                <div
+                                    className="stat-card statistics-card clickable"
+                                    onClick={() => navigate("PG700006")}
+                                >
                                     <div className="stat-icon blue">
                                         <FiBarChart />
                                     </div>
@@ -341,14 +295,14 @@ const PG700001: React.FC = () => {
                                             {analysisCount}건
                                         </div>
                                         <div className="stat-label">
-                                            분석 횟수
+                                            계약서 분석 내역
                                         </div>
                                     </div>
                                 </div>
                                 {/* 최근 로그인 */}
                                 <div
                                     className="stat-card login-card clickable"
-                                    onClick={handleViewLoginHistoryClick}
+                                    onClick={() => navigate("PG700004")}
                                 >
                                     <div className="stat-icon yellow">
                                         <FiClock />
@@ -365,7 +319,7 @@ const PG700001: React.FC = () => {
                                 {/* 활동 내역 */}
                                 <div
                                     className="stat-card activity-card clickable"
-                                    onClick={handleViewMyActivitiesClick}
+                                    onClick={() => navigate("PG700005")}
                                 >
                                     <div className="stat-icon red">
                                         <FiMessageSquare />
@@ -404,57 +358,64 @@ const PG700001: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        {/* 최근 분석 기록 */}
-                        <div className="section-card recent-analysis-card">
-                            <h3 className="card-title">최근 분석 기록</h3>
-                            <div className="analysis-table">
-                                <div className="table-header">
-                                    <span className="col-location">
-                                        주소
-                                    </span>
-                                    <span className="col-amount">
-                                        계약금
-                                    </span>
-                                    <span className="col-risk">위험도</span>
-                                </div>
-                                <div className="table-body">
-                                    {recentAnalysis.length > 0 ? (
-                                        recentAnalysis.map(
-                                            (item, index) => (
-                                                <div
-                                                    key={index}
-                                                    className="table-row"
-                                                >
-                                                    <span className="col-location">
-                                                        {item.location}
-                                                    </span>
-                                                    <span className="col-amount">
-                                                        ₩
-                                                        {item.deposit.toLocaleString()}
-                                                    </span>
-                                                    <span
-                                                        className="col-risk risk-badge"
-                                                        style={{
-                                                            color: getRiskColor(
-                                                                item.risk
-                                                            ),
-                                                        }}
+                            {/* 최근 분석 기록 */}
+                            <div className="section-card recent-analysis-card">
+                                <h3 className="card-title">최근 분석 기록</h3>
+                                <div className="analysis-table">
+                                    <div className="table-header">
+                                        <span className="col-location">
+                                            주소
+                                        </span>
+                                        <span className="col-amount">
+                                            계약금
+                                        </span>
+                                        <span className="col-risk">위험도</span>
+                                    </div>
+                                    <div className="table-body">
+                                        {recentAnalysis.length > 0 ? (
+                                            recentAnalysis.map(
+                                                (item, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="table-row"
                                                     >
-                                                        {item.risk}
-                                                    </span>
-                                                </div>
+                                                        <span className="col-location">
+                                                            {item.location}
+                                                        </span>
+                                                        <span className="col-amount">
+                                                            ₩
+                                                            {item.deposit.toLocaleString()}
+                                                        </span>
+                                                        <span
+                                                            className="col-risk risk-badge"
+                                                            style={{
+                                                                color: getRiskColor(
+                                                                    item.risk
+                                                                ),
+                                                            }}
+                                                        >
+                                                            {item.risk}
+                                                        </span>
+                                                    </div>
+                                                )
                                             )
-                                        )
-                                    ) : (
-                                        <div className="empty-message">
-                                            최근 분석 기록이 없습니다.
-                                        </div>
-                                    )}
+                                        ) : (
+                                            <div className="empty-message">
+                                                최근 분석 기록이 없습니다.
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </>
+                ) : (
+                    <Routes>
+                        <Route path="PG700003" element={<PG700003 onBack={() => navigate(-1)} />} />
+                        <Route path="PG700006" element={<PG700006 />} />
+                        <Route path="PG700004" element={<PG700004 />} />
+                        <Route path="PG700005" element={<PG700005 />} />
+                    </Routes>
                 )}
             </div>
         </PageContainer>

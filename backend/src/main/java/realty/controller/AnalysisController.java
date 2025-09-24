@@ -1,5 +1,6 @@
 package realty.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -8,6 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import realty.domain.dto.AnalysisHistoryDTO;
 import realty.domain.dto.RecentAnalysisDTO;
 import realty.domain.dto.RiskDistributionDTO;
 import realty.domain.model.User;
@@ -29,8 +31,8 @@ import realty.service.UserService;
 @RequiredArgsConstructor
 public class AnalysisController {
 
-    private final AnalysisService analysisService;
-    private final UserService userService;
+    private final AnalysisService analysisService; // Ensure AnalysisService is a properly managed Spring bean (@Service)
+    private final UserService userService; // Ensure UserService is a properly managed Spring bean (@Service or @Component)
 
     /**
      * 현재 로그인한 사용자의 총 계약서 분석 횟수 반환
@@ -75,5 +77,19 @@ public class AnalysisController {
 
         List<RiskDistributionDTO> riskDistribution = analysisService.getRiskDistributionForUser(currentUser.getUserCode());
         return ResponseEntity.ok(riskDistribution);
+    }
+
+    /**
+     * 현재 로그인한 사용자의 분석 내역 반환
+     */
+    @GetMapping("/history")
+    public ResponseEntity<List<AnalysisHistoryDTO>> getAnalysisHistory(HttpServletRequest request) {
+        User currentUser = userService.getCurrentUser(request);
+        if (currentUser == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        String userCode = currentUser.getUserCode();
+        List<AnalysisHistoryDTO> history = analysisService.getAnalysisHistory(userCode);
+        return ResponseEntity.ok(history);
     }
 }

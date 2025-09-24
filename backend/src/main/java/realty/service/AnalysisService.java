@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import realty.domain.dto.AnalysisHistoryDTO;
 import lombok.RequiredArgsConstructor;
 import realty.domain.dto.RecentAnalysisDTO;
 import realty.domain.repository.AnalysisRepository;
@@ -60,5 +61,12 @@ public class AnalysisService {
                 Math.round(percentage) // 소수점 반올림
             );
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 특정 사용자의 전체 분석 기록 반환 (내 분석 보기)
+     */
+    public List<AnalysisHistoryDTO> getAnalysisHistory(String userCode) {
+        return analysisRepository.findAnalysisHistoryByUserCode(userCode);
     }
 }

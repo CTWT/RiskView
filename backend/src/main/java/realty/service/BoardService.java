@@ -512,7 +512,7 @@ public class BoardService {
     public PostSentimentAnalysisDTO getPostSentimentAnalysisByPostCode(String postCode) {
         Post post = postRepository.findByPostCode(postCode).orElseThrow(() -> new EntityNotFoundException("Post not found with postCode: " + postCode));
 
-        PostSentimentAnalysis postSentimentAnalysis = postSentimentAnalysisRepository.findByPost(post)
+        PostSentimentAnalysis postSentimentAnalysis = postSentimentAnalysisRepository.findByPostCode(postCode)
                                                             .orElseThrow(() -> new EntityNotFoundException("PostSentimentAnalysis not found with postCode: " + postCode));
 
         return PostSentimentAnalysisDTO.builder()

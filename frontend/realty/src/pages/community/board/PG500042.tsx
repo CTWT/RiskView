@@ -21,9 +21,9 @@ import axios from "axios";
  * 수업명 : 가비아 2회차
  * 이름 : 이주하
  * 작성자 : 이주하
- * 수정자 : 박윤성
+ * 수정자 : 유연우
  * 작성일 : 25.08.19
- * 수정일 : 25.09.03
+ * 수정일 : 25.09.23
  * 파일명 : PG500042.tsx
  */
 
@@ -45,6 +45,15 @@ interface PostDetail {
     comments: Comment[];
     postType?: "질문" | "후기" | "정보" | "기타";
 }
+// 게시판 감성 분석
+export interface PostSentimentAnalysis {
+  sentimentScore: number;        // 감성 점수 (0~100)
+  sentimentCategory: string;     // 감성 분류 (긍정, 부정, 중립)
+  sentimentEmoji: string;        // 이모지
+  summary: string;               // 분석 요약 설명
+  analyzedAt: string;            // 분석 완료 시각 (ISO 날짜 문자열)
+}
+
 
 // PostDetail에 추가적인 플래그(__fromWrite)를 포함한 확장 인터페이스
 // - __fromWrite: 글 작성 후 이동 시 임시 상태임을 표시
@@ -386,6 +395,32 @@ const PG500042: React.FC = () => {
         viewedOnceRef.current = true;
         fetch(`/api/posts/${pid}/views`, { method: "POST" }).catch(() => {});
     }, [getPostId]);
+
+    const [analysis, setAnalysis] = useState<PostSentimentAnalysis | null>(null);
+
+    useEffect(() => {
+        const fetchSentimentAnalysis = async () => {
+            const pid = getPostId();
+            console.log(`[PG500042] 게시글 ID : ${pid}`);
+            if (!pid) {
+                console.error("게시글 ID가 없습니다. 감성 분석을 불러올 수 없습니다.");
+                return;
+            }
+            try {
+                const res = await fetch(`/api/posts/sentiment/${pid}`);
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                const data: PostSentimentAnalysis = await res.json();
+                setAnalysis(data);
+            } catch (err) {
+                console.error("감성 분석 로딩 실패:", err);
+                setAnalysis(null);
+            }
+        };
+        fetchSentimentAnalysis();
+    }, [id, location.search, location.state, getPostId]);
+
 
     /**
      * 로컬 상태의 댓글 내용을 수정
@@ -860,6 +895,8 @@ const PG500042: React.FC = () => {
         }
     };
 
+
+
     return (
         // PageContainer: 상단 브레드크럼/중앙정렬 레이아웃 컴포넌트
         <PageContainer showBreadcrumb={true} centerContent={true}>
@@ -998,16 +1035,16 @@ const PG500042: React.FC = () => {
                     </div>
                 </div>
 
-                {/* AI 감성분석 섹션 (샘플/목업) */}
+                {/* AI 감성분석 섹션 */}
                 <section className="ai-analysis">
                     <h3 className="analysis-title">AI 감성분석</h3>
                     <div className="analysis-content">
                         <div className="emotion-badges">
                             <div className="score-item sentiment-score">
                                 <div className="sentiment-label">
-                                    <span className="sentiment-emoji">😊</span>
+                                    <span className="sentiment-emoji">{analysis?.sentimentEmoji}</span>
                                     <span className="sentiment-text">
-                                        긍정적 정보 공유
+                                        {analysis?.sentimentCategory}
                                     </span>
                                 </div>
                                 <div className="sentiment-bar-wrapper">
@@ -1018,22 +1055,18 @@ const PG500042: React.FC = () => {
                                     <div className="sentiment-bar-bg">
                                         <div
                                             className="sentiment-bar-fill"
-                                            style={{ width: "82%" }}
+                                            style={{ width: `${analysis?.sentimentScore}%` }}
                                         />
                                     </div>
                                     <span className="sentiment-score-number">
-                                        82/100
+                                        {analysis?.sentimentScore}/100
                                     </span>
                                 </div>
                             </div>
                         </div>
                         <p></p>
                         <p className="analysis-text">
-                            이 게시글은 실제 경험을 바탕으로 한 유용한 정보를
-                            담고 있습니다. 특히 전세 계약 시 주의사항과 RiskView
-                            서비스 사용 후기가 다른 사용자들에게 큰 도움이 될
-                            것으로 분석됩니다. 긍적적이고 건설적인 내용으로
-                            커뮤니티에 가치를 더하는 게시글입니다.
+                            {analysis?.summary || "감성 분석 결과를 불러오는 중입니다..."}
                         </p>
                     </div>
                     <hr className="emotion-divider" />
@@ -1043,7 +1076,7 @@ const PG500042: React.FC = () => {
                             커뮤니티 기여도
                         </small>
                         <span className="analysis-timestamp">
-                            🕐 분석 시간: 2025.08.15 오후 17:39:48
+                            🕐 분석 시간: {analysis?.analyzedAt}
                         </span>
                     </div>
                 </section>

@@ -706,9 +706,9 @@
 .rv05-dl {
   display: grid;
   grid-template-columns: 1fr 1fr; /* 왼쪽은 라벨, 오른쪽은 값 */
-  row-gap: 12px; /* 세로 간격 */
+  row-gap: 16px; /* 세로 간격 */
   column-gap: 28px; /* 좌우 간격 */
-  align-items: center; /* 세로 중앙 정렬 */
+  align-items: start; /* 세로 중앙 정렬 */
   margin: 0;
   padding: 0;
 }
@@ -721,11 +721,12 @@
 }
 
 .rv05-dl dd {
+  text-indent: 1em;
+  text-align: left;
   font-weight: 600;
   margin: 0;
-  word-break: break-all; /* 긴 텍스트 강제 줄바꿈 (CJK 언어 대응) */
+  word-break: keep-all; /* 긴 텍스트 단어 단위 줄바꿈 */
   line-height: 1.8;
-  text-align: right; /* 값 오른쪽 정렬 */
 }
 
 /* 칩(상단 요약) */
@@ -808,23 +809,6 @@
   background: #f59e0b22;
 }
 
-/* 위험도 등급별 색상 */
-.rv05-badge.danger {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-color: #fecaca;
-}
-.rv05-badge.warn {
-  background-color: #fef3c7;
-  color: #92400e;
-  border-color: #fde68a;
-}
-.rv05-badge.ok {
-  background-color: #dcfce7;
-  color: #166534;
-  border-color: #bbf7d0;
-}
-
 /* 특약 */
 .rv05-special {
   white-space: pre-wrap;
@@ -868,6 +852,14 @@
 
 .rv05-dim {
   color: #9ca3af;
+}
+
+/* 액션 버튼 영역 */
+.rv05-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
 }
 
 /* --- 스켈레톤 UI 스타일 --- */
@@ -938,7 +930,8 @@
   position: absolute;
   background-color: #ffffff;
   min-width: 160px;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
   z-index: 1;
   border-radius: 8px;
   bottom: 100%; /* 버튼 위에 표시 */

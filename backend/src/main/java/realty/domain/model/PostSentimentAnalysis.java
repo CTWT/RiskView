@@ -9,9 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "post_sentiment_analysis",
-       indexes = @Index(name = "fk_post_sentiment", columnList = "post_code"),
-       uniqueConstraints = @UniqueConstraint(name = "analysis_code", columnNames = "analysis_code"))
+@Table(name = "post_sentiment_analysis")
 public class PostSentimentAnalysis {
 
     @Id
@@ -22,10 +20,8 @@ public class PostSentimentAnalysis {
     @Column(name = "analysis_code", nullable = false, length = 20)
     private String analysisCode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_code", nullable = false,
-                foreignKey = @ForeignKey(name = "fk_post_sentiment"))
-    private Post post; // Post 엔티티와 매핑
+    @Column(name = "post_code", nullable = false, length = 20) 
+    private String postCode; 
 
     @Column(name = "sentiment_score", nullable = false)
     private Integer sentimentScore;

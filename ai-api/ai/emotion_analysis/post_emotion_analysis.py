@@ -32,7 +32,7 @@ BASE_PROMPT = """
 너는 부동산 커뮤니티의 게시글 내용을 분석하는 AI 감성 분석가야.
 
 사용자가 작성한 커뮤니티 글의 **텍스트 내용만을 기반으로** 감성분석을 수행하고, 다음 항목을 JSON 형식으로 출력해줘.
-summary는 2문장을 반드시 채워줘.
+summary는 4문장을 반드시 채워줘.
 
 출력 형식(JSON):
 {
@@ -62,6 +62,8 @@ summary는 2문장을 반드시 채워줘.
 
 - 모든 출력은 반드시 JSON 객체여야 하며, 코드 블록(예: ```)으로 감싸지 마세요.
 - summary 기제시 반드시 어울리는 이모지를 추가하세요.
+- summary 기재시 반드시 게시물에 대한 감성분석을 한 줄 이상 기재하세요.
+- summary 감성 분석 멘트 후 매우 감성적인 코멘트를 한 줄 이상 추가하세요.
 
 """
 
@@ -169,7 +171,7 @@ def create_prompt(title: str, content: str) -> str:
 def analyze_sentiment(title: str, content: str):
     prompt = create_prompt(title, content)
     response = client.chat.completions.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,
         max_tokens=700,
@@ -223,9 +225,12 @@ def analyze_all_posts_as_json():
     return results
 
 
-# if __name__ == "__main__":
-#     # posts 테이블 전체 감성분석 실행
-#     results = analyze_all_posts_as_json()
-#     import json
+# post_code
 
-#     print(json.dumps(results, ensure_ascii=False, indent=2))
+
+if __name__ == "__main__":
+    # posts 테이블 전체 감성분석 실행
+    results = analyze_all_posts_as_json()
+    import json
+
+    print(json.dumps(results, ensure_ascii=False, indent=2))

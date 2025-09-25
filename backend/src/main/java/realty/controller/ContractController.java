@@ -161,20 +161,6 @@ public class ContractController {
         log.info("특약사항 분석을 실행합니다.");
         ContractClauseDTO contractClauseDTO = contractService.analyzeClause(contractClause);
 
-        // 디코딩
-        String decoded = URLDecoder.decode(contractClauseDTO.getClauseValue(), StandardCharsets.UTF_8);
-
-        // 끝 '=' 제거
-        if (decoded.endsWith("=")) {
-            decoded = decoded.substring(0, decoded.length() - 1);
-        }
-
-        // DTO 업데이트
-        contractClauseDTO.setClauseValue(decoded);
-
-        // 디코딩 후 로그 출력
-        log.info("특약사항 분석 결과(디코딩 완료) : {}", contractClauseDTO.toString());
-
         return ResponseEntity.ok(contractClauseDTO);
     }
 

@@ -1,19 +1,27 @@
 package realty.controller;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +37,8 @@ import realty.domain.dto.ContractDTO;
 import realty.domain.dto.FinalCommitRequest;
 import realty.domain.dto.MapInfo;
 import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
+import realty.domain.model.FileStorageMetadata;
+import realty.domain.repository.FileStorageMetadataRepository;
 import realty.domain.model.StructuredContractData;
 import realty.domain.model.User;
 import realty.service.ContractService;
@@ -46,6 +56,7 @@ import realty.support.AddressFormatter;
  */
 
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class ContractController {
     private static final Logger log = LoggerFactory.getLogger(ContractController.class);
@@ -55,6 +66,7 @@ public class ContractController {
     private final OcrComponent ocrComponent;
     private final FileComponent fileComponent;
     private final UserService userService;
+    private final FileStorageMetadataRepository fileStorageMetadataRepository;
 
     /**
      * 계약서를 저장하는 PostMapping
@@ -111,6 +123,38 @@ public class ContractController {
                     .ok()
                     .body(analysisSummaryDTO);
 
+    }
+    
+    @GetMapping("/download/contract")
+    public ResponseEntity<Resource> downloadContractFile(@RequestParam("documentCode") String documentCode) throws IOException {
+        log.info("파일 다운로드 요청. 문서 코드: {}", documentCode);
+
+        // 1. documentCode(entity_code)로 파일 메타데이터 조회
+        FileStorageMetadata metadata = fileStorageMetadataRepository.findByEntityCode(documentCode).stream().findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("문서 코드에 해당하는 파일을 찾을 수 없습니다: " + documentCode));
+
+        // 2. 실제 저장된 파일명 (fileCode + . + 확장자)으로 파일 경로 생성 및 리소스 로드
+        // metadata.getOriginalName()에서 확장자를 추출하여 사용
+        String fileExtension = getFileExtension(metadata.getOriginalName());
+        String storedFileName = metadata.getFileCode() + "." + fileExtension;
+        Path filePath = Paths.get(metadata.getStoredPath()).resolve(storedFileName).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (!resource.exists() || !resource.isReadable()) {
+            throw new FileNotFoundException("파일을 찾을 수 없거나 읽을 수 없습니다: " + storedFileName);
+        }
+
+        // 3. 다운로드 시 사용할 원본 파일명 추출
+        String originalFileName = metadata.getOriginalName();
+
+        // 4. 다운로드를 위한 HTTP 헤더 설정
+        String encodedFileName = URLEncoder.encode(originalFileName, StandardCharsets.UTF_8.toString()).replaceAll("\\+", "%20");
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"");
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(resource);
     }
 
     /**
@@ -204,5 +248,11 @@ public class ContractController {
         dto.setRealtorOfficeAddress2(AddressFormatter.formatAddress(dto.getRealtorOfficeAddress2()));
         dto.setLessorAgentAddress(AddressFormatter.formatAddress(dto.getLessorAgentAddress()));
         dto.setLesseeAgentAddress(AddressFormatter.formatAddress(dto.getLesseeAgentAddress()));
+    }
+
+    // 파일 확장자를 추출하는 헬퍼 메서드 (FileComponent와 중복되지만, Controller에서도 필요하므로 추가)
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
     }
 }

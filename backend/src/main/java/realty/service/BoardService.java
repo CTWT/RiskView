@@ -207,11 +207,14 @@ public class BoardService {
 
                 logger.info("originalName : {}", safeFileName);
 
-                String resultFilename = contractService.fileStorageMetadataSave(fileStorageMetadataDTO, entityCode);
-                String fileUrl = fileComponent.getPathURL() + resultFilename;
+                FileStorageMetadata metadata = contractService.fileStorageMetadataSave(fileStorageMetadataDTO, entityCode);
+                String fileExtension = getFileExtension(metadata.getOriginalName());
+                String storedFileNameOnDisk = metadata.getFileCode() + "." + fileExtension;
+
+                String fileUrl = fileComponent.getPathURL() + storedFileNameOnDisk;
 
                 // 실제 파일 저장
-                Path path = Paths.get(storedPath, resultFilename);
+                Path path = Paths.get(storedPath, storedFileNameOnDisk);
                 Files.write(path, imageBytes);
 
                 // content 내 base64 -> URL로 교체
@@ -222,6 +225,12 @@ public class BoardService {
         }
 
         return content;
+    }
+
+    // 파일 확장자를 추출하는 헬퍼 메서드
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
     }
 
 

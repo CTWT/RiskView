@@ -46,10 +46,12 @@ public class FileComponent {
      * @param session  세션
      * @return 파일경로
      */
-    public String saveFile(File file, String fileName, HttpSession session) {
+    public String saveFile(File file, String fileCode, String originalFileName) {
         if (file == null || file.isFile() == false) {
             throw new IllegalArgumentException("파일이 아니거나 null 입니다.");
         }
+        // 실제 저장될 파일명은 fileCode와 원본 파일의 확장자를 조합하여 생성
+        String storedFileNameOnDisk = fileCode + "." + getFileExtension(originalFileName);
 
         try {
             // 1. 저장힐 폴더 경로 설정
@@ -60,7 +62,7 @@ public class FileComponent {
                 Files.createDirectories(dir);
             }
 
-            Path filePath = dir.resolve(fileName);
+            Path filePath = dir.resolve(storedFileNameOnDisk);
 
             // 3. 임시 파일 → 저장 폴더로 복사 (기존 파일 덮어쓰기 허용)
             Files.copy(file.toPath(), filePath, StandardCopyOption.REPLACE_EXISTING);
@@ -71,7 +73,7 @@ public class FileComponent {
                 System.err.println("임시 파일 삭제 실패: " + file.getAbsolutePath());
             }
 
-            return filePath.toString();
+            return dir.toString(); // 저장된 디렉토리 경로만 반환
 
         } catch (IOException e) {
             throw new RuntimeException("파일 저장 실패", e);
@@ -163,5 +165,11 @@ public class FileComponent {
     public int longtoInt(long l) {
         Long ll = l;
         return ll.intValue();
+    }
+
+    // 파일 확장자를 추출하는 헬퍼 메서드
+    private String getFileExtension(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        return (dotIndex == -1) ? "" : fileName.substring(dotIndex + 1);
     }
 }

@@ -161,12 +161,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             const apiLang = backendLangMap[targetLang];
             const [contractRes, analysisRes] = await Promise.all([
                 axios.post<StructuredContractDataDTO>(
-                    'http://localhost:8000/contracts/translate',
+                    '/api/contracts/translate',
                     data,
                     { params: { target_lang: apiLang } }
                 ),
                 axios.post<AnalysisSummaryDTO>(
-                    'http://localhost:8000/analysis/translate',
+                    '/api/analysis/translate',
                     summary,
                     { params: { target_lang: apiLang } }
                 )
@@ -237,11 +237,11 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                 console.log("PG100005: 계약서 및 요약 정보 API 호출");
                 const [contractRes, summaryRes] = await Promise.all([
                     axios.get<StructuredContractDataDTO>(
-                        "http://localhost:8080/contracts",
+                        "/api/contracts",
                         { params: { documentCode: code }, withCredentials: true }
                     ),
                     axios.get<AnalysisSummaryDTO>(
-                        "http://localhost:8080/analysisSummary",
+                        "/api/analysisSummary",
                         { params: { documentCode: code }, withCredentials: true }
                     ),
                 ]);

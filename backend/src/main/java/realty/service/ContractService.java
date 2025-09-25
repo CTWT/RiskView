@@ -118,13 +118,14 @@ public class ContractService {
         log.info("구조화된 계약 데이터 저장 완료. 문서 코드: {}", documentCode);
     }
 
-    public String fileStorageMetadataSave(ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO, String entityCode) {
+    public FileStorageMetadata fileStorageMetadataSave(ContractDTO.FileStorageMetadataDTO fileStorageMetadataDTO, String entityCode) {
         log.info("파일 메타데이터 저장 시작. 부모 코드: {}", entityCode);
         log.info("파일 메타데이터 DTO : {}", fileStorageMetadataDTO);
         FileStorageMetadata entity = ContractDTO.FileStorageMetadataDTO.toEntity(fileStorageMetadataDTO);
         entity.setFileCode("not-set"); // 초기값
-        entity.setOriginalName("not-set"); // 초기값
         entity.setEntityCode(entityCode);
+        // 원본 파일명은 DTO에서 받은 그대로 유지합니다.
+        entity.setOriginalName(fileStorageMetadataDTO.getOriginalName());
 
         // 일단 저장하여 ID 생성
         FileStorageMetadata savedEntity = fileStorageMetadataRepository.saveAndFlush(entity);
@@ -132,12 +133,11 @@ public class ContractService {
         // 고유 코드 생성
         String generateCode = "FSM" + String.format("%08d", savedEntity.getFileId());
         savedEntity.setFileCode(generateCode);
-        savedEntity.setOriginalName(generateCode + "_" + fileStorageMetadataDTO.getOriginalName());
 
         fileStorageMetadataRepository.save(savedEntity);
         fileStorageMetadataRepository.flush();
 
-        return generateCode + "_" + fileStorageMetadataDTO.getOriginalName();
+        return savedEntity;
     }
 
     @Transactional
@@ -145,7 +145,7 @@ public class ContractService {
         log.info("계약 정보 저장 트랜잭션 시작. 사용자 코드: {}", userCode);
         String documentsCode = documentSave(contractInfo.getDocumentsDTO(), userCode);
         structuredContractDataSave(contractInfo.getStructuredContractDataDTO(), documentsCode);
-        String fileName = fileStorageMetadataSave(contractInfo.getFileStorageMetadataDTO(), documentsCode);
+        FileStorageMetadata metadata = fileStorageMetadataSave(contractInfo.getFileStorageMetadataDTO(), documentsCode);
 
         // 세션에 저장된 임시 파일경로를 가져와서 불러옴
         String tempFilePath = (String) session.getAttribute("tempFilePath");
@@ -153,10 +153,10 @@ public class ContractService {
         Path filePath = Path.of(tempFilePath);
         File file = filePath.toFile();
 
-        log.info("최종 파일 이름 : {}", fileName);
-
-        // 불러온 임시파일 저장
-        fileComponent.saveFile(file, fileName, session);
+        // 불러온 임시파일 저장하고, 저장된 디렉토리 경로를 받아옴
+        String storedDir = fileComponent.saveFile(file, metadata.getFileCode(), metadata.getOriginalName());
+        metadata.setStoredPath(storedDir);
+        fileStorageMetadataRepository.save(metadata);
 
         log.info("계약 정보 저장 트랜잭션 완료. 문서 코드: {}", documentsCode);
         return documentsCode;

@@ -331,8 +331,6 @@
     height: auto !important;
     /* 고정 높이 제거 */
     min-height: calc(100vh - 72px);
-    /* 헤더 높이 제외한 최소 높이 */
-    margin-top: 72px;
     box-sizing: border-box;
     display: flex;
     justify-content: center;

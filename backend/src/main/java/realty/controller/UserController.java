@@ -36,7 +36,7 @@ import jakarta.servlet.http.Cookie;
  * 작성자 : 박윤성
  * 수정자 : 박윤성
  * 작성일 : 25.07.18
- * 수정일 : 25.09.22
+ * 수정일 : 25.09.25
  * 파일명 : UserController.java
  */
 
@@ -279,22 +279,14 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseBody);
         }
 
-        // 이메일 인증코드 발송
-        String emailToken = emailService.sendVerificationEmailCode(email.trim());
-        logger.info("API: [POST /api/user/send-password-reset-code] - 비밀번호 재설정 코드를 이메일로 발송. email: {}", email.trim());
-
-        // HttpOnly 쿠키로 저장
-        Cookie emailTokenCookie = new Cookie("emailToken", emailToken);
-        emailTokenCookie.setHttpOnly(true);
-        emailTokenCookie.setPath("/");
-        // cookie.setSecure(true); // HTTPS 환경일 때만 전송 허용하는 설정. 추후 활용.
-        emailTokenCookie.setMaxAge(emailTokenExpiration);
-        response.addCookie(emailTokenCookie);
-        logger.debug("emailToken for password reset added to cookie.");
+        // 인증 코드와 토큰 생성
+        Map<String, String> codeAndToken = emailService.createVerificationCodeAndToken(email.trim());
+        logger.info("API: [POST /api/user/send-password-reset-code] - 비밀번호 재설정용 인증 코드 및 토큰 생성. email: {}", email.trim());
 
         // 성공 응답
-        responseBody.put("message", email + "로 인증코드를 발송했습니다.");
-        responseBody.put("token", emailToken); // 프론트엔드에 토큰 전달
+        responseBody.put("message", "인증 코드 및 토큰이 생성되었습니다.");
+        responseBody.put("code", codeAndToken.get("code"));
+        responseBody.put("token", codeAndToken.get("token"));
         // 응답 반환
         return ResponseEntity.ok(responseBody);
     }

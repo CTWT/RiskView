@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import emailjs from "@emailjs/browser";
 
 /**
  * 공통 axios 요청 함수
@@ -21,11 +22,12 @@ export const apiRequest = async <T = unknown,>(
         return response;
     } catch (error) {
         if (axios.isAxiosError(error)) {
+            // 서버에서 보낸 오류 메시지가 있으면 그것을 사용하고, 없으면 기본 메시지 사용
             throw new Error(
-                error.response?.data?.message || "API 요청중 오류 발생"
+                error.response?.data?.message || "서버와 통신 중 오류가 발생했습니다."
             );
         }
-        throw new Error("알 수 없는 오류 발생");
+        throw new Error("알 수 없는 네트워크 오류가 발생했습니다.");
     }
 };
 
@@ -47,14 +49,57 @@ export const checkEmailDuplicate = async (email: string) => {
  * @param email 이메일 인증을 위한 이메일
  * @returns
  */
-export const sendVerificationEmail = async (email: string) => {
-    const response = await apiRequest<{ message: string }>({
+export const requestVerificationCode = async (email: string) => {
+    const response = await apiRequest<{ message: string; code: string; token: string }>({
         url: "/api/send-verification-email-code",
         method: "POST",
         data: { email },
     });
-    return response.data.message;
+    return response.data; // { message, code, token }
 };
+
+/**
+ * 비밀번호 재설정 코드 발송 요청
+ * @param userId 사용자 아이디
+ * @param email 사용자 이메일
+ * @returns
+ */
+export const requestPasswordResetCode = async (userId: string, email: string) => {
+    const response = await apiRequest<{ message: string; code: string; token: string }>({
+        url: "/api/user/send-password-reset-code",
+        method: "POST",
+        data: { userId, email },
+    });
+    return response.data;
+};
+/**
+ * EmailJS를 사용하여 인증 이메일 발송
+ * @param to_email 수신자 이메일
+ * @param verification_code 인증 코드
+ */
+export const sendEmailWithEmailJS = async (to_email: string, verification_code: string) => {
+    const serviceID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+    const templateID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+    const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+    if (!serviceID || !templateID || !publicKey) {
+        throw new Error("EmailJS 환경 변수가 설정되지 않았습니다.");
+    }
+
+    const templateParams = {
+        to_email: to_email,
+        verification_code: verification_code,
+    };
+
+    try {
+        await emailjs.send(serviceID, templateID, templateParams, publicKey);
+        console.log("EmailJS: 이메일 발송 성공!");
+    } catch (error) {
+        console.error("EmailJS: 이메일 발송 실패...", error);
+        throw new Error("EmailJS를 통한 이메일 발송에 실패했습니다.");
+    }
+};
+
 
 /**
  * 이메일 인증코드 일치 확인

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
+import Cookies from "js-cookie";
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
 import * as Common from "../../../../components/common";
@@ -14,6 +15,7 @@ import * as UserAPI from "../../../../components/api";
  * 작성자 : 이주하
  * 수정자 : 박윤성
  * 작성일 : 25.07.29
+ * 수정일 : 25.09.25
  * 파일명 : PG300006.tsx
  */
 
@@ -166,28 +168,32 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
             }
 
             try {
-                const available = await UserAPI.checkEmailDuplicate(
-                    emailResult.value!
-                );
+                const available = await UserAPI.checkEmailDuplicate(emailResult.value!);
                 if (!available) {
-                    showToast("이미 사용중인 이메일 입니다.", {
-                        type: "error",
-                    });
+                    showToast("이미 사용중인 이메일 입니다.", { type: "error" });
                     return;
                 }
 
-                const message = await UserAPI.sendVerificationEmail(
-                    emailResult.value!
-                );
-                showToast(message || "인증코드가 전송되었습니다.", {
-                    type: "success",
-                });
+                // 1. 백엔드에 인증 코드와 토큰 생성 요청
+                const { code, token } = await UserAPI.requestVerificationCode(emailResult.value!);
 
-                setSend(true);
-            } catch {
-                showToast("이메일 전송 중 오류가 발생했습니다.", {
-                    type: "error",
-                });
+                if (code && token) {
+                    // 2. EmailJS로 이메일 발송
+                    await UserAPI.sendEmailWithEmailJS(emailResult.value!, code);
+
+                    // 3. 응답으로 받은 토큰을 쿠키에 저장
+                    Cookies.set("emailToken", token, { expires: 1/48, path: '/' }); // 30분 유효
+
+                    showToast("인증코드가 전송되었습니다.", { type: "success" });
+                    setSend(true);
+                } else {
+                    throw new Error("서버로부터 인증 코드 또는 토큰을 받지 못했습니다.");
+                }
+            } catch (error) {
+                // api.tsx에서 throw된 Error 객체를 받아 메시지를 표시
+                const errorMessage = error instanceof Error ? error.message : "이메일 처리 중 오류가 발생했습니다.";
+                showToast(errorMessage, { type: "error" });
+                console.error("이메일 발송 프로세스 오류:", error);
             }
             return;
         }
@@ -200,28 +206,17 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
             }
 
             try {
-                const result = await UserAPI.verifyEmailCode(
-                    form.email,
-                    form.num
-                );
+                const result = await UserAPI.verifyEmailCode(form.email, form.num);
 
                 if (result.code === "001") {
                     setVerify(true);
-                    showToast(
-                        result.message || "이메일 인증이 완료되었습니다.",
-                        { type: "success" }
-                    );
+                    showToast(result.message || "이메일 인증이 완료되었습니다.", { type: "success" });
                     setEmail(form.email);
                 } else {
-                    showToast(
-                        result.message || "인증번호가 올바르지 않습니다.",
-                        { type: "error" }
-                    );
+                    showToast(result.message || "인증번호가 올바르지 않습니다.", { type: "error" });
                 }
             } catch (error) {
-                showToast("인증 처리 중 오류가 발생했습니다.", {
-                    type: "error",
-                });
+                showToast("인증 처리 중 오류가 발생했습니다.", { type: "error" });
                 console.log(error);
             }
         }
@@ -245,24 +240,15 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
         async (userIdToCheck: string): Promise<boolean> => {
             try {
                 setIsCheckingUserId(true);
-                const result = await UserAPI.checkUserIdDuplicate(
-                    userIdToCheck
-                );
+                const result = await UserAPI.checkUserIdDuplicate(userIdToCheck);
 
                 if (result.available) {
                     setIsUserIdValid(true);
-                    showToast("사용 가능한 아이디 입니다.", {
-                        type: "success",
-                    });
+                    showToast("사용 가능한 아이디 입니다.", { type: "success" });
                     return true;
                 } else {
                     setIsUserIdValid(false);
-                    showToast(
-                        result.message || "이미 사용 중인 아이디 입니다.",
-                        {
-                            type: "error",
-                        }
-                    );
+                    showToast(result.message || "이미 사용 중인 아이디 입니다.", { type: "error" });
                     return false;
                 }
             } catch (error) {
@@ -286,9 +272,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
     const handleNicknameCheck = useCallback(
         async (nicknameToCheck: string): Promise<boolean> => {
             try {
-                const result = await UserAPI.checkNickNameDuplicate(
-                    nicknameToCheck
-                );
+                const result = await UserAPI.checkNickNameDuplicate(nicknameToCheck);
                 console.log("nickname");
                 if (result.available) {
                     setIsNicknameValid(true);
@@ -296,19 +280,12 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                     return true;
                 } else {
                     setIsNicknameValid(false);
-                    showToast(
-                        result.message || "이미 사용 중인 닉네임입니다.",
-                        {
-                            type: "error",
-                        }
-                    );
+                    showToast(result.message || "이미 사용 중인 닉네임입니다.", { type: "error" });
                     return false;
                 }
             } catch (error) {
                 setIsNicknameValid(false);
-                showToast("닉네임 확인 중 오류가 발생했습니다.", {
-                    type: "error",
-                });
+                showToast("닉네임 확인 중 오류가 발생했습니다.", { type: "error" });
                 console.error("Nickname check error:", error);
                 return false;
             }
@@ -350,9 +327,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
         const timeoutId = setTimeout(() => {
             if (confirmPassword && password) {
                 if (confirmPassword !== password) {
-                    showToast("비밀번호가 일치하지 않습니다.", {
-                        type: "error",
-                    });
+                    showToast("비밀번호가 일치하지 않습니다.", { type: "error" });
                 } else {
                     showToast("비밀번호가 일치합니다.", { type: "success" });
                 }
@@ -377,12 +352,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
             confirmPassword === password &&
             verify === true
         ) {
-            console.log("폼 제출 완료:", {
-                email,
-                password,
-                userId,
-                nickname,
-            });
+            console.log("폼 제출 완료:", { email, password, userId, nickname });
 
             onNext({ password, userId, nickname, email });
         } else {
@@ -520,9 +490,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                         />
                         <span
                             className="password-toggle-icon"
-                            onClick={() =>
-                                setShowConfirmPassword((prev) => !prev)
-                            }
+                            onClick={() => setShowConfirmPassword((prev) => !prev)}
                         >
                             {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
                         </span>
@@ -580,22 +548,14 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                     {/* 로그인 페이지로 이동 */}
                     <p className="authPrompt">
                         이미 계정이 있으신가요?
-                        <button
-                            type="button"
-                            onClick={onLogin}
-                            className="authLink"
-                        >
+                        <button type="button" onClick={onLogin} className="authLink">
                             로그인
                         </button>
                     </p>
                 </form>
             </div>
             {/* 토스트 컴포넌트 */}
-            <Toast
-                message={toast.message}
-                type={toast.type}
-                isVisible={toast.isVisible}
-            />
+            <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} />
         </div>
     );
 };

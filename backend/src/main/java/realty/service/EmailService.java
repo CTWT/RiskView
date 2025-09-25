@@ -2,16 +2,12 @@ package realty.service;
 
 import realty.support.JwtUtil;
 import io.jsonwebtoken.Claims;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import java.util.Date;
 import java.util.Map;
 import java.util.Random;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -22,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
  * 작성자 : 박윤성
  * 수정자 : 박윤성
  * 작성일 : 25.07.25
+ * 수정일 : 25.09.25
  * 파일명 : EmailService.java
  */
 
@@ -29,9 +26,6 @@ import org.springframework.beans.factory.annotation.Value;
 public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
-
-    @Autowired
-    private JavaMailSender javaMailSender;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -42,12 +36,11 @@ public class EmailService {
 
     /**
      * 이메일 인증코드 전송
-     * @param email 인증코드를 보낼 이메일 주소
-     * @param request HTTP 요청
-     * @return 이메일 인증코드 발송 결과
+     * @param email 인증할 이메일 주소
+     * @return 생성된 인증 코드와 JWT 토큰을 담은 Map
      */
-    public String sendVerificationEmailCode(String email) {
-        logger.info("이메일 인증코드 전송 프로세스 시작. 수신자: {}", email);
+    public Map<String, String> createVerificationCodeAndToken(String email) {
+        logger.info("이메일 인증코드 및 토큰 생성 프로세스 시작. 이메일: {}", email);
         // 이메일 유효성 검사
         if (email == null || email.trim().isEmpty()) {
             logger.warn("이메일 주소가 null이거나 비어있습니다.");
@@ -70,53 +63,8 @@ public class EmailService {
             throw new RuntimeException("이메일 인증코드 생성에 실패했습니다.", e);
         }
 
-        try {
-            logger.info("메일 발송 준비. 발신자: {}, 수신자: {}", senderEmail, email);
-            // JavaMailSender를 통해 이메일 메시지 생성
-            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-            // 이메일 발신자, 수신자, 제목, 내용 설정을 위해 MimeMessageHelper 객체 생성
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage,"utf-8");
-            logger.debug("MimeMessageHelper 생성 및 기본 설정 완료.");
-            helper.setFrom(senderEmail);
-            helper.setTo(email);
-            helper.setSubject("[RiskView] 이메일 인증 코드를 확인해주세요.");
-            String emailContent = "<!DOCTYPE html>"
-                + "<html>"
-                + "<body style=\"font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; margin: 0; padding: 0; background-color: #f8f9fa;\">"
-                + "  <div style=\"max-width: 600px; margin: 40px auto; background-color: #ffffff; border: 1px solid #dee2e6; border-radius: 12px; overflow: hidden;\">"
-                + "    <div style=\"background-color: #8b5cf6; color: white; padding: 24px; text-align: center;\">"
-                + "      <h1 style=\"margin: 0; font-size: 24px;\">RiskView 이메일 인증</h1>"
-                + "    </div>"
-                + "    <div style=\"padding: 32px;\">"
-                + "      <h2 style=\"font-size: 20px; color: #343a40; margin-top: 0;\">인증 코드를 확인해주세요.</h2>"
-                + "      <p style=\"font-size: 16px; color: #495057; line-height: 1.6;\">안녕하세요! RiskView입니다.<br>아래 인증 코드를 입력하여 본인 확인을 완료해주세요.</p>"
-                + "      <div style=\"background-color: #f1f3f5; border-radius: 8px; margin: 24px 0; padding: 20px; text-align: center;\">"
-                + "        <p style=\"font-size: 32px; font-weight: 700; color: #8b5cf6; margin: 0; letter-spacing: 4px;\">" + code + "</p>"
-                + "      </div>"
-                + "      <p style=\"font-size: 14px; color: #868e96;\">이 인증 코드는 <strong>30분</strong> 동안 유효합니다.</p>"
-                + "      <p style=\"font-size: 14px; color: #868e96;\">만약 직접 요청하지 않으셨다면 이 이메일을 무시하셔도 됩니다.</p>"
-                + "    </div>"
-                + "    <div style=\"background-color: #f8f9fa; padding: 16px; text-align: center; font-size: 12px; color: #adb5bd;\">"
-                + "      © RiskView. All rights reserved.<br>본 메일은 발신 전용입니다."
-                + "    </div>"
-                + "  </div>"
-                + "</body>"
-                + "</html>";
-
-        
-            helper.setText(emailContent, true);
-
-            logger.debug("이메일 전송 시도...");
-            // javaMailSender를 통해 이메일 전송
-            javaMailSender.send(mimeMessage);
-            logger.info("✅ 이메일 전송 성공. 수신자: {}", email);
-        } catch (MessagingException e) {
-            logger.error("❌ 이메일 전송 실패. 수신자: {}. SMTP 설정 및 네트워크를 확인하세요.", email, e);
-            throw new RuntimeException("이메일 발송에 실패했습니다.", e);
-        }
-
-        // 코드가 포함된 토큰 반환
-        return token;
+        // 인증 코드와 토큰을 Map에 담아 반환
+        return Map.of("code", code, "token", token);
     }
 
     /**

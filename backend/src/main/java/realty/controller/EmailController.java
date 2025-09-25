@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 작성자 : 박윤성
  * 수정자 : 박윤성
  * 작성일 : 25.07.25
+ * 수정일 : 25.09.25
  * 파일명 : EmailController.java
  */
 
@@ -59,24 +60,16 @@ public class EmailController {
         logger.info("API 요청 수신: 이메일 인증코드 발송. 수신자 이메일: {}", email);
 
         try {
-            // 이메일 인증코드 발송
-            String emailToken = emailService.sendVerificationEmailCode(email);
-            logger.debug("EmailService로부터 이메일 토큰 수신 완료.");
-
-            // HttpOnly 쿠키로 저장
-            Cookie cookie = new Cookie("emailToken", emailToken);
-            cookie.setHttpOnly(true);
-            // cookie.setSecure(true); // HTTPS 환경에서만 전송되도록. 추후 활성화 예정.
-            cookie.setPath("/");
-            cookie.setMaxAge(emailTokenExpiration); // 유효기간 설정
-
-            // 응답에 쿠키 추가
-            response.addCookie(cookie);
+            // 인증 코드와 토큰 생성
+            Map<String, String> codeAndToken = emailService.createVerificationCodeAndToken(email);
+            logger.debug("EmailService로부터 인증 코드 및 토큰 수신 완료.");
 
             // 메시지와 함께 OK 응답 반환
-            logger.info("이메일 인증코드 발송 성공. 수신자: {}", email);
+            logger.info("이메일 인증코드 및 토큰 생성 성공. 수신자: {}", email);
             return ResponseEntity.ok(Map.of(
-                "message", email + "로 인증코드를 발송했습니다."
+                "message", "인증 코드 및 토큰이 생성되었습니다.",
+                "code", codeAndToken.get("code"),
+                "token", codeAndToken.get("token")
             ));
         } catch (IllegalArgumentException e) {
             logger.warn("잘못된 요청으로 인증코드 발송 실패. 수신자: {}, 원인: {}", email, e.getMessage());

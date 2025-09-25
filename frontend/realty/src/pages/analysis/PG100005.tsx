@@ -99,9 +99,43 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
         const pdfData = displayData;
         if (!pdfData) return;
 
-        console.log("PG100005: PDF 내보내기 실행", { lang: i18n.language });
+        // PDF에 필요한 모든 레이블을 현재 언어로 미리 번역합니다.
+        const pdfLabels = {
+            analysis_report_title: t("analysis_report_title"),
+            basic_information: t("basic_information"),
+            property_address: t("property_address"),
+            contract_type: t("contract_type"),
+            lease_period: t("lease_period"),
+            financial_analysis_base: t("financial_analysis_base"),
+            deposit: t("deposit"),
+            down_payment: t("down_payment"),
+            middle_payment: t("middle_payment"),
+            balance: t("balance"),
+            rent: t("rent"),
+            currency_unit: t("currency_unit"),
+            special_terms: t("special_terms"),
+            no_special_terms: t("no_special_terms"),
+            summary: t("summary"),
+            risk_level: t("risk_level"),
+            sentiment_analysis: t("sentiment_analysis"),
+            sentiment_score: t("sentiment_score"),
+            transaction_anomaly_detection: t("transaction_anomaly_detection"),
+            contract_price: t("contract_price"),
+            average_price: t("average_price"),
+            deviation_rate: t("deviation_rate"),
+            anomaly_status: t("anomaly_status"),
+            anomaly: t("anomaly"),
+            normal: t("normal"),
+            risky_clauses: t("risky_clauses"),
+            legal_risk: t("legal_risk"),
+            clause_summary: t("clause_summary"),
+            financial_impact: t("financial_impact"),
+            operational_impact: t("operational_impact"),
+            recommended_action: t("recommended_action"),
+            no_analysis_data: t("no_analysis_data"),
+        };
 
-        const blob = await pdf(<ReportPDF data={pdfData} summary={summary}/>).toBlob();
+        const blob = await pdf(<ReportPDF data={pdfData} summary={displaySummary} labels={pdfLabels} lang={i18n.language} />).toBlob();
         const url = URL.createObjectURL(blob);
 
         const a = document.createElement("a");

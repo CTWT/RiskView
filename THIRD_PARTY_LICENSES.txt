@@ -1,5 +1,21 @@
 The following third-party libraries are used in this project:
 
+Library: NotoSansKR
+License: SIL Open Font License, Version 1.1
+URL: https://fonts.google.com/noto/specimen/Noto+Sans+KR/license?query=noto+sans+kr
+
+---
+
+Library: NotoSansJP
+License: SIL Open Font License, Version 1.1
+URL: https://fonts.google.com/noto/specimen/Noto+Sans+JP/license?query=noto+sans+jp
+
+---
+
+Library: NotoSansSC
+License: SIL Open Font License, Version 1.1
+URL: https://fonts.google.com/noto/specimen/Noto+Sans+SC/license?query=noto+sans+sc
+
 ---
 
 Library: Open Korean Text  

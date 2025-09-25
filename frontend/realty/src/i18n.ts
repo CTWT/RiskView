@@ -28,6 +28,8 @@ const resources = {
       contract_type: "Contract Type",
       jeonse: "Jeonse",
       monthly: "Monthly Rent",
+      JEONSE: "Jeonse",
+      MONTHLY: "Monthly Rent",
 
       // Comprehensive Risk Banner
       comprehensive_risk_assessment: "Comprehensive Risk Assessment",
@@ -41,9 +43,17 @@ const resources = {
       CRITICAL: "CRITICAL",
       WARNING: "WARNING",
       CAUTION: "CAUTION",
+      UNKNOWN: "UNKNOWN",
+      치명: "CRITICAL",
+      고위험: "HIGH",
+      경고: "WARNING",
+      주의: "CAUTION",
+      저위험: "LOW",
 
       // Transaction Anomaly
       transaction_anomaly_detection: "Transaction Anomaly Detection",
+      summary: "Summary",
+      risk_level: "Risk Level",
       contract_price: "Contract Price",
       average_price: "Average Price",
       deviation_rate: "Deviation Rate",
@@ -52,6 +62,7 @@ const resources = {
       normal: "Normal",
 
       // Risky Clauses
+      sentiment_analysis: "Sentiment Analysis",
       risky_clauses: "Risky Clauses",
       clause_summary: "Clause Summary",
       legal_risk: "Legal Risk",
@@ -98,6 +109,7 @@ const resources = {
       translating: "Translating...",
       translate_contract: "Translate Contract",
 
+      no_analysis_data: "No analysis data available.",
       // Currency
       currency_unit: "KRW",
     },
@@ -175,6 +187,8 @@ const resources = {
       contract_type: "계약 유형",
       jeonse: "전세",
       monthly: "월세",
+      JEONSE: "전세",
+      MONTHLY: "월세",
 
       // Comprehensive Risk Banner
       comprehensive_risk_assessment: "종합 위험도 평가",
@@ -188,9 +202,17 @@ const resources = {
       치명: "치명",
       경고: "경고",
       주의: "주의",
+      UNKNOWN: "알 수 없음",
+      HIGH: "고위험",
+      MEDIUM: "중위험",
+      LOW: "저위험",
+      CRITICAL: "치명",
+      WARNING: "경고",
 
       // Transaction Anomaly
       transaction_anomaly_detection: "거래 이상 감지",
+      summary: "요약",
+      risk_level: "위험 수준",
       contract_price: "계약 가격",
       average_price: "평균 가격",
       deviation_rate: "편차율",
@@ -199,6 +221,7 @@ const resources = {
       normal: "정상",
 
       // Risky Clauses
+      sentiment_analysis: "감성 분석",
       risky_clauses: "위험 조항",
       clause_summary: "조항 요약",
       legal_risk: "법적 리스크",
@@ -245,6 +268,7 @@ const resources = {
       translating: "번역 중...",
       translate_contract: "계약서 번역",
 
+      no_analysis_data: "분석 데이터가 없습니다.",
       // Currency
       currency_unit: "원",
     },
@@ -322,6 +346,8 @@ const resources = {
       contract_type: "契約タイプ",
       jeonse: "チョンセ",
       monthly: "月払い家賃",
+      JEONSE: "チョンセ",
+      MONTHLY: "月払い家賃",
 
       // Comprehensive Risk Banner
       comprehensive_risk_assessment: "総合リスク評価",
@@ -335,9 +361,14 @@ const resources = {
       致命的: "致命的",
       警告: "警告",
       注意: "注意",
+      UNKNOWN: "不明",
+      "HIGH": "高リスク",
+      "MEDIUM": "中リスク",
 
       // Transaction Anomaly
       transaction_anomaly_detection: "取引異常検知",
+      summary: "要約",
+      risk_level: "リスクレベル",
       contract_price: "契約価格",
       average_price: "平均価格",
       deviation_rate: "偏差率",
@@ -346,6 +377,7 @@ const resources = {
       normal: "正常",
 
       // Risky Clauses
+      sentiment_analysis: "感情分析",
       risky_clauses: "危険条項",
       clause_summary: "条項要約",
       legal_risk: "法的リスク",
@@ -392,6 +424,7 @@ const resources = {
       translating: "翻訳中...",
       translate_contract: "契約書翻訳",
 
+      no_analysis_data: "分析データがありません。",
       // Currency
       currency_unit: "KRW",
     },
@@ -463,6 +496,8 @@ const resources = {
       contract_type: "合同类型",
       jeonse: "全租",
       monthly: "月租",
+      JEONSE: "全租",
+      MONTHLY: "月租",
 
       // Comprehensive Risk Banner
       comprehensive_risk_assessment: "综合风险评估",
@@ -476,9 +511,14 @@ const resources = {
       致命: "致命",
       警告: "警告",
       注意: "注意",
+      UNKNOWN: "未知",
+      "HIGH": "高风险",
+      "MEDIUM": "中风险",
 
       // Transaction Anomaly
       transaction_anomaly_detection: "交易异常检测",
+      summary: "摘要",
+      risk_level: "风险等级",
       contract_price: "合同价格",
       average_price: "平均价格",
       deviation_rate: "偏差率",
@@ -487,6 +527,7 @@ const resources = {
       normal: "正常",
 
       // Risky Clauses
+      sentiment_analysis: "情感分析",
       risky_clauses: "风险条款",
       clause_summary: "条款摘要",
       legal_risk: "法律风险",
@@ -533,6 +574,7 @@ const resources = {
       translating: "翻译中...",
       translate_contract: "翻译合同",
 
+      no_analysis_data: "无分析数据。",
       // Currency
       currency_unit: "韩元",
     },
@@ -557,9 +599,6 @@ const resources = {
       landlordName: "房东姓名",
       tenantName: "租户姓名",
       landType: "土地类别",
-      landArea: "土地面积",
-      buildingStructureUse: "建筑结构/用途",
-      buildingArea: "建筑面积",
       leaseArea: "租赁面积",
       realtorAddress: "中介地址",
       realtorName: "中介名称",

@@ -6641,3 +6641,15 @@
   padding: 40px;
   color: #6b7280;
 }
+
+/* 인쇄 전용 스타일 */
+@media print {
+  /* 인쇄 시 사이드바 숨기기 */
+  .analysis-sidebar-wrapper {
+    display: none;
+  }
+  /* 인쇄 시 버튼 영역 숨기기 */
+  .rv05-actions {
+    display: none;
+  }
+}

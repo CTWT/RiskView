@@ -1,6 +1,9 @@
 // ReportPDF.tsx
 import React from "react";
-import NotoSansKR from "../../src/fonts/NotoSansKR-Regular.ttf";
+import NotoSansKR from "../../../../ai-api/api/wordcloud/NotoSansKR-Bold.ttf";
+import NotoSansJP from "../../../../ai-api/api/wordcloud/NotoSansJP-Bold.ttf";
+import NotoSansSC from "../../../../ai-api/api/wordcloud/NotoSansSC-Bold.ttf";
+
 import { Font } from "@react-pdf/renderer";
 import {
   Page,
@@ -12,11 +15,8 @@ import {
 import type { StructuredContractDataDTO } from "../types/contract";
 import type { AnalysisSummaryDTO } from "../pages/analysis/PG100005";
 
-// 폰트 등록
-Font.register({
-  family: "NotoSansKR",
-  src: NotoSansKR,
-});
+// 한글 등 비 라틴 문자권 하이픈 오류 방지
+Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
   page: { padding: 30, fontSize: 12, fontFamily: "NotoSansKR", backgroundColor: "#f9f9f9" },
@@ -34,54 +34,79 @@ const styles = StyleSheet.create({
 interface ReportPDFProps {
   data: StructuredContractDataDTO;
   summary: AnalysisSummaryDTO | null;
+  labels: Record<string, string>;
+  lang: string; // 현재 언어 코드 (e.g., 'KO', 'EN', 'JP', 'ZH')
 }
 
-const ReportPDF: React.FC<ReportPDFProps> = ({ data, summary }) => {
+const ReportPDF: React.FC<ReportPDFProps> = ({ data, summary, labels, lang }) => {
+  // 언어에 따라 폰트 동적 등록
+  const getFontFamily = (language: string) => {
+    const upperLang = language.toUpperCase();
+    switch (upperLang) {
+      case 'JA': // 일본어
+      case 'JP':
+        Font.register({ family: "NotoSans", src: NotoSansJP });
+        return "NotoSans";
+      case 'ZH': // 중국어
+        Font.register({ family: "NotoSans", src: NotoSansSC });
+        return "NotoSans";
+      case 'KO': // 한국어
+      default:
+        Font.register({ family: "NotoSans", src: NotoSansKR });
+        return "NotoSans";
+    }
+  };
+
+  const fontFamily = getFontFamily(lang);
+  const dynamicStyles = StyleSheet.create({
+    page: { ...styles.page, fontFamily: fontFamily },
+  });
+
   if (!summary) {
     return (
       <Document>
         <Page style={styles.page}>
-          <Text>분석 데이터가 없습니다.</Text>
+          <Text>{labels.no_analysis_data}</Text>
         </Page>
       </Document>
     );
   }
 
-  const sentimentColor =
-    summary.analysisReport.sentimentScore > 70
-      ? "#4caf50"
-      : summary.analysisReport.sentimentScore > 40
-      ? "#ff9800"
-      : "#f44336";
+  const getSentimentColor = (score: number) => {
+    if (score > 70) return "#4caf50"; // Positive
+    if (score > 40) return "#ff9800"; // Neutral
+    return "#f44336"; // Negative
+  };
 
-  const riskColor =
-    summary.analysisReport.riskLevel === "HIGH"
-      ? "#d32f2f"
-      : summary.analysisReport.riskLevel === "MEDIUM"
-      ? "#fbc02d"
-      : "#388e3c";
+  const getRiskColor = (riskLevel: string) => {
+    const lowerRisk = riskLevel?.toLowerCase();
+    if (["high", "critical", "고위험", "치명"].includes(lowerRisk)) return "#d32f2f";
+    if (["medium", "warning", "중위험", "경고"].includes(lowerRisk)) return "#fbc02d";
+    if (["low", "저위험"].includes(lowerRisk)) return "#388e3c";
+    return "#9e9e9e"; // gray for UNKNOWN
+  };
 
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
+      <Page size="A4" style={dynamicStyles.page}>
         {/* 제목 */}
         <View style={styles.section}>
-          <Text style={styles.title}>계약서 분석 리포트</Text>
+          <Text style={styles.title}>{labels.analysis_report_title}</Text>
         </View>
 
         {/* 기본 정보 */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>기본 정보</Text>
+          <Text style={styles.subtitle}>{labels.basic_information}</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>매물 주소:</Text>
+            <Text style={styles.label}>{labels.property_address}:</Text>
             <Text style={styles.value}>{data.location ?? "-"}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>계약 유형:</Text>
+            <Text style={styles.label}>{labels.contract_type}:</Text>
             <Text style={styles.value}>{data.leaseType ?? "-"}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>임대 기간:</Text>
+            <Text style={styles.label}>{labels.lease_period}:</Text>
             <Text style={styles.value}>
               {data.leasePeriodStart ?? "-"} ~ {data.leasePeriodEnd ?? "-"}
             </Text>
@@ -90,83 +115,83 @@ const ReportPDF: React.FC<ReportPDFProps> = ({ data, summary }) => {
 
         {/* 재무 정보 */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>재무 정보</Text>
+          <Text style={styles.subtitle}>{labels.financial_analysis_base}</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>보증금:</Text>
-            <Text style={styles.value}>{data.deposit?.toLocaleString() ?? "-"} 원</Text>
+            <Text style={styles.label}>{labels.deposit}:</Text>
+            <Text style={styles.value}>{data.deposit?.toLocaleString() ?? "-"} {labels.currency_unit}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>계약금:</Text>
-            <Text style={styles.value}>{data.downPayment?.toLocaleString() ?? "-"} 원</Text>
+            <Text style={styles.label}>{labels.down_payment}:</Text>
+            <Text style={styles.value}>{data.downPayment?.toLocaleString() ?? "-"} {labels.currency_unit}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>중도금:</Text>
-            <Text style={styles.value}>{data.middlePayment?.toLocaleString() ?? "-"} 원</Text>
+            <Text style={styles.label}>{labels.middle_payment}:</Text>
+            <Text style={styles.value}>{data.middlePayment?.toLocaleString() ?? "-"} {labels.currency_unit}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>잔금:</Text>
-            <Text style={styles.value}>{data.balance?.toLocaleString() ?? "-"} 원</Text>
+            <Text style={styles.label}>{labels.balance}:</Text>
+            <Text style={styles.value}>{data.balance?.toLocaleString() ?? "-"} {labels.currency_unit}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>차임:</Text>
+            <Text style={styles.label}>{labels.rent}:</Text>
             <Text style={styles.value}>
-              {data.rentAmount?.toLocaleString() ?? "-"} 원 ({data.rentType ?? "-"})
+              {data.rentAmount?.toLocaleString() ?? "-"} {labels.currency_unit} ({data.rentType ?? "-"})
             </Text>
           </View>
         </View>
 
         {/* 특약사항 */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>특약사항</Text>
-          <Text>{data.specialTerms?.trim() || "특약 없음"}</Text>
+          <Text style={styles.subtitle}>{labels.special_terms}</Text>
+          <Text>{data.specialTerms?.trim() || labels.no_special_terms}</Text>
         </View>
 
         {/* 분석 요약 */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>AI 분석 요약</Text>
+          <Text style={styles.subtitle}>{labels.analysis_report_title}</Text>
           <View style={{ ...styles.highlightBox, backgroundColor: "#e3f2fd" }}>
-            <Text>요약: {summary.analysisReport.summary}</Text>
+            <Text>{labels.summary}: {summary.analysisReport.summary}</Text>
           </View>
-          <Text style={{ color: riskColor }}>위험 수준: {summary.analysisReport.riskLevel}</Text>
+          <Text style={{ color: getRiskColor(summary.analysisReport.riskLevel) }}>{labels.risk_level}: {summary.analysisReport.riskLevel}</Text>
           <View style={{ marginTop: 4 }}>
             <Text>
-              감성 분석: {summary.analysisReport.sentimentSummary} {summary.analysisReport.sentimentEmoji}
+              {labels.sentiment_analysis}: {summary.analysisReport.sentimentSummary} {summary.analysisReport.sentimentEmoji}
             </Text>
             <View style={styles.sentimentBarContainer}>
               <View
                 style={{
                   ...styles.sentimentBarFill,
                   width: `${summary.analysisReport.sentimentScore}%`,
-                  backgroundColor: sentimentColor,
+                  backgroundColor: getSentimentColor(summary.analysisReport.sentimentScore),
                 }}
               />
             </View>
             <Text>
-              감성 점수: {summary.analysisReport.sentimentScore} ({summary.analysisReport.sentimentCategory})
+              {labels.sentiment_score}: {summary.analysisReport.sentimentScore} ({summary.analysisReport.sentimentCategory})
             </Text>
           </View>
         </View>
 
         {/* 거래 이상 감지 */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>거래 이상 감지</Text>
-          <Text>계약 가격: {summary.transactionAnomaly.price.toLocaleString()} 원</Text>
-          <Text>평균 가격: {summary.transactionAnomaly.averagePrice.toLocaleString()} 원</Text>
-          <Text>편차율: {summary.transactionAnomaly.deviationPercent}%</Text>
-          <Text>이상 여부: {summary.transactionAnomaly.isAnomaly ? "이상" : "정상"}</Text>
+          <Text style={styles.subtitle}>{labels.transaction_anomaly_detection}</Text>
+          <Text>{labels.contract_price}: {summary.transactionAnomaly.price.toLocaleString()} {labels.currency_unit}</Text>
+          <Text>{labels.average_price}: {summary.transactionAnomaly.averagePrice.toLocaleString()} {labels.currency_unit}</Text>
+          <Text>{labels.deviation_rate}: {summary.transactionAnomaly.deviationPercent}%</Text>
+          <Text>{labels.anomaly_status}: {summary.transactionAnomaly.isAnomaly ? labels.anomaly : labels.normal}</Text>
         </View>
 
         {/* 위험 조항 */}
         <View style={styles.section}>
-          <Text style={styles.subtitle}>위험 조항</Text>
+          <Text style={styles.subtitle}>{labels.risky_clauses}</Text>
           <View style={{ ...styles.highlightBox, backgroundColor: "#ffecec" }}>
-            <Text style={{ fontWeight: "bold", color: "#d32f2f" }}>법적 리스크:</Text>
+            <Text style={{ fontWeight: "bold", color: "#d32f2f" }}>{labels.legal_risk}:</Text>
             <Text>{summary.riskyClauses.legalRisk}</Text>
           </View>
-          <Text>조항 요약: {summary.riskyClauses.clauseSummary}</Text>
-          <Text>재정적 영향: {summary.riskyClauses.financialImpact}</Text>
-          <Text>운영적 영향: {summary.riskyClauses.operationalImpact}</Text>
-          <Text>권장 조치: {summary.riskyClauses.recommendedAction}</Text>
+          <Text>{labels.clause_summary}: {summary.riskyClauses.clauseSummary}</Text>
+          <Text>{labels.financial_impact}: {summary.riskyClauses.financialImpact}</Text>
+          <Text>{labels.operational_impact}: {summary.riskyClauses.operationalImpact}</Text>
+          <Text>{labels.recommended_action}: {summary.riskyClauses.recommendedAction}</Text>
         </View>
       </Page>
     </Document>

@@ -80,6 +80,10 @@ public class ContractController {
         fileComponent.saveFile(file, fileName, session);
 
         formatAddress(contractInfo.getStructuredContractDataDTO());
+
+        log.info("들어온 데이터 : {}", contractInfo.getStructuredContractDataDTO());
+
+
         String documentCode = contractService.save(contractInfo, userCode);
         return ResponseEntity
                 .ok()

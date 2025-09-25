@@ -57,6 +57,7 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
     try {
       const { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO } = ocrData!;
       const payload = { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO };
+      console.log("전송 데이터", structuredContractDataDTO)
       const response = await axios.post<string>("http://localhost:8080/contracts", payload, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,

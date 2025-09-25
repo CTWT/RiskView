@@ -260,11 +260,6 @@ const PG200002: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="white-divider"></div>
-                                <div className="ai-status-wrapper">
-                                    <div className="ai-status-badge">
-                                        분석 완료
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     ))}

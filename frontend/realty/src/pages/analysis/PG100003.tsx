@@ -177,6 +177,9 @@ const PG100003: React.FC<PG100003Props> = ({
      */
     const handleProcessResult = async () => {
         try {
+
+            console.log(currentOcrData);
+
             if (onAnalysisComplete) {
                  onAnalysisComplete(currentOcrData); // ocr 데이터 전달
             }

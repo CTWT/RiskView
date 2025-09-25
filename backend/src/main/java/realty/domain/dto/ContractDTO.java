@@ -255,6 +255,7 @@ public class ContractDTO {
                     .leasePeriodEnd(toLocalDate(dto.getLeasePeriodEnd()))
                     .commissionAmount(dto.getCommissionAmount())
                     .specialTerms(dto.getSpecialTerms())
+                    .contractDate(toLocalDate(dto.getContractDate()))
                     .lessorAddress(dto.getLessorAddress())
                     .lessorIdNumber(dto.getLessorIdNumber())
                     .lessorPhone(dto.getLessorPhone())

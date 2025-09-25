@@ -1,7 +1,7 @@
 # create_report.py
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Union
 from openai import OpenAI, RateLimitError
 import os, json, re
 
@@ -9,13 +9,13 @@ import os, json, re
 # Pydantic 모델 정의
 # -----------------------------
 class AnomalyDetectResult(BaseModel):
-    userContractPrice: float
-    totalRiskScore: float
-    averagePrice: float
+    userContractPrice: Union[int, float]
+    totalRiskScore: Union[int, float]
+    averagePrice: Union[int, float]
     isAnomaly: bool
-    deviationPercent: float
-    riskLevel: str
-    riskComment: str
+    deviationPercent: Union[int, float]
+    riskLevel: Optional[str] = None
+    riskComment: Optional[str] = None
     zScore: Optional[float] = None
     label: Optional[str] = None
 

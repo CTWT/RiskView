@@ -29,6 +29,7 @@ import realty.domain.dto.ContractDTO;
 import realty.domain.dto.FinalCommitRequest;
 import realty.domain.dto.MapInfo;
 import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
+import realty.domain.model.StructuredContractData;
 import realty.domain.model.User;
 import realty.service.ContractService;
 import realty.service.UserService;
@@ -38,8 +39,9 @@ import realty.support.AddressFormatter;
  * 수업명 : 가비아 2회차
  * 이름 : 김관호
  * 작성자 : 김관호
- * 수정자 : 
+ * 수정자 : 박윤성
  * 작성일 : 25.08.08
+ * 수정일 : 25.09.25
  * 파일명 : ContractController.java
  */
 
@@ -92,9 +94,16 @@ public class ContractController {
     @GetMapping("/contracts")
     public ResponseEntity<ContractDTO.StructuredContractDataDTO> getData(
             @RequestParam("documentCode") String documentCode) {
+        
+        StructuredContractData contractData = contractService.findStructuredContractDataByDocumentcode(documentCode);
 
-        ContractDTO.StructuredContractDataDTO dto = ContractDTO.StructuredContractDataDTO.from(
-                contractService.findStructuredContractDataByDocumentcode(documentCode));
+        // 주민등록번호 필드 복호화
+        contractData.setLessorIdNumber(userService.decrypt(contractData.getLessorIdNumber()));
+        contractData.setLesseeIdNumber(userService.decrypt(contractData.getLesseeIdNumber()));
+        contractData.setLessorAgentIdNumber(userService.decrypt(contractData.getLessorAgentIdNumber()));
+        contractData.setLesseeAgentIdNumber(userService.decrypt(contractData.getLesseeAgentIdNumber()));
+
+        ContractDTO.StructuredContractDataDTO dto = ContractDTO.StructuredContractDataDTO.from(contractData);
 
         formatAddress(dto);
 

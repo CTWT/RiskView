@@ -67,6 +67,7 @@ public class ContractService {
     private final ContractClauseRepository contractClauseRepository;
     private final AnalysisReportRepository analysisReportRepository;
     private final TransactionAnomalyRepository transactionAnomalyRepository;
+    private final UserService userService; // UserService 주입
     private final RestTemplate restTemplate;
 
     public StructuredContractData findStructuredContractDataByDocumentcode(String documentcode) {
@@ -101,6 +102,13 @@ public class ContractService {
         log.info("구조화된 계약 데이터 저장 시작. 문서 코드: {}", documentCode);
         StructuredContractData entity = ContractDTO.StructuredContractDataDTO.toEntity(structuredContractDataDTO);
         entity.setDocumentcode(documentCode);
+
+        // 주민등록번호 필드 해싱
+        entity.setLessorIdNumber(userService.encrypt(entity.getLessorIdNumber()));
+        entity.setLesseeIdNumber(userService.encrypt(entity.getLesseeIdNumber()));
+        entity.setLessorAgentIdNumber(userService.encrypt(entity.getLessorAgentIdNumber()));
+        entity.setLesseeAgentIdNumber(userService.encrypt(entity.getLesseeAgentIdNumber()));
+
         contractRepository.save(entity);
         log.info("구조화된 계약 데이터 저장 완료. 문서 코드: {}", documentCode);
     }
@@ -234,12 +242,16 @@ public class ContractService {
                 sanitizedDto,
                 AnomalyDetectResult.class);
 
+        AnomalyDetectResult result = response.getBody();
+
         if (response.getStatusCode().is2xxSuccessful()) {
-            log.info("이상 거래 분석 성공. 결과: {}", response.getBody());
+            log.info("이상 거래 분석 성공. 결과: {}", result);
         } else {
             log.error("이상 거래 분석 실패. 응답 코드: {}", response.getStatusCode());
+            // 실패 시 null 또는 기본 객체를 반환할 수 있습니다.
+            return new AnomalyDetectResult(); 
         }
-        return response.getBody();
+        return result != null ? result : new AnomalyDetectResult();
     }
 
     private ContractDTO.StructuredContractDataDTO sanitizeDto(ContractDTO.StructuredContractDataDTO dto) {
@@ -432,13 +444,17 @@ public class ContractService {
         Map<String, String> triggerBody = new HashMap<>();
         triggerBody.put("api_name", apiName);
 
+        @SuppressWarnings("rawtypes") // postForEntity가 제네릭 맵 타입을 직접 지원하지 않으므로 경고를 무시합니다.
         ResponseEntity<Map> response = restTemplate.postForEntity(
                 "http://localhost:8000/trigger",
                 triggerBody,
                 Map.class);
 
-        if (response.getBody() != null) {
-            String message = (String) response.getBody().get("message");
+        @SuppressWarnings("rawtypes")
+        Map responseBody = response.getBody();
+        if (responseBody != null) {
+            Object messageObj = responseBody.get("message");
+            String message = (messageObj != null) ? messageObj.toString() : "No message";
             log.info("FastAPI 트리거 응답: {}", message);
         }
     }

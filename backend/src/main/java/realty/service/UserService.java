@@ -11,8 +11,15 @@ import realty.exception.UserNotFoundException;
 import realty.support.JwtUtil;
 import realty.exception.EmailNotVerifiedException;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.transaction.Transactional; 
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.HashMap;
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.util.Map; 
 
 import org.slf4j.Logger;
@@ -29,6 +36,7 @@ import io.jsonwebtoken.Claims;
  * 작성자 : 박윤성
  * 수정자 : 박윤성
  * 작성일 : 25.07.18
+ * 수정일 : 25.09.25
  * 파일명 : UserService.java
  */
 
@@ -48,6 +56,12 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Value("${app.encryption.secret-key}")
+    private String secretKey;
+
+    @Value("${app.encryption.iv}")
+    private String iv;
 
     /**
      * 로그인 처리
@@ -497,5 +511,58 @@ public class UserService {
         boolean isMatch = passwordEncoder.matches(currentPassword, user.getPassword());
         logger.debug("비밀번호 일치 여부 확인 결과: {}. userId: {}", isMatch, userId);
         return isMatch;
+    }
+
+    /**
+     * 주민등록번호와 같은 민감 정보를 AES-256으로 암호화
+     * @param plainText 암호화할 평문
+     * @return Base64로 인코딩된 암호문
+     */
+    public String encrypt(String plainText) {
+        if (plainText == null || plainText.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+
+            logger.info("secretKey length (chars): {}", secretKey.length());
+            logger.info("secretKey length (bytes): {}", secretKey.getBytes(StandardCharsets.UTF_8).length);
+
+            logger.info("iv length (chars): {}", iv.length());
+            logger.info("iv length (bytes): {}", iv.getBytes(StandardCharsets.UTF_8).length);
+
+            cipher.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
+            byte[] encrypted = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+            return Base64.getEncoder().encodeToString(encrypted);
+        } catch (Exception e) {
+            logger.error("데이터 암호화 중 오류 발생", e);
+            throw new RuntimeException("데이터 암호화에 실패했습니다.", e);
+        }
+    }
+
+    /**
+     * AES-256으로 암호화된 데이터를 복호화
+     * @param encryptedText Base64로 인코딩된 암호문
+     * @return 복호화된 평문
+     */
+    public String decrypt(String encryptedText) {
+        if (encryptedText == null || encryptedText.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+            byte[] decodedBytes = Base64.getDecoder().decode(encryptedText);
+            byte[] decrypted = cipher.doFinal(decodedBytes);
+            return new String(decrypted, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            logger.error("데이터 복호화 중 오류 발생", e);
+            // 복호화 실패 시, 원본 암호화된 텍스트를 반환하거나, 정책에 따라 null 또는 빈 문자열을 반환할 수 있습니다.
+            return encryptedText; // 혹은 null
+        }
     }
 }

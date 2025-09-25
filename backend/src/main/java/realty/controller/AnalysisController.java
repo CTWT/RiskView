@@ -89,7 +89,13 @@ public class AnalysisController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         String userCode = currentUser.getUserCode();
-        List<AnalysisHistoryDTO> history = analysisService.getAnalysisHistory(userCode);
+        List<AnalysisHistoryDTO> history = analysisService.getAnalysisHistory(userCode).stream().map(h -> {
+            // contractDate가 없는 경우를 대비해 analysisDate를 추가
+            if (h.getContractDate() == null && h.getAnalysisDate() != null) {
+                h.setContractDate(h.getAnalysisDate());
+            }
+            return h;
+        }).collect(java.util.stream.Collectors.toList());
         return ResponseEntity.ok(history);
     }
 }

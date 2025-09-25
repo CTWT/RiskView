@@ -8,14 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import realty.apicommunication.FileComponent;
 import realty.domain.dto.PostSentimentAnalysisDTO;
 import realty.domain.dto.BoardDTOs.*;
-import realty.domain.dto.ContractDTO;
 import realty.domain.dto.ContractDTO.FileStorageMetadataDTO;
 import realty.domain.model.CommunityComment;
 import realty.domain.model.FileStorageMetadata;

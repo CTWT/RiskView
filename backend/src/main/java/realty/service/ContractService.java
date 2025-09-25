@@ -1,5 +1,9 @@
 package realty.service;
 
+import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -221,11 +225,13 @@ public class ContractService {
 
         triggerFastApiAnalysis("analyze_estate");
 
+        ContractDTO.StructuredContractDataDTO sanitizedDto = sanitizeDto(structuredContractDataDTO);
+
         log.info("FastAPI 'analyze_estate' 호출");
         // post
         ResponseEntity<AnomalyDetectResult> response = restTemplate.postForEntity(
                 "http://localhost:8000/analyze_estate",
-                structuredContractDataDTO,
+                sanitizedDto,
                 AnomalyDetectResult.class);
 
         if (response.getStatusCode().is2xxSuccessful()) {
@@ -236,6 +242,58 @@ public class ContractService {
         return response.getBody();
     }
 
+    private ContractDTO.StructuredContractDataDTO sanitizeDto(ContractDTO.StructuredContractDataDTO dto) {
+        // 문자열 기본값 처리
+        if (dto.getLeaseType() == null) dto.setLeaseType("");
+        if (dto.getLocation() == null) dto.setLocation("");
+        if (dto.getLandType() == null) dto.setLandType("");
+        if (dto.getBuildingStructureUse() == null) dto.setBuildingStructureUse("");
+        if (dto.getLeasePart() == null) dto.setLeasePart("");
+        if (dto.getRentType() == null) dto.setRentType("");
+        if (dto.getSpecialTerms() == null) dto.setSpecialTerms("");
+
+        // Lessor
+        if (dto.getLessorAddress() == null) dto.setLessorAddress("");
+        if (dto.getLessorIdNumber() == null) dto.setLessorIdNumber("");
+        if (dto.getLessorPhone() == null) dto.setLessorPhone("");
+        if (dto.getLessorName() == null) dto.setLessorName("");
+        if (dto.getLessorAgentAddress() == null) dto.setLessorAgentAddress("");
+        if (dto.getLessorAgentIdNumber() == null) dto.setLessorAgentIdNumber("");
+        if (dto.getLessorAgentName() == null) dto.setLessorAgentName("");
+
+        // Lessee
+        if (dto.getLesseeAddress() == null) dto.setLesseeAddress("");
+        if (dto.getLesseeIdNumber() == null) dto.setLesseeIdNumber("");
+        if (dto.getLesseePhone() == null) dto.setLesseePhone("");
+        if (dto.getLesseeName() == null) dto.setLesseeName("");
+        if (dto.getLesseeAgentAddress() == null) dto.setLesseeAgentAddress("");
+        if (dto.getLesseeAgentIdNumber() == null) dto.setLesseeAgentIdNumber("");
+        if (dto.getLesseeAgentName() == null) dto.setLesseeAgentName("");
+
+        // Realtor
+        if (dto.getRealtorOfficeAddress1() == null) dto.setRealtorOfficeAddress1("");
+        if (dto.getRealtorOfficeAddress2() == null) dto.setRealtorOfficeAddress2("");
+        if (dto.getRealtorOfficeName1() == null) dto.setRealtorOfficeName1("");
+        if (dto.getRealtorOfficeName2() == null) dto.setRealtorOfficeName2("");
+        if (dto.getRealtorSignature1() == null) dto.setRealtorSignature1("");
+        if (dto.getRealtorSignature2() == null) dto.setRealtorSignature2("");
+        if (dto.getRealtorLicensePhone1() == null) dto.setRealtorLicensePhone1("");
+        if (dto.getRealtorLicensePhone2() == null) dto.setRealtorLicensePhone2("");
+        if (dto.getRealtorAgentSignature1() == null) dto.setRealtorAgentSignature1("");
+        if (dto.getRealtorAgentSignature2() == null) dto.setRealtorAgentSignature2("");
+
+        // 날짜 기본값 처리 (오늘 날짜로)
+        if (dto.getMiddlePaymentDate() == null) dto.setMiddlePaymentDate(new Date());
+        if (dto.getBalanceDate() == null) dto.setBalanceDate(new Date());
+        if (dto.getRentDate() == null) dto.setRentDate(new Date());
+        if (dto.getLeasePeriodStart() == null) dto.setLeasePeriodStart(new Date());
+        if (dto.getLeasePeriodEnd() == null) dto.setLeasePeriodEnd(new Date());
+        if (dto.getContractDate() == null) dto.setContractDate(new Date());
+
+        return dto;
+    }
+
+
     /**
      * 특약사항 분석 로직
      * @param contractClause
@@ -243,10 +301,13 @@ public class ContractService {
      */
     public ContractClauseDTO analyzeClause(String contractClause){
         log.info("특약사항 분석 시작. 내용: {}", contractClause);
+
         triggerFastApiAnalysis("analyze_clause");
 
+        String decodedContractClause = decodeUTF(contractClause);
+
         Map<String, String> body = new HashMap<>();
-        body.put("contract_clause", contractClause);
+        body.put("contract_clause", decodedContractClause);
 
         // 헤더 설정
         HttpHeaders headers = new HttpHeaders();
@@ -271,10 +332,28 @@ public class ContractService {
         return response.getBody();
     }
 
+    private String decodeUTF(String incodedStr) {
+        // 디코딩
+        String decoded = URLDecoder.decode(incodedStr, StandardCharsets.UTF_8);
+
+        // 끝 '=' 제거
+        if (decoded.endsWith("=")) {
+            decoded = decoded.substring(0, decoded.length() - 1);
+        }
+
+        // 디코딩 후 로그 출력
+        log.info("디코딩 문자열 : {}", decoded);
+
+        return decoded;
+
+    }
+
     public AnalysisReportsDTO createAnalysisReport(AiRiskAnalysisRequest request) {
         log.info("분석 리포트 생성 시작");
 
         triggerFastApiAnalysis("create_report");
+
+        request.setAnomalyDetectResult(sanitizeAnomalyResult(request.getAnomalyDetectResult()));
 
         log.info("FastAPI 'create_report' 호출");
         // post
@@ -289,6 +368,21 @@ public class ContractService {
             log.error("분석 리포트 생성 실패. 응답 코드: {}", response.getStatusCode());
         }
         return response.getBody();
+    }
+
+    private AnomalyDetectResult sanitizeAnomalyResult(AnomalyDetectResult result) {
+        if (result == null) return new AnomalyDetectResult();
+
+        if (result.getUserContractPrice() == null) result.setUserContractPrice(0L);
+        if (result.getTotalRiskScore() == null) result.setTotalRiskScore(0L);
+        if (result.getAveragePrice() == null) result.setAveragePrice(0L);
+        if (result.getIsAnomaly() == null) result.setIsAnomaly(false);
+        if (result.getDeviationPercent() == null) result.setDeviationPercent(new BigDecimal(0L));
+        if (result.getRiskLevel() == null) result.setRiskLevel("");
+        if (result.getRiskComment() == null) result.setRiskComment("");
+        if (result.getZScore() == null) result.setZScore(new BigDecimal(0L));
+        if (result.getLabel() == null) result.setLabel("");
+        return result;
     }
 
     /**

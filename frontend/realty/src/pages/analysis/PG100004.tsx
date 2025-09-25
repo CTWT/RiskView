@@ -13,15 +13,15 @@ interface PG100004Props {
 export type SentimentCategory = "긍정" | "부정" | "중립";
 
 export interface AnomalyDetectResult {
-  userContractPrice: number;
-  totalRiskScore: number;
-  averagePrice: number;
-  isAnomaly: boolean;
-  deviationPercent : number;
-  riskLevel: string;
-  riskComment: string;
+  userContractPrice: number | null;
+  totalRiskScore: number | null;
+  averagePrice: number | null;
+  isAnomaly: boolean | null;
+  deviationPercent : number | null;
+  riskLevel: string | null;
+  riskComment: string | null;
   zScore: number | null;
-  label: string;
+  label: string | null;
 }
 export interface ContractClauseDTO {
   clauseType: "계약금" | "중도금" | "잔금" | "특약" | "기타";

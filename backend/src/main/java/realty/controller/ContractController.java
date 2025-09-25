@@ -125,7 +125,7 @@ public class ContractController {
         // 계약서 정보
         fileComponent.saveTmpFile(file, session);
         ContractDTO.ContractInfo contractInfo = ocrComponent.scanContract(file);
-        //log.info("컨트렉트데이트 ==> {}", contractInfo.getStructuredContractDataDTO().getContractDate().toString());
+        log.info("OCR 결과 데이터 ==> {}", contractInfo.getStructuredContractDataDTO());
 
         // 맵 정보
         String address = contractInfo.getStructuredContractDataDTO().getLocation();
@@ -157,22 +157,25 @@ public class ContractController {
     }
 
     @PostMapping("/contracts/clauseAnalysis")
-    public ResponseEntity<ContractClauseDTO> analyzeClause(
-             @RequestBody String contractCaluse) {
+    public ResponseEntity<ContractClauseDTO> analyzeClause(@RequestBody String contractClause) {
         log.info("특약사항 분석을 실행합니다.");
-        ContractClauseDTO contractClauseDTO = contractService.analyzeClause(contractCaluse);
+        ContractClauseDTO contractClauseDTO = contractService.analyzeClause(contractClause);
+
+        // 디코딩
         String decoded = URLDecoder.decode(contractClauseDTO.getClauseValue(), StandardCharsets.UTF_8);
-        // 문자열 끝에 '=' 있으면 제거
+
+        // 끝 '=' 제거
         if (decoded.endsWith("=")) {
             decoded = decoded.substring(0, decoded.length() - 1);
         }
+
+        // DTO 업데이트
         contractClauseDTO.setClauseValue(decoded);
-        log.info("특약사항 분석 결과 : {}", contractClauseDTO.toString());
 
+        // 디코딩 후 로그 출력
+        log.info("특약사항 분석 결과(디코딩 완료) : {}", contractClauseDTO.toString());
 
-        return ResponseEntity
-                .ok()
-                .body(contractClauseDTO);
+        return ResponseEntity.ok(contractClauseDTO);
     }
 
     /**

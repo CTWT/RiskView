@@ -2,8 +2,6 @@ package realty.controller;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 
 import org.slf4j.Logger;
@@ -34,6 +32,7 @@ import realty.domain.dto.ContractDTO.StructuredContractDataDTO;
 import realty.domain.model.User;
 import realty.service.ContractService;
 import realty.service.UserService;
+import realty.support.AddressFormatter;
 
 /*
  * 수업명 : 가비아 2회차
@@ -194,35 +193,12 @@ public class ContractController {
      * @param dto
      */
     private void formatAddress(StructuredContractDataDTO dto) {
-        dto.setLocation(formatAddress(dto.getLocation()));
-        dto.setLesseeAddress(formatAddress(dto.getLesseeAddress()));
-        dto.setLessorAddress(formatAddress(dto.getLessorAddress()));
-        dto.setRealtorOfficeAddress1(formatAddress(dto.getRealtorOfficeAddress1()));
-        dto.setRealtorOfficeAddress2(formatAddress(dto.getRealtorOfficeAddress2()));
-        dto.setLessorAgentAddress(formatAddress(dto.getLessorAgentAddress()));
-        dto.setLesseeAgentAddress(formatAddress(dto.getLesseeAgentAddress()));
-    }
-
-    private String formatAddress(String raw) {
-        if (raw == null || raw.isEmpty()) {
-            return raw;
-        }
-
-        String result = raw;
-
-        // 1. 시/도/구/군/동/읍/면/리 뒤에 공백
-        result = result.replaceAll("(시|도|구|군|동|읍|면|리)", "$1 ");
-
-        // 2. 로/길 뒤에 공백
-        result = result.replaceAll("(로|길)", "$1 ");
-
-        // 3. 숫자 앞뒤에 공백 (예: "테헤란로123길45" → "테헤란로 123 길 45")
-        result = result.replaceAll("(?<=\\D)(\\d+)", " $1"); // 숫자 앞에 한글 있으면 공백 삽입
-        result = result.replaceAll("(\\d+)(?=\\D)", "$1 "); // 숫자 뒤에 한글 있으면 공백 삽입
-
-        // 4. 여러 공백 하나로 정리
-        result = result.replaceAll("\\s+", " ").trim();
-        // log.info("주소 변경! {} -> {}", raw, result);
-        return result;
+        dto.setLocation(AddressFormatter.formatAddress(dto.getLocation()));
+        dto.setLesseeAddress(AddressFormatter.formatAddress(dto.getLesseeAddress()));
+        dto.setLessorAddress(AddressFormatter.formatAddress(dto.getLessorAddress()));
+        dto.setRealtorOfficeAddress1(AddressFormatter.formatAddress(dto.getRealtorOfficeAddress1()));
+        dto.setRealtorOfficeAddress2(AddressFormatter.formatAddress(dto.getRealtorOfficeAddress2()));
+        dto.setLessorAgentAddress(AddressFormatter.formatAddress(dto.getLessorAgentAddress()));
+        dto.setLesseeAgentAddress(AddressFormatter.formatAddress(dto.getLesseeAgentAddress()));
     }
 }

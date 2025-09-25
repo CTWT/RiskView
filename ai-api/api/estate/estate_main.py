@@ -763,7 +763,7 @@ def calculate_deviation_rate(user_value, values):
     if mean == 0:
         return None
 
-    deviationPercent = abs(user_value - mean) / mean * 100
+    deviationPercent = (user_value - mean) / mean * 100
     return deviationPercent
 
 # 파일 단독 실행 시 테스트용 임시 계약 데이터로 분석 실행

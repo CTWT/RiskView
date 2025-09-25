@@ -110,7 +110,11 @@ def insertTexttoPDF(contract:LeaseContract,pdf_path:str) -> str:
     elif(contract.rentType == "후불"):
         page.insert_text((407, 298), "ㅁ", fontsize=20, fontname="KoreanFont", fontfile=font_path, color=(1,0,0))
 
-    page.insert_text((460, 295), str(contract.rentDate.day), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
+    # rentDate 처리
+    if contract.rentDate:
+        page.insert_text((460, 295), str(contract.rentDate.day), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
+    else:
+        page.insert_text((460, 295), "1", fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)  # 없을 때는 빈칸/대시
 
     page.insert_text((375, 313), str(contract.leasePeriodStart.year), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)
     page.insert_text((425, 313), str(contract.leasePeriodStart.month), fontsize=fontsize, fontname="KoreanFont", fontfile=font_path)

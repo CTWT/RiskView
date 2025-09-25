@@ -70,22 +70,12 @@ public class ContractController {
         }
         String userCode = user.getUserCode();
 
-        String fileName = contractInfo.getFileStorageMetadataDTO().getOriginalName();
-
-        // 세션에 저장된 임시 파일경로를 가져와서 불러옴
-        String tempFilePath = (String) session.getAttribute("tempFilePath");
-        Path filePath = Path.of(tempFilePath);
-        File file = filePath.toFile();
-
-        // 불러온 임시파일 저장
-        fileComponent.saveFile(file, fileName, session);
-
         formatAddress(contractInfo.getStructuredContractDataDTO());
 
         log.info("들어온 데이터 : {}", contractInfo.getStructuredContractDataDTO());
 
 
-        String documentCode = contractService.save(contractInfo, userCode);
+        String documentCode = contractService.save(contractInfo, userCode, session);
         return ResponseEntity
                 .ok()
                 .body(documentCode);
@@ -157,7 +147,12 @@ public class ContractController {
         log.info("이상치 분석을 실행합니다.");
         AnomalyDetectResult analysisResult = contractService
                 .analyzeAnomaly(contractInfo.getStructuredContractDataDTO());
-        log.info("이상치 분석 결과 : {}", analysisResult.toString());
+
+        if(analysisResult != null) {
+            analysisResult.setAveragePrice(analysisResult.getAveragePrice() * 10000);
+            analysisResult.setUserContractPrice(analysisResult.getUserContractPrice() * 10000);
+            log.info("이상치 분석 결과 : {}", analysisResult.toString());
+        }
 
         return ResponseEntity
                 .ok()

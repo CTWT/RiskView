@@ -1,8 +1,10 @@
 package realty.service;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import realty.apicommunication.FileComponent;
 import realty.domain.dto.AiRiskAnalysisRequest;
 import realty.domain.dto.AnalysisReportsDTO;
 import realty.domain.dto.AnalysisSummaryDTO;
@@ -69,6 +73,7 @@ public class ContractService {
     private final TransactionAnomalyRepository transactionAnomalyRepository;
     private final UserService userService; // UserService 주입
     private final RestTemplate restTemplate;
+    private final FileComponent fileComponent;
 
     public StructuredContractData findStructuredContractDataByDocumentcode(String documentcode) {
         log.info("문서 코드로 구조화된 계약 데이터 조회 시작: {}", documentcode);
@@ -136,16 +141,27 @@ public class ContractService {
     }
 
     @Transactional
-    public String save(ContractDTO.ContractInfo contractInfo, String userCode) {
+    public String save(ContractDTO.ContractInfo contractInfo, String userCode, HttpSession session) {
         log.info("계약 정보 저장 트랜잭션 시작. 사용자 코드: {}", userCode);
         String documentsCode = documentSave(contractInfo.getDocumentsDTO(), userCode);
         structuredContractDataSave(contractInfo.getStructuredContractDataDTO(), documentsCode);
-        fileStorageMetadataSave(contractInfo.getFileStorageMetadataDTO(), documentsCode);
+        String fileName = fileStorageMetadataSave(contractInfo.getFileStorageMetadataDTO(), documentsCode);
+
+        // 세션에 저장된 임시 파일경로를 가져와서 불러옴
+        String tempFilePath = (String) session.getAttribute("tempFilePath");
+        log.info("임시 폴더 경로 : {}", tempFilePath);
+        Path filePath = Path.of(tempFilePath);
+        File file = filePath.toFile();
+
+        log.info("최종 파일 이름 : {}", fileName);
+
+        // 불러온 임시파일 저장
+        fileComponent.saveFile(file, fileName, session);
 
         log.info("계약 정보 저장 트랜잭션 완료. 문서 코드: {}", documentsCode);
         return documentsCode;
     }
-
+    
     @Transactional
     public void save(FinalCommitRequest finalCommitRequest) {
         log.info("최종 분석 결과 저장 트랜잭션 시작. 문서 코드: {}", finalCommitRequest.getDocumentCode());

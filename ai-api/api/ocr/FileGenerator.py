@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 pdf_path = 'api/ocr/sources/Contract_form.pdf'
 
 if isPDFValid(pdf_path):
-    for contract in contracts:
+    for contract in test_dataset:
         output_PDF_path = insertTexttoPDF(contract, pdf_path)
         output_image_path = output_PDF_path.replace('.pdf', '.jpg')
         convertPDFtoJPG(output_PDF_path, output_image_path)

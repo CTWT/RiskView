@@ -154,6 +154,15 @@
   text-align: center;
 }
 
+/* PG100001 - 계약서 분석 페이지 루트 컨테이너 */
+.analysis-root-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 20px;
+}
+
 /* PG100001 - 계약서 분석페이지 담당 */
 
 /* PG100002 계약서 분석 전 페이지 스타일*/
@@ -506,9 +515,6 @@
   padding: 30px;
   max-width: 1200px;
   margin: 0 auto;
-  background-color: #f9f9f9;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -648,7 +654,6 @@
 }
 
 .report-container {
-  margin: 0 auto;
   padding: 24px;
   max-width: 1030px;
 }
@@ -3356,9 +3361,7 @@
 }
 
 /* PG700006.tsx - 분석 내역 레이아웃 (사이드바 + 보고서) */
-.analysis-page-layout {
-  display: flex;            /* 부모를 flex로 설정하여 자식들을 가로 배치 */
-  align-items: flex-start;  /* 상단 정렬 */
+.analysis-page-layout { 
 }
 
 .analysis-sidebar-wrapper {
@@ -3375,9 +3378,17 @@
 }
 
 /* 보고서 영역이 남은 공간을 차지하도록 */
-.analysis-report-container {
-  flex: 1 1 auto;
+.analysis-report-content { 
+  display: flex;
+  gap: 20px; /* 사이드바와 콘텐츠 사이 간격 */
+  align-items: flex-start; 
   min-width: 0;             /* Grid/Flex 내부 콘텐츠가 넘치지 않도록 */
+}
+
+/* analysis-report-container를 flex 컨테이너로 변경 */
+.analysis-report-container {
+  display: flex;
+  justify-content: center; /* 내부 요소를 수평 중앙 정렬 */
 }
 
 /* 사이드바 */
@@ -5828,7 +5839,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 12px;
   padding: 24px 32px;
-  margin-bottom: 30px;
+  margin-bottom: 50px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
@@ -5877,7 +5888,6 @@
 }
 
 .stat-card.login-card {
-  cursor: pointer;
   grid-row: 2;
   grid-column: 2;
   background-color: #fff9db; /* 연한 노란색 */
@@ -5898,6 +5908,16 @@
 }
 .stat-card.activity-card {
     background-color: #fee2e2; /* 연한 빨간색 */
+}
+
+.stat-card.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.stat-card.clickable:active {
+  transform: translateY(1px); /* 크기 변화 없이 살짝 아래로 이동 */
+  box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.2); /* 내부 그림자 미세 조정 */
 }
 
 .stat-icon {
@@ -6076,20 +6096,31 @@
   border-radius: 12px;
   padding: 32px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  margin-top: 30px;
+  margin-top: 50px;
   margin-bottom: 80px;
 }
 
-.card-title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #1f2937;
-  margin: 0 0 32px 0;
+/* 최근 분석 기록 카드 헤더 스타일 */
+.recent-analysis-card {
+  padding: 0; /* 내부 패딩 제거 */
+  overflow: hidden; /* 자식 요소가 border-radius를 넘지 않도록 함 */
+}
+
+.recent-analysis-card .card-title {
+  background-color: #374151d4;
+  color: white;
+  padding: 20px 32px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  border-radius: 12px 12px 0 0; /* 상단 모서리만 둥글게 */
 }
 
 /* 테이블 스타일 */
 .analysis-table {
   width: 100%;
+  padding: 16px 32px; /* 헤더를 제외한 콘텐츠 영역에 패딩 적용 */
+  box-sizing: border-box;
 }
 
 .table-header {
@@ -6525,32 +6556,54 @@
 
 /* PG700006.tsx - 내 분석 내역 사이드바 */
 .analysis-list-sidebar {
+  position: relative; /* 자식 ::after 요소의 기준점 */
   width: 100%;
   max-height: 500px; /* 스크롤 영역의 최대 높이 */
-  overflow-y: auto;
+  margin-top: 150px;
+}
+
+/* 스크롤 영역 하단에 그라데이션을 추가하여 더 많은 콘텐츠가 있음을 암시 */
+.analysis-list-sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 40px; /* 그라데이션 높이 */
+  background: linear-gradient(to top, white, transparent);
+  pointer-events: none; /* 마우스 이벤트가 통과되도록 설정 */
+  border-radius: 0 0 8px 8px;
+}
+
+.analysis-list-scroll-wrapper {
+  height: 500px;
+  overflow-y: auto; /* 실제 스크롤은 이 요소에서 처리 */
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding-right: 8px; /* 스크롤바 공간 확보 */
-  margin-top: 100px;
+}
+
+.analysis-list-sidebar:hover::after {
+  display: none; /* 호버 시에는 그라데이션 숨김 */
 }
 
 /* Webkit 브라우저용 커스텀 스크롤바 */
-.analysis-list-sidebar::-webkit-scrollbar {
+.analysis-list-scroll-wrapper::-webkit-scrollbar {
   width: 6px; /* 스크롤바 너비 */
 }
 
-.analysis-list-sidebar::-webkit-scrollbar-track {
+.analysis-list-scroll-wrapper::-webkit-scrollbar-track {
   background: transparent; /* 기본적으로 트랙 숨김 */
   border-radius: 10px;
 }
 
-.analysis-list-sidebar::-webkit-scrollbar-thumb {
+.analysis-list-scroll-wrapper::-webkit-scrollbar-thumb {
   background: transparent; /* 기본적으로 스크롤바 숨김 */
   border-radius: 10px;
 }
 
-.analysis-sidebar-wrapper:hover .analysis-list-sidebar::-webkit-scrollbar-thumb {
+.analysis-sidebar-wrapper:hover .analysis-list-scroll-wrapper::-webkit-scrollbar-thumb {
   background: #a290ff; /* 사이드바 래퍼에 호버 시 스크롤바 표시 */
 }
 
@@ -6582,14 +6635,6 @@
   justify-content: space-between;
   font-size: 12px;
   color: #6b7280;
-}
-
-.analysis-report-container {
-  width: 100%;
-  flex-grow: 1; /* 남은 공간을 모두 차지하도록 설정 */
-  padding: 0 20px; /* 좌우 여백 추가 */
-  box-sizing: border-box;
-  min-height: auto;
 }
 
 .empty-message {

@@ -68,42 +68,45 @@ const PG700006: React.FC = () => {
     }
 
     return (
-        <div className="analysis-page-layout permanent-sidebar">
-            {/* 사이드바 */}
-            <div className="analysis-sidebar-wrapper">
-                <div className="profile-sidebar" style={{ width: '280px', gap: '8px' }}>
-                    <div className="analysis-list-sidebar">
-                        {analysisHistory.length > 0 ? (
-                            analysisHistory.map((item) => (
-                                <div
-                                    key={item.documentCode}
-                                    className={`analysis-list-item-sidebar ${selectedDocumentCode === item.documentCode ? 'active' : ''}`}
-                                    onClick={() => setSelectedDocumentCode(item.documentCode)}
-                                >
-                                    <div className="analysis-item-location">{item.location}</div>
-                                    <div className="analysis-item-meta">
-                                        <span>{new Date(item.contractDate).toLocaleDateString()}</span>
-                                        <span style={{ color: getRiskColor(item.riskLevel), fontWeight: 'bold' }}>
-                                            {item.riskLevel}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="empty-message">분석 내역이 없습니다.</div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
+        <div className="analysis-page-layout">
             <div className="analysis-report-container">
-                {selectedDocumentCode ? (
-                    <PG100005 documentCode={selectedDocumentCode} />
-                ) : (
-                    <div className="empty-message" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        왼쪽에서 분석 항목을 선택해주세요.
+                <div className="analysis-report-content">
+                    {/* 사이드바 */}
+                    <div className="analysis-sidebar-wrapper">
+                        <div className="profile-sidebar" style={{ width: '280px', gap: '8px' }}>
+                            <div className="analysis-list-sidebar">
+                                <div className="analysis-list-scroll-wrapper">
+                                    {analysisHistory.length > 0 ? (
+                                        analysisHistory.map((item) => (
+                                            <div
+                                                key={item.documentCode}
+                                                className={`analysis-list-item-sidebar ${selectedDocumentCode === item.documentCode ? 'active' : ''}`}
+                                                onClick={() => setSelectedDocumentCode(item.documentCode)}
+                                            >
+                                                <div className="analysis-item-location">{item.location}</div>
+                                                <div className="analysis-item-meta">
+                                                    <span>{new Date(item.contractDate).toLocaleDateString()}</span>
+                                                    <span style={{ color: getRiskColor(item.riskLevel), fontWeight: 'bold' }}>
+                                                        {item.riskLevel}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="empty-message">분석 내역이 없습니다.</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                )}
+                    {selectedDocumentCode ? (
+                        <PG100005 documentCode={selectedDocumentCode} />
+                    ) : (
+                        <div className="empty-message" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {analysisHistory.length > 0 ? '왼쪽에서 분석 항목을 선택해주세요.' : '분석 내역이 없습니다.'}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

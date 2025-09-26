@@ -16,10 +16,12 @@ interface AuthContextType {
     isLoggedIn: boolean; // 로그인 여부
     login: () => void; // 로그인 함수
     logout: () => void; // 로그아웃 함수
+    isLoading: boolean; // 인증 상태 로딩 여부
 }
 
 export const AuthContext = createContext<AuthContextType>({
     isLoggedIn: false, // 초기값: 로그인되지 않은 상태
     login: () => {},
     logout: () => {},
+    isLoading: true, // 초기값: 로딩 중
 });

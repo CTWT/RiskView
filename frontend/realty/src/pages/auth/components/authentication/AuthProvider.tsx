@@ -25,6 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
     // 로그인 상태를 관리하는 상태값
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true); // 인증 상태 확인 로딩 상태 추가
     // 커스텀 훅을 사용하여 토스트 메시지 상태 및 표시 함수 획득
     const { toast, showToast } = useToast();
 
@@ -48,6 +49,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             } catch (error) {
                 console.warn("사용자 인증 확인 실패", error);
                 setIsLoggedIn(false);
+            } finally {
+                setIsLoading(false); // 인증 확인 완료
             }
         };
 
@@ -120,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     // AuthContext.Provider로 로그인 상태와 로그인/로그아웃 함수를 하위 컴포넌트에 전달
     return (
         <>
-            <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
+            <AuthContext.Provider value={{ isLoggedIn, login, logout, isLoading }}>
                 {children}
             </AuthContext.Provider>
             <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} />

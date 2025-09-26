@@ -4,6 +4,7 @@ import { AuthProvider } from "./pages/auth/components/authentication/AuthProvide
 import { AuthContext } from "./pages/auth/components/authentication/AuthContext";
 import Layout from "./components/layout/Layout";
 import PG200001 from "./pages/home/PG200001";
+import useToast from "./hooks/useToast";
 import PG100001 from "./pages/analysis/PG100001";
 import PG300001 from "./pages/auth/components/authentication/PG300001";
 import PG400001 from "./pages/news/PG400001";
@@ -19,14 +20,17 @@ import ChatToggleButtonConnected from "./components/chat/ChatToggleButtonConnect
 
 import "./App.css";
 
-const PrivateRoute: React.FC<{ children: JSX.Element }> = ({ children }) => {
-    const { isLoggedIn } = useContext(AuthContext);
+const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isLoggedIn, isLoading } = useContext(AuthContext);
     const location = useLocation();
+    const { showToast } = useToast();
+
+    if (isLoading) {
+        return <div className="loading-spinner">인증 정보를 확인하는 중...</div>;
+    }
 
     if (!isLoggedIn) {
-        // 사용자가 로그아웃 상태일 경우, 로그인 페이지로 리디렉션합니다.
-        // 현재 요청했던 경로를 state로 전달하여 로그인 후 해당 경로로 돌아갈 수 있도록 합니다.
-        console.log("PrivateRoute: 로그인이 필요하여 /PG300001?login=true로 리디렉션합니다.");
+        showToast("로그인이 필요한 서비스입니다.", { type: "info" });
         return <Navigate to="/PG300001?login=true" state={{ from: location }} replace />;
     }
 
@@ -61,38 +65,35 @@ function App() {
                                 <Route
                                     path="/PG100001"
                                     element={
-                                        <PrivateRoute>
-                                            <PG100001 />
-                                        </PrivateRoute>
+                                        <PrivateRoute><PG100001 /></PrivateRoute>
                                     }
                                 />
                                 <Route
                                     path="/PG400001"
                                     element={
-                                        <PrivateRoute>
-                                            <PG400001 />
-                                        </PrivateRoute>
+                                        <PrivateRoute><PG400001 /></PrivateRoute>
                                     }
                                 />
                                 <Route
                                     path="/PG500001/*"
                                     element={
-                                        <PrivateRoute>
-                                            <PG500001 />
-                                        </PrivateRoute>
+                                        <PrivateRoute><PG500001 /></PrivateRoute>
                                     }
                                 />
                                 <Route
                                     path="/PG500043"
                                     element={
-                                        <PrivateRoute>
-                                            <PG500043 />
-                                        </PrivateRoute>
+                                        <PrivateRoute><PG500043 /></PrivateRoute>
                                     }
                                 />
                                 <Route
                                     path="/PG700001/*"
                                     element={<PrivateRoute><PG700001 /></PrivateRoute>}
+                                />
+                                {/* 마이페이지 하위의 커뮤니티 경로도 PrivateRoute로 보호합니다. */}
+                                <Route
+                                    path="/PG700001/PG500001/*"
+                                    element={<PrivateRoute><PG500001 /></PrivateRoute>}
                                 />
                             </Routes>
                             </Layout>

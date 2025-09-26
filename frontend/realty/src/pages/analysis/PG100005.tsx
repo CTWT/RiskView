@@ -221,6 +221,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
 
     useEffect(() => {
         // --- 데이터 로딩 useEffect ---
+        // 컴포넌트가 마운트될 때 항상 언어를 한국어로 초기화하여 다른 페이지의 번역 상태에 영향을 받지 않도록 합니다.
+        if (i18n.language !== 'KO') {
+            i18n.changeLanguage('KO');
+        }
+        setCurrentLang('KO');
+
         console.log("PG100005: useEffect 실행, 데이터 로딩 시작");
         const code = documentCode ?? sessionStorage.getItem("rv_documentCode");
         if (!code) {
@@ -293,7 +299,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             console.log("PG100005: 컴포넌트 unmount 또는 재실행으로 인한 클린업");
             cancelled = true;
         };
-    }, [documentCode]);
+    }, [documentCode, i18n]);
 
     // i18n 언어 변경과 currentLang 동기화 + 번역 자동 트리거
     useEffect(() => {

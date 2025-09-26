@@ -1,5 +1,5 @@
 import requests
-from data.MapInfo import MapInfo
+from ..data.MapInfo import MapInfo
 from dotenv import load_dotenv
 import sys
 import os
@@ -14,7 +14,7 @@ import re
 
 # 네이버 맵 API(geocoding) 을 처리해주는 파일
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 load_dotenv()
 
 # @Param ocr스캔하여 얻은 계약서의 소재지

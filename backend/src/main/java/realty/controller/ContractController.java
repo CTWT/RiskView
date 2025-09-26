@@ -56,7 +56,6 @@ import realty.support.AddressFormatter;
  */
 
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
 public class ContractController {
     private static final Logger log = LoggerFactory.getLogger(ContractController.class);

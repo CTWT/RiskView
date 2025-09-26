@@ -1,6 +1,6 @@
 import fitz  # PyMuPDF
-from ..data.LeaseContract import LeaseContract
-from ..tools.StringHelper import *
+from ..data.LeaseContract import LeaseContract # This was already correct
+from ..tools.StringHelper import * # This was already correct
 from pdf2image import convert_from_path  # PDF를 이미지(JPG)로 변환하는 함수
 from pdf2image import exceptions
 from pdf2image import convert_from_bytes
@@ -18,7 +18,7 @@ import sys
 #  파일명 : PDFFunction.py
 
 # OCR할 때 필요한 PDF 처리 관련 함수들을 모아 놓은 파일
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) #상위폴더 서치
 load_dotenv()
 poppler_path = os.getenv('POPLER_PATH')
 

@@ -58,7 +58,7 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
       const { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO } = ocrData!;
       const payload = { documentsDTO, fileStorageMetadataDTO, structuredContractDataDTO };
       console.log("전송 데이터", structuredContractDataDTO)
-      const response = await axios.post<string>("/api/contracts", payload, {
+      const response = await axios.post<string>("http://localhost:8080/contracts", payload, {
         headers: { "Content-Type": "application/json" },
         withCredentials: true,
       });
@@ -74,7 +74,7 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
 
   const anomalyDetect = async (ocrData: OcrDataType) => {
     const response = await axios.post<AnomalyDetectResult>(
-      "/api/contracts/anomalyDetect",
+      "http://localhost:8080/contracts/anomalyDetect",
       ocrData
     );
     console.log("이상치 분석 결과 ==>", response.data);
@@ -83,7 +83,7 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
 
   const clauseAnalyze = async (clause: string | null) => {
     const response = await axios.post<ContractClauseDTO>(
-      "/api/contracts/clauseAnalysis",
+      "http://localhost:8080/contracts/clauseAnalysis",
       clause
     );
     console.log("특약사항 분석결과 ==>", response.data);
@@ -97,8 +97,8 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
   ) => {
     const payload: AiRiskAnalysisRequest = { contractClauseDTO, anomalyDetectResult };
     const response = await axios.post<AnalysisReportsDTO>(
-      "/api/contracts/aiRiskAnalysis",
-      payload,
+      "http://localhost:8080/contracts/aiRiskAnalysis",
+            payload,
       { headers: { "Content-Type": "application/json" } }
     );
     console.log("리포트 분석결과 ==>", response.data);
@@ -124,7 +124,7 @@ const PG100004: React.FC<PG100004Props> = ({ ocrData, onAnalysisComplete }) => {
       analysisReportsDTO: analysisReport
     };
     const response = await axios.post<string>(
-      "/api/contracts/finalCommit",
+      "http://localhost:8080/contracts/finalCommit",
       payload,
       { headers: { "Content-Type": "application/json" } }
     );

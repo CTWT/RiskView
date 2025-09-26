@@ -229,7 +229,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
             try {
                 // progress 이벤트 추적을 위해 axios 옵션에 onUploadProgress를 추가
                 const response = await axios.post(
-                    `/api/upload`,
+                    `http://localhost:8080/upload`,
                     formData,
                     {
                         headers: {

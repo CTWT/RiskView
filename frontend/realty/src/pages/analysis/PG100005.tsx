@@ -425,7 +425,6 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
           <CommonContainerHeader
             subtitle={t("analysis_result_subtitle")}
             title={t("analysis_report_title")}
-            description={t("analysis_report_description")}
           />
           {/* 스켈레톤 UI */}
           <div className="rv05-banner skeleton" style={{ height: '120px', marginBottom: '24px' }}></div>
@@ -487,7 +486,6 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
           <CommonContainerHeader
               subtitle={t("analysis_result_subtitle")}
               title={t("analysis_report_title")}
-              description={displaySummary?.analysisReport?.summary || t("analysis_report_description")}
           />
 
           {/* 상단 요약칩 */}
@@ -704,6 +702,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
               </dl>
             </article>
 
+            {/* 재무 분석(기초값) */}
             <article className="rv05-card">
               <h3 className="rv05-sec-title">{t("financial_analysis_base")}</h3>
               <hr className="rv05-hr"/>
@@ -737,7 +736,6 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             {/* 특약 */}
             <article className="rv05-card rv05-wide">
               <h3 className="rv05-sec-title">{t("special_terms")}</h3>
-              <hr className="rv05-hr"/>
               <p></p>
               <SkeletonBlock height="auto">
                 <p className="rv05-special">
@@ -758,11 +756,11 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   restEntries.map(({ label, value }, idx) => (
                     <li key={idx}>
                       <span>{t(label)}</span> {/* label을 i18n 키로 인식 */}
-                      <em>
+                      <span className="rv05-subtext">
                         <SkeletonWrapper width="100px">
                           {value === 'true' ? t('yes') : value === 'false' ? t('no') : t(value)}
                         </SkeletonWrapper>
-                      </em>
+                      </span>
                     </li>
                   ))
                 )}
@@ -787,12 +785,6 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   </div>
               </div>
             )}
-            <button
-              className="an02-ai-analyze-start-btn"
-              onClick={() => window.history.back()}
-            >
-              {t("back")}
-            </button>
             <button
               className="an02-ai-analyze-start-btn"
               onClick={handleExportPDF}

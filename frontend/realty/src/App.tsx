@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./pages/auth/components/authentication/AuthProvider";
 import { AuthContext } from "./pages/auth/components/authentication/AuthContext";
@@ -13,6 +13,7 @@ import PG500043 from "./pages/community/board/PG500043";
 import PG600001 from "./pages/serviceIntro/PG600001";
 import CommonTest from "./pages/serviceIntro/CommonTest";
 import PG700001 from "./pages/mypage/PG700001";
+import ErrorBoundary from "./pages/auth/components/authentication/ErrorBoundary";
 
 import { ChatProvider } from "./components/chat/ChatProvider";
 import ChatWidget from "./components/chat/ChatWidget";
@@ -21,16 +22,21 @@ import ChatToggleButtonConnected from "./components/chat/ChatToggleButtonConnect
 import "./App.css";
 
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { isLoggedIn, isLoading } = useContext(AuthContext);
-    const location = useLocation();
-    const { showToast } = useToast();
+	const { isLoggedIn, isLoading } = useContext(AuthContext);
+	const location = useLocation();
+	const { showToast } = useToast();
+
+	useEffect(() => {
+		if (!isLoading && !isLoggedIn) {
+			showToast("로그인이 필요한 서비스입니다.", { type: "info" });
+		}
+	}, [isLoading, isLoggedIn, showToast]);
 
     if (isLoading) {
         return <div className="loading-spinner">인증 정보를 확인하는 중...</div>;
     }
 
     if (!isLoggedIn) {
-        showToast("로그인이 필요한 서비스입니다.", { type: "info" });
         return <Navigate to="/PG300001?login=true" state={{ from: location }} replace />;
     }
 
@@ -65,35 +71,63 @@ function App() {
                                 <Route
                                     path="/PG100001"
                                     element={
-                                        <PrivateRoute><PG100001 /></PrivateRoute>
+                                        <ErrorBoundary fallback={<div>페이지를 로드하는 중 에러가 발생했습니다.</div>}>
+                                            <PrivateRoute>
+                                                <PG100001 />
+                                            </PrivateRoute>
+                                        </ErrorBoundary>
                                     }
                                 />
                                 <Route
                                     path="/PG400001"
                                     element={
-                                        <PrivateRoute><PG400001 /></PrivateRoute>
+                                        <ErrorBoundary fallback={<div>페이지를 로드하는 중 에러가 발생했습니다.</div>}>
+                                            <PrivateRoute>
+                                                <PG400001 />
+                                            </PrivateRoute>
+                                        </ErrorBoundary>
                                     }
                                 />
                                 <Route
                                     path="/PG500001/*"
                                     element={
-                                        <PrivateRoute><PG500001 /></PrivateRoute>
+                                        <ErrorBoundary fallback={<div>페이지를 로드하는 중 에러가 발생했습니다.</div>}>
+                                            <PrivateRoute>
+                                                <PG500001 />
+                                            </PrivateRoute>
+                                        </ErrorBoundary>
                                     }
                                 />
                                 <Route
                                     path="/PG500043"
                                     element={
-                                        <PrivateRoute><PG500043 /></PrivateRoute>
+                                        <ErrorBoundary fallback={<div>페이지를 로드하는 중 에러가 발생했습니다.</div>}>
+                                            <PrivateRoute>
+                                                <PG500043 />
+                                            </PrivateRoute>
+                                        </ErrorBoundary>
                                     }
                                 />
                                 <Route
                                     path="/PG700001/*"
-                                    element={<PrivateRoute><PG700001 /></PrivateRoute>}
+                                    element={
+                                        <ErrorBoundary fallback={<div>페이지를 로드하는 중 에러가 발생했습니다.</div>}>
+                                            <PrivateRoute>
+                                                <PG700001 />
+                                            </PrivateRoute>
+                                        </ErrorBoundary>
+                                    }
                                 />
                                 {/* 마이페이지 하위의 커뮤니티 경로도 PrivateRoute로 보호합니다. */}
                                 <Route
                                     path="/PG700001/PG500001/*"
-                                    element={<PrivateRoute><PG500001 /></PrivateRoute>}
+                                    element={
+                                        <ErrorBoundary fallback={<div>페이지를 로드하는 중 에러가 발생했습니다.</div>}>
+                                            <PrivateRoute>
+                                                <PG500001 />
+                                            </PrivateRoute>
+                                        </ErrorBoundary>
+                                    }
                                 />
                             </Routes>
                             </Layout>
@@ -104,7 +138,7 @@ function App() {
                 </ChatProvider>
             </AuthProvider>
         </BrowserRouter>
-            );
+    );
 }
 
 export default App;

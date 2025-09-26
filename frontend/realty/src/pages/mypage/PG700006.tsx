@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import PG100005 from "../analysis/PG100005";
 import "../../styles/common/common.css";
-import { FiDownload } from "react-icons/fi";
 
 /*
  * 수업명 : 가비아 2회차
  * 이름 : 박윤성
  * 작성자 : 박윤성
- * 수정자 :
+ * 수정자 : 박윤성
  * 작성일 : 25.09.25
+ * 수정일 : 25.09.27
  * 파일명 : PG700006.tsx
  * 설명 : 내 분석 내역을 보여주는 페이지
  */
@@ -25,7 +25,6 @@ const PG700006: React.FC = () => {
     const [analysisHistory, setAnalysisHistory] = useState<AnalysisHistoryItem[]>([]);
     const [selectedDocumentCode, setSelectedDocumentCode] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [hoveredItem, setHoveredItem] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -61,39 +60,6 @@ const PG700006: React.FC = () => {
         }
     };
 
-    const handleDownload = async (e: React.MouseEvent, documentCode: string) => {
-        e.stopPropagation(); // 부모 요소의 onClick 이벤트 전파 방지
-        try {
-            const response = await axios.get(`/download/contract`, {
-                params: { documentCode },
-                responseType: 'blob', // 바이너리 데이터로 응답 받기
-                withCredentials: true,
-            });
-
-            const contentDisposition = response.headers['content-disposition'];
-            let filename = 'downloaded-file'; // 기본 파일명
-            if (contentDisposition) {
-                const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-                if (filenameMatch && filenameMatch.length > 1) {
-                    filename = decodeURIComponent(filenameMatch[1]);
-                }
-            }
-
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', filename);
-            document.body.appendChild(link);
-            link.click();
-            link.parentNode?.removeChild(link);
-            window.URL.revokeObjectURL(url);
-
-        } catch (err) {
-            console.error("Failed to download file:", err);
-            alert("파일을 다운로드하는 데 실패했습니다.");
-        }
-    };
-
     if (isLoading) {
         return <div className="loading-spinner">분석 내역을 불러오는 중...</div>;
     }
@@ -117,8 +83,6 @@ const PG700006: React.FC = () => {
                                                 key={item.documentCode}
                                                 className={`analysis-list-item-sidebar ${selectedDocumentCode === item.documentCode ? 'active' : ''}`}
                                                 onClick={() => setSelectedDocumentCode(item.documentCode)}
-                                                onMouseEnter={() => setHoveredItem(item.documentCode)}
-                                                onMouseLeave={() => setHoveredItem(null)}
                                             >
                                                 <div className="analysis-item-location">{item.location}</div>
                                                 <div className="analysis-item-meta">
@@ -127,15 +91,6 @@ const PG700006: React.FC = () => {
                                                         {item.riskLevel}
                                                     </span>
                                                 </div>
-                                                {hoveredItem === item.documentCode && (
-                                                    <button
-                                                        className="download-btn"
-                                                        data-tooltip="원본 파일 다운로드"
-                                                        onClick={(e) => handleDownload(e, item.documentCode)}
-                                                    >
-                                                        <FiDownload />
-                                                    </button>
-                                                )}
                                             </div>
                                         ))
                                     ) : (

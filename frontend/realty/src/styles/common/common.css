@@ -566,35 +566,6 @@
   transform-origin: 50% 50%;
 }
 
-/* PG700006.tsx 다운로드 버튼 스타일 */
-.analysis-list-item-sidebar {
-  position: relative; /* 자식 요소의 position: absolute 기준점 */
-}
-
-.download-btn {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  background-color: #e9e9e9;
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  font-size: 18px;
-  color: #555;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease-in-out;
-}
-
-.download-btn:hover {
-  background-color: #d1d5db;
-  color: #000;
-}
-
 @keyframes spin {
   0% {
     transform: rotate(0deg);
@@ -759,10 +730,9 @@
 }
 
 .rv05-dl dd {
-  text-indent: 1em;
   text-align: left;
   font-weight: 600;
-  margin: 0;
+  margin-left: 15px;
   word-break: keep-all; /* 긴 텍스트 단어 단위 줄바꿈 */
   line-height: 1.8;
 }
@@ -873,12 +843,11 @@
 /* 특약 */
 .rv05-special {
   white-space: pre-wrap;
-  background: #fafafa;
-  border: 1px dashed #e5e7eb;
+  background: rgb(254, 243, 199);
   border-radius: 10px;
   padding: 12px;
   color: var(--rv05-text);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  /* box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12); */
 }
 
 /* 주요 발견사항(나머지 필드) */
@@ -896,19 +865,16 @@
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
-  border: 1px solid #f0f2f5;
   border-radius: 10px;
-  background: #fcfcfd;
+  background: #f0f2f5;
 }
 
 .rv05-kvlist li span {
-  color: var(--rv05-subtext);
+  color: var(--rv05-text);
 }
 
-.rv05-kvlist li em {
-  font-style: normal;
-  color: var(--rv05-text);
-  font-weight: 700;
+.rv05-kvlist li span.rv05-subtext {
+  color: var(--rv05-subtext);
 }
 
 .rv05-dim {

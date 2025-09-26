@@ -8,7 +8,7 @@ import "../../styles/common/common.css";
  * 작성자 : 이주하
  * 수정자 : 박윤성
  * 작성일 : 25.09.12
- * 수정일 : 25.09.22
+ * 수정일 : 25.09.27
  * 파일명 : PG700002.tsx
  */
 
@@ -40,8 +40,23 @@ const PG700002: React.FC<{
     const centerPercentage = centerData ? centerData.percentage : 0;
     const centerLabel = centerData ? centerData.level : "분석 없음";
 
+    // 위험도 우선순위 정의 (높을수록 먼저 표시)
+    const riskPriority: { [key: string]: number } = {
+        'HIGH': 0,
+        'MEDIUM': 1,
+        'LOW': 2,
+        'UNKNOWN': 3
+    };
+
+    // 위험도 우선순위에 따라 데이터 정렬
+    const sortedData = [...data].sort((a, b) => {
+        const priorityA = riskPriority[a.level] ?? Number.MAX_SAFE_INTEGER;
+        const priorityB = riskPriority[b.level] ?? Number.MAX_SAFE_INTEGER;
+        return priorityA - priorityB;
+    });
+
     // 라이브러리 형식에 맞게 데이터 변환
-    const chartData = data.map((item) => ({
+    const chartData = sortedData.map((item) => ({
         title: item.level,
         value: item.percentage,
         color: item.color,
@@ -72,7 +87,7 @@ const PG700002: React.FC<{
 
             {/* 위험도 범례 (색상별 구간 표시) */}
             <div className="risk-chart-legend">
-                {data.map((item, index) => (
+                {sortedData.map((item, index) => (
                     <div key={index} className="risk-legend-item">
                         <div className="risk-legend-indicator">
                             <div

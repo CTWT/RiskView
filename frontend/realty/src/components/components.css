@@ -308,20 +308,12 @@
     font-weight: bold;
 }
 
-.common-container-header-description {
-    font-size: 1.3rem;
-    color: #666666;
-    line-height: 1.5;
-    font-weight: 700;
-}
-
-
 /*
  * 생성자 : 이주하
  * 생성일 : 25.07.30
  * 파일명 : components.css
  * 수정자 : 박윤성
- * 수정일 : 25.09.25
+ * 수정일 : 25.09.27
  * 설명 : 컴포넌트 css 담당 파일
  */
 /* pageContainer - 공통 컨테이너 담당 스타일*/

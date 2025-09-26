@@ -547,20 +547,24 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                 </div>
                 <div
                   className={`rv05-badge ${
-                    (
-                      displaySummary?.analysisReport?.riskLevel === "HIGH" ||
-                      displaySummary?.analysisReport?.riskLevel === "치명" ||
-                      displaySummary?.analysisReport?.riskLevel === "고위험" ||
-                      displaySummary?.analysisReport?.riskLevel === "高リスク"
-                    )
-                      ? "danger"
-                      : (displaySummary?.analysisReport?.riskLevel === "MEDIUM" ||
-                        displaySummary?.analysisReport?.riskLevel === "경고" ||
-                        displaySummary?.analysisReport?.riskLevel === "주의" ||
-                        displaySummary?.analysisReport?.riskLevel === "中リスク"
-                      )
-                      ? "warn"
-                      : "ok"
+                    (() => {
+                      const level = displaySummary?.analysisReport?.riskLevel?.toLowerCase();
+                      switch (level) {
+                        case "high":
+                        case "critical":
+                        case "고위험":
+                        case "치명":
+                        case "高リスク":
+                          return "danger";
+                        case "medium":
+                        case "경고":
+                        case "주의":
+                        case "中リスク":
+                          return "warn";
+                        default:
+                          return "ok";
+                      }
+                    })()
                   }`}
                 >
                   <SkeletonWrapper width="40px">

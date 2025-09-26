@@ -48,65 +48,61 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 # -----------------------------
 def analyze_with_openai(anomaly: AnomalyDetectResult, clause: ContractClauseDTO) -> AnalysisReportsDTO:
     prompt = f"""
-        당신은 법률 계약서 위험 분석 전문가입니다. 
-        제공된 이상치 탐지 결과와 계약 특약사항을 종합적으로 분석하여, **임대인 기준**으로 상세한 위험도 평가를 수행하세요. 
-        임대인에게 유리하거나 안정적인 조건은 반드시 긍정적으로 평가하고, 임대인에게 불리하거나 위험한 조건만 부정적으로 평가하세요.
+    당신은 **법률 계약서 위험 분석 전문가**이자 **임차인(세입자) 관점 감성 분석 전문가**입니다.  
+    분석은 반드시 **임차인의 권익과 위험**만을 기준으로 하여 수행하세요.  
+    임대인(집주인)의 입장은 절대 고려하지 않습니다.  
 
-        === 분석 데이터 ===
+    === 분석 데이터 ===
 
-        【이상치 탐지 결과 상세 분석】
-        - 사용자 계약 가격: {anomaly.userContractPrice:,.0f}원
-        - 시장 평균 가격: {anomaly.averagePrice:,.0f}원  
-        - 가격 편차율: {anomaly.deviationPercent:.1f}%
-        - Z-Score: {anomaly.zScore if anomaly.zScore else 'N/A'}
-        - 이상치 여부: {'예' if anomaly.isAnomaly else '아니오'}
-        - 시스템 위험도: {anomaly.riskLevel}
-        - 총 위험 점수: {anomaly.totalRiskScore}
-        - 위험 코멘트: {anomaly.riskComment}
-        - 분류 라벨: {anomaly.label if anomaly.label else 'N/A'}
+    【이상치 탐지 결과 상세 분석】
+    - 사용자 계약 가격: {anomaly.userContractPrice:,.0f}원
+    - 시장 평균 가격: {anomaly.averagePrice:,.0f}원  
+    - 가격 편차율: {anomaly.deviationPercent:.1f}%
+    - Z-Score: {anomaly.zScore if anomaly.zScore else 'N/A'}
+    - 이상치 여부: {'예' if anomaly.isAnomaly else '아니오'}
+    - 시스템 위험도: {anomaly.riskLevel}
+    - 총 위험 점수: {anomaly.totalRiskScore}
+    - 위험 코멘트: {anomaly.riskComment}
+    - 분류 라벨: {anomaly.label if anomaly.label else 'N/A'}
 
-        【계약 특약사항 세부 내용】  
-        - 특약 유형: {clause.clauseType}
-        - 특약 제목: {clause.clauseTitle}
-        - 특약 내용: {clause.clauseValue}
-        - 위험성 판정: {'위험' if clause.isRisky else '안전'}
-        - 위험 사유: {clause.riskReason}
+    【계약 특약사항 세부 내용】  
+    - 특약 유형: {clause.clauseType}
+    - 특약 제목: {clause.clauseTitle}
+    - 특약 내용: {clause.clauseValue}
+    - 위험성 판정: {'위험' if clause.isRisky else '안전'}
+    - 위험 사유: {clause.riskReason}
 
-        === 분석 요구사항 ===
+    === 분석 지침 (반드시 임차인 기준으로 작성) ===
 
-        1. **가격 이상치 분석**: 
-        - 임대인 입장에서 시장가 대비 계약 가격 적정성 평가
-        - 가격이 임대인에게 유리하면 반드시 긍정적 평가
-        - 임대인 수익/위험 영향을 중심으로 분석
-        - 잠재적 손실보다 수익 기회 강조
+    1. **가격 이상치 분석**  
+    - 시장가 대비 계약 가격이 임차인에게 유리하면 긍정 평가  
+    - 불리하다면 부정 평가  
+    - 영향이 적으면 중립으로 평가  
 
-        2. **특약사항 위험도 분석**:
-        - 임대인에게 유리한 특약은 긍정적으로 평가
-        - 임대인에게 불리하거나 관리 부담이 있는 경우만 부정적으로 평가
-        - 법적 위험성과 수익 안정성을 중심으로 분석
+    2. **특약사항 위험도 분석**  
+    - 임차인 권익 보호·주거 안정성에 유리하면 긍정  
+    - 임차인에게 불리하거나 추가 비용/책임/법적 위험을 주면 부정  
+    - 영향이 미미하면 중립  
 
-        3. **종합 위험도 판정**:
-        - 가격 이상치와 특약사항을 연계하여 임대인 관점에서 통합적 위험도 산출
-        - 단기/장기적 관점에서 임대인에게 주는 안정감 또는 위험 강조
-        - 임대인에게 유리한 조건은 무조건 긍정 반영
+    3. **종합 위험도 판정**  
+    - 가격과 특약을 통합하여 임차인의 장기적 안정성과 위험을 평가  
+    - 반드시 HIGH / MEDIUM / LOW 중 하나로 출력  
 
-        4. **감성 분석**:
-        - 임대인 관점에서 계약 조건이 주는 심리적 안정감과 부담감 평가
-        - 임대인에게 유리한 조건은 긍정적으로, 불리한 조건만 부정적으로 분석
-        - 임대인 신뢰도, 수익 안정성, 심리적 안정감 중심으로 점수 산출
+    4. **감성 분석 (임차인 기준)**  
+    - 임차인에게 주거 안정감·경제적 이익이 크면 긍정 (😀)  
+    - 큰 영향이 없으면 중립 (😐)  
+    - 임차인에게 손해·불안·위험이 크면 부정 (⚠️, 😰, 🚨 중 택1)  
 
-        반드시 아래 JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요:
-
-        {{
-        "summary": "임대인 관점에서 이상치 분석과 특약사항을 종합한 상세 위험도 분석 요약 (300자 이상)",
-        "riskLevel": "HIGH|MEDIUM|LOW",
-        "sentimentSummary": "임대인 관점에서 계약 조건이 주는 심리적 영향과 안정감 분석 (200자 이상)",
-        "sentimentScore": 0~100,
-        "sentimentCategory": "긍정|중립|부정", 
-        "sentimentEmoji": "😀|😐|⚠️|😰|🚨"
-        }}
-        """
-
+    === 출력 형식 (JSON만 반환) ===
+    {{
+    "summary": "임차인 기준으로 이상치와 특약을 종합한 상세 위험도 분석 요약 (300자 이상)",
+    "riskLevel": "HIGH|MEDIUM|LOW",
+    "sentimentSummary": "임차인 기준으로 계약 조건이 주는 심리적 영향 분석 (200자 이상)",
+    "sentimentScore": "0~100",
+    "sentimentCategory": "긍정|중립|부정",
+    "sentimentEmoji": "😀|😐|⚠️|😰|🚨"
+    }}
+    """
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",

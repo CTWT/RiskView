@@ -3,6 +3,7 @@ import useToast from "../../hooks/useToast";
 import "../../styles/common/common.css";
 import Toast from "../../components/ui/Toast";
 import axios from "axios";
+import * as UserAPI from "../../components/api";
 
 /*
  * 수업명 : 가비아 2회차
@@ -78,6 +79,8 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
     const [isEmailVerified, setIsEmailVerified] = useState(false); // 이메일 인증 완료 여부
     const [isSendingEmail, setIsSendingEmail] = useState(false); // 이메일 발송 중 상태
     const [isVerifyingCode, setIsVerifyingCode] = useState(false); // 인증 코드 확인 중 상태
+    // 이메일 입력 필드의 현재 값을 추적하기 위한 별도 상태
+    const [currentEmail, setCurrentEmail] = useState("");
 
     // 컴포넌트 마운트 시 사용자 프로필 정보 가져오기
     useEffect(() => {
@@ -99,6 +102,7 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                             data.createdAt
                         ).toLocaleDateString(),
                     });
+                    setCurrentEmail(data.email); // 초기 이메일 값 설정
                 }
             } catch (error) {
                 const message =
@@ -126,6 +130,7 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
         const { name, value } = e.target;
         setProfile((prev) => (prev ? { ...prev, [name]: value } : null));
         // 이메일 주소가 변경되면 인증 상태 초기화
+        if (name === "email") setCurrentEmail(value);
         if (name === "email") {
             // 이메일이 바뀌면 인증 상태 초기화
             setHasSentEmailCode(false);
@@ -353,46 +358,28 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
 
     // 이메일 인증 코드 발송 함수
     const handleSendEmailVerification = async () => {
-        if (!profile?.email) {
+        if (!currentEmail.trim()) {
             showToast("이메일을 입력해주세요.", { type: "error" });
             return;
         }
         // 간단한 이메일 형식 검증
         const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-        if (!emailRegex.test(profile.email)) {
+        if (!emailRegex.test(currentEmail)) {
             showToast("유효한 이메일 주소를 입력해주세요.", { type: "error" });
             return;
         }
         setIsSendingEmail(true);
         try {
-            // 서버에 인증 코드 발송 요청
-            const response = await axios.post(
-                "/api/send-verification-email-code",
-                {
-                    email: profile.email,
-                },
-                {
-                    headers: { "Content-Type": "application/json" },
-                    withCredentials: true,
-                }
+            // 통합 인증 프로세스 사용
+            await UserAPI.sendVerificationEmail(
+                currentEmail,
+                "/api/send-verification-email-code"
             );
-            if (response.status === 200) {
-                const { message } = response.data as { message?: string };
-                showToast(message || "인증 메일이 전송되었습니다!", {
-                    type: "success",
-                });
-                setHasSentEmailCode(true);
-            }
+            setHasSentEmailCode(true);
+            showToast("인증 메일이 전송되었습니다!", { type: "success" });
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const errorMessage =
-                    error.response?.data?.message ||
-                    error.response?.data ||
-                    "처리 중 오류가 발생했습니다.";
-                showToast(String(errorMessage), { type: "error" });
-            } else {
-                showToast("알 수 없는 오류가 발생했습니다.", { type: "error" });
-            }
+            const errorMessage = error instanceof Error ? error.message : "처리 중 오류가 발생했습니다.";
+            showToast(errorMessage, { type: "error" });
         } finally {
             setIsSendingEmail(false);
         }
@@ -414,7 +401,6 @@ const PG700003: React.FC<PG700003Props> = ({ onBack }) => {
                     code: verificationCode,
                 },
                 {
-                    headers: { "Content-Type": "application/json" },
                     withCredentials: true,
                 }
             );

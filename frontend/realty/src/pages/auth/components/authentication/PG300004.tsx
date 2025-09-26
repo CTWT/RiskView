@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import axios from "axios";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
+import * as UserAPI from "../../../../components/api";
 
 // Signup_EmailInputComponent : 이메일 인증 페이지
 
@@ -58,21 +58,13 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
      */
     const checkEmailDuplicate = async (email: string): Promise<boolean> => {
         try {
-            const response = await axios.get(
-                `/api/user/check-email/${encodeURIComponent(email)}`,
-                {
-                    withCredentials: true,
-                }
-            );
-            return response.data.available; // true: 사용 가능, false: 중복
+            const response = await UserAPI.checkEmailDuplicate(email);
+            return response; // true: 사용 가능, false: 중복
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw new Error(
-                    error.response?.data?.message ||
-                        "이메일 중복 확인 중 오류가 발생했습니다."
-                );
+            if (error instanceof Error) {
+                throw new Error(error.message);
             }
-            throw new Error("알 수 없는 오류가 발생했습니다.");
+            throw new Error("이메일 중복 확인 중 오류가 발생했습니다.");
         }
     };
 
@@ -82,82 +74,52 @@ const PG300004: React.FC<PG300004Props> = ({ onNext }) => {
      * 실패 시 오류 메시지를 표시
      */
     const handleSendEmail = async () => {
-        // 공백과 스페이스 제거
         const cleanedEmail = email.replace(/\s+/g, "");
-        // 이메일 상태 업데이트
         setEmail(cleanedEmail);
 
-        // 이메일 입력 여부 확인
         if (!cleanedEmail) {
             showToast("이메일을 입력해주세요.", { type: "error" });
             return;
         }
-
-        // 이메일 유효성 검사
         if (!validateEmail(cleanedEmail)) {
             showToast("유효한 이메일 주소를 입력해주세요.", { type: "error" });
             return;
         }
 
-        // 인증메일 전송 상태 업데이트
         setIsLoading(true);
-
         try {
-            // 이메일 중복 확인
             const isEmailAvailable = await checkEmailDuplicate(cleanedEmail);
-
             if (!isEmailAvailable) {
                 showToast(
                     "이미 사용 중인 이메일 주소입니다. 다른 이메일을 입력해주세요.",
                     { type: "error" }
                 );
-                // 인증메일 전송 상태 업데이트
                 setIsLoading(false);
                 return;
             }
 
-            // 백엔드에 이메일 인증코드 발송 요청
-            const response = await axios.post(
-                "/api/send-verification-email-code",
-                {
-                    // JSON 형식으로 입력한 이메일 주소 전달
-                    email: cleanedEmail,
-                },
-                {
-                    // 쿠키 포함
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json", // JSON 데이터 형식으로 명시
-                    },
-                }
+            // UserAPI를 사용한 이메일 인증코드 발송
+            const result = await UserAPI.sendVerificationEmail(
+                cleanedEmail,
+                "/api/send-verification-email-code"
             );
-            // 성공 응답이 왔다면
-            if (response.status === 200) {
-                // 응답 메시지에서 메시지 추출
-                const { message } = response.data;
-                // 성공 메시지 표시
-                showToast(message || "인증 메일이 전송되었습니다!", {
-                    type: "success",
-                });
-                // 입력한 이메일 주소를 가지고 다음 단계로 이동
-                onNext(cleanedEmail);
-                window.dispatchEvent(new Event("resetTimer"));
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const errorMessage =
-                    error.response?.data?.message ||
-                    "처리 중 오류가 발생했습니다.";
-                showToast(errorMessage, { type: "error" });
+
+            // 만약 API가 { message, code, ... } 형태로 응답하면
+            if (result && (result as any).message) {
+                showToast((result as any).message, { type: "success" });
             } else {
-                const errorMessage =
-                    error instanceof Error
-                        ? error.message
-                        : "알 수 없는 오류가 발생했습니다.";
-                showToast(errorMessage, { type: "error" });
+                showToast("인증 메일이 전송되었습니다!", { type: "success" });
+            }
+
+            onNext(cleanedEmail);
+            window.dispatchEvent(new Event("resetTimer"));
+        } catch (error) {
+            if (error instanceof Error) {
+                showToast(error.message, { type: "error" });
+            } else {
+                showToast("처리 중 오류가 발생했습니다.", { type: "error" });
             }
         } finally {
-            // 인증메일 전송 상태 업데이트
             setIsLoading(false);
         }
     };

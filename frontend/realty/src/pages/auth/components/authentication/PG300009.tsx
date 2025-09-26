@@ -1,10 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiChevronLeft } from "react-icons/fi";
-import axios, { AxiosError } from "axios";
+import { AxiosError } from "axios";
 import Toast from "../../../../components/ui/Toast";
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
+import * as UserAPI from "../../../../components/api";
 import PageContainer from "../../../../components/layout/PageContainer";
 
 // 비밀번호 찾기 페이지 컴포넌트 (아이디+이메일 입력 → 인증번호 전송)
@@ -91,64 +92,36 @@ const PG300009: React.FC<PG300009Props> = ({
      * 인증번호 전송 처리 함수
      * 아이디와 이메일을 검증하고 목업 데이터와 비교하여 PG300010으로 이동
      */
-    const handleSendVerificationCode = async () => {
-        // 1단계: 기본 입력값 검증
+    const handleSendEmailVerification = async () => {
         if (!userId.trim()) {
             showToast("아이디를 입력해주세요.", { type: "error" });
             return;
         }
-
         if (!email.trim()) {
             showToast("이메일을 입력해주세요.", { type: "error" });
             return;
         }
-
-        // 2단계: 이메일 형식 검증
         if (!validateEmail(email.trim())) {
             showToast("올바른 이메일 형식을 입력해주세요.", { type: "error" });
             return;
         }
-
-        // 3단계: 로딩 시작
+    
         setIsLoading(true);
-
-        // 4단계: 사용자 존재 여부 확인 및 인증코드 발송
+    
         try {
-            // 이메일 인증코드 발송 요청
-            const codeRequestRes = await axios.post(
+            const token = await UserAPI.sendVerificationEmail(
+                email.trim(),
                 "/api/user/send-password-reset-code",
-                {
-                    // JSON 형식으로 전달
-                    userId: userId.trim(),
-                    email: email.trim(),
-                },
-                {
-                    // 쿠키 포함
-                    withCredentials: true,
-                    headers: {
-                        "Content-Type": "application/json", // JSON 데이터 형식으로 명시
-                    },
-                }
+                { userId: userId.trim() }
             );
-
-            if (codeRequestRes.status !== 200) {
-                showToast("이메일 인증 요청 실패", { type: "error" });
-                return;
-            }
-
-            showToast("인증번호가 이메일로 전송되었습니다.", {
-                type: "success",
-            });
-
-            // 인증번호 입력 페이지로 이동 (사용자 ID와 이메일 전달)
+    
+            showToast("인증번호가 이메일로 전송되었습니다.", { type: "success" });
+    
             if (onPasswordReset) {
-                // 부모 컴포넌트에서 콜백이 제공된 경우 userId, email, token 정보를 가지고 인증번호 입력 페이지로 이동
-                onPasswordReset(userId.trim(), email.trim(), codeRequestRes.data.token);
+                onPasswordReset(userId.trim(), email.trim(), token);
             } else {
-                // 콜백이 없다면 기본 이동 처리: 인증번호 입력 페이지(PG300010)로 이동
                 navigate("/pg/PG300010", {
                     state: {
-                        // state로 userId, email 전달
                         userId: userId.trim(),
                         email: email.trim(),
                     },
@@ -156,24 +129,19 @@ const PG300009: React.FC<PG300009Props> = ({
             }
         } catch (error) {
             const axiosError = error as AxiosError<{ message: string }>;
-            console.error("인증번호 전송 오류:", axiosError);
-            // AxiosError로부터 응답 메시지 추출
-            const serverMessage =
-                axiosError?.response?.data?.message ||
-                "오류가 발생했습니다. 다시 시도해주세요.";
+            const serverMessage = axiosError?.response?.data?.message || "오류가 발생했습니다. 다시 시도해주세요.";
             showToast(serverMessage, { type: "error" });
         } finally {
-            // 로딩 종료
             setIsLoading(false);
         }
-    };
+    };    
 
     /**
      * 폼 제출 핸들러
      */
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        handleSendVerificationCode(); // 인증코드 전송 핸들러 호출
+        handleSendEmailVerification(); // 인증코드 전송 핸들러 호출
     };
 
     // JSX 렌더링

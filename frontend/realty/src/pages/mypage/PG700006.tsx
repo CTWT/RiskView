@@ -64,7 +64,7 @@ const PG700006: React.FC = () => {
     const handleDownload = async (e: React.MouseEvent, documentCode: string) => {
         e.stopPropagation(); // 부모 요소의 onClick 이벤트 전파 방지
         try {
-            const response = await axios.get(`/api/download/contract`, {
+            const response = await axios.get(`/download/contract`, {
                 params: { documentCode },
                 responseType: 'blob', // 바이너리 데이터로 응답 받기
                 withCredentials: true,

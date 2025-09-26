@@ -4,6 +4,7 @@ import axios from "axios";
 import Toast from "../../../../components/ui/Toast";
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
+import { sendEmailWithEmailJS } from "../../../../components/api";
 import PageContainer from "../../../../components/layout/PageContainer";
 
 // 비밀번호 찾기 - 인증번호 입력 페이지 컴포넌트
@@ -29,7 +30,6 @@ import PageContainer from "../../../../components/layout/PageContainer";
 interface PG300010Props {
     userId: string;
     email: string;
-    emailToken: string;
     onLogin: () => void;
     onPasswordReset: (userId: string) => void;
 }
@@ -48,7 +48,6 @@ interface PG300010Props {
 const PG300010: React.FC<PG300010Props> = ({
     userId,
     email,
-    emailToken,
     onLogin,
     onPasswordReset,
 }) => {
@@ -110,18 +109,8 @@ const PG300010: React.FC<PG300010Props> = ({
                 },
                 {
                     withCredentials: true, // 쿠키 포함
-                    headers: {
-                        "Content-Type": "application/json", // JSON 데이터 형식으로 명시
-                        Authorization: `Bearer ${emailToken}`, // JWT 토큰 추가
-                    },
                 }
             );
-
-            console.log("전송 데이터:", {
-                email,
-                code: verificationCode.trim(),
-                token: emailToken,
-            });
 
             // 성공: 인증번호 확인 완료, PG300011로 이동
             if (res.status === 200) {
@@ -161,19 +150,18 @@ const PG300010: React.FC<PG300010Props> = ({
     const handleResendCode = async () => {
         setIsResending(true);
         try {
-            await axios.post(
+            const res = await axios.post<{ code: string; token: string }>(
                 "/api/send-verification-email-code",
                 {
                     email,
                 },
                 {
                     withCredentials: true, // 쿠키 포함
-                    headers: {
-                        "Content-Type": "application/json", // JSON 데이터 형식으로 명시
-                        Authorization: `Bearer ${emailToken}`, // JWT 토큰 추가
-                    },
                 }
             );
+
+            // 백엔드에서 받은 코드로 EmailJS를 통해 이메일 발송
+            await sendEmailWithEmailJS(email, res.data.code);
 
             setVerificationCode("");
             setTimeLeft(180);

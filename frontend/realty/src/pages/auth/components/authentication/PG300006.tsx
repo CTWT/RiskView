@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { FiEye, FiEyeOff, FiCheckCircle } from "react-icons/fi";
 import Toast from "../../../../components/ui/Toast"; // Toast 컴포넌트 임포트
-import Cookies from "js-cookie";
 import useToast from "../../../../hooks/useToast";
 import "../../../../styles/common/common.css";
 import * as Common from "../../../../components/common";
@@ -66,13 +65,11 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
     ); // null: 미확인, true: 유효, false: 무효
 
     // 이메일 상태
-    const [verify, setVerify] = useState(false);
+    const [isEmailVerified, setIsEmailVerified] = useState(false);
     // 이메일 코드전송 상태
-    const [send, setSend] = useState(false);
-    // 이메일
-    const [email, setEmail] = useState("");
+    const [isVerificationCodeSent, setIsVerificationCodeSent] = useState(false);
 
-    // 공통 함수 적용
+    // 폼 입력값 상태
     const [form, setForm] = useState({
         id: "",
         email: "",
@@ -80,13 +77,16 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
         nickname: "",
     });
 
-    // 인풋 박스 변경점 체크
+    // 입력 필드 변경 핸들러
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
-    };
 
-    // 인풋 박스 포커스 아웃 이벤트 발생
+        // 핸들러 내부에서 직접 상태 업데이트
+        if (name === "id") setUserId(value);
+        if (name === "nickname") setNickname(value);
+    };
+    // 입력 필드 포커스 아웃 핸들러 (유효성 검사)
     const handleBlur = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         switch (name) {
@@ -148,94 +148,62 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
         }
     };
 
-    // 이메일 전송 기능 추가
+    // 이메일 인증코드 발송 및 확인 핸들러
     const handleSendEmail = async () => {
-        // 인증이 완료된 경우
-        console.log(verify);
-
-        if (verify) {
+        if (isEmailVerified) {
             showToast("인증이 이미 완료되었습니다.", { type: "error" });
             return;
         }
 
-        // 아직 메일 전송 성공 안 했을 경우
-        if (!send) {
+        // 1. 인증코드 발송 단계
+        if (!isVerificationCodeSent) {
             const emailResult = Common.validateEmail(form.email);
-
             if (!emailResult.valid) {
                 showToast(emailResult.message!, { type: "error" });
                 return;
             }
-
             try {
                 const available = await UserAPI.checkEmailDuplicate(emailResult.value!);
                 if (!available) {
                     showToast("이미 사용중인 이메일 입니다.", { type: "error" });
                     return;
                 }
-
-                // 1. 백엔드에 인증 코드와 토큰 생성 요청
-                const { code, token } = await UserAPI.requestVerificationCode(emailResult.value!);
-
-                if (code && token) {
-                    // 2. EmailJS로 이메일 발송
-                    await UserAPI.sendEmailWithEmailJS(emailResult.value!, code);
-
-                    // 3. 응답으로 받은 토큰을 쿠키에 저장
-                    Cookies.set("emailToken", token, { expires: 1/48, path: '/' }); // 30분 유효
-
-                    showToast("인증코드가 전송되었습니다.", { type: "success" });
-                    setSend(true);
-                } else {
-                    throw new Error("서버로부터 인증 코드 또는 토큰을 받지 못했습니다.");
-                }
+    
+                // 통합 이메일 인증 프로세스 사용
+                await UserAPI.sendVerificationEmail(
+                    emailResult.value!, 
+                    "/api/send-verification-email-code"
+                );
+    
+                showToast("인증코드가 전송되었습니다.", { type: "success" });
+                setIsVerificationCodeSent(true);
             } catch (error) {
-                // api.tsx에서 throw된 Error 객체를 받아 메시지를 표시
                 const errorMessage = error instanceof Error ? error.message : "이메일 처리 중 오류가 발생했습니다.";
                 showToast(errorMessage, { type: "error" });
-                console.error("이메일 발송 프로세스 오류:", error);
             }
-            return;
-        }
-
-        // 메일 인증코드 발송 후 인증 번호 검증
-        if (send && !verify) {
+        } else {
+            // 2. 인증코드 검증 단계
             if (!form.num || form.num.length !== 6) {
                 showToast("6자리 인증번호를 입력해주세요", { type: "error" });
                 return;
             }
-
             try {
                 const result = await UserAPI.verifyEmailCode(form.email, form.num);
-
                 if (result.code === "001") {
-                    setVerify(true);
+                    setIsEmailVerified(true);
                     showToast(result.message || "이메일 인증이 완료되었습니다.", { type: "success" });
-                    setEmail(form.email);
                 } else {
                     showToast(result.message || "인증번호가 올바르지 않습니다.", { type: "error" });
                 }
             } catch (error) {
+                console.error("인증코드 검증 오류:", error);
                 showToast("인증 처리 중 오류가 발생했습니다.", { type: "error" });
-                console.log(error);
             }
         }
     };
 
-    /**
-     * 비밀번호 보기/숨기기 토글 핸들러
-     */
-    const togglePasswordVisibility = () => {
-        setShowPassword((prev) => !prev);
-    };
-
-    /**
-     * 아이디 중복 확인 함수
-     * 입력된 아이디의 중복 여부를 확인
-     *
-     * @param userIdToCheck - 중복 여부를 확인할 아이디 문자열
-     */
-
+    const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
+    
     const handleUserIdCheck = useCallback(
         async (userIdToCheck: string): Promise<boolean> => {
             try {
@@ -263,17 +231,10 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
         [showToast]
     );
 
-    /**
-     * 닉네임 중복 확인 함수
-     * 입력된 닉네임의 중복 여부를 확인
-     *
-     * @param nicknameToCheck - 중복 여부를 확인할 닉네임 문자열
-     */
     const handleNicknameCheck = useCallback(
         async (nicknameToCheck: string): Promise<boolean> => {
             try {
                 const result = await UserAPI.checkNickNameDuplicate(nicknameToCheck);
-                console.log("nickname");
                 if (result.available) {
                     setIsNicknameValid(true);
                     showToast("사용 가능한 닉네임입니다.", { type: "success" });
@@ -350,11 +311,11 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
             isNicknameValid === true &&
             password.length >= 6 &&
             confirmPassword === password &&
-            verify === true
+            isEmailVerified === true
         ) {
-            console.log("폼 제출 완료:", { email, password, userId, nickname });
+            console.log("폼 제출 완료:", { email: form.email, password, userId, nickname });
 
-            onNext({ password, userId, nickname, email });
+            onNext({ password, userId, nickname, email: form.email });
         } else {
             showToast("입력 정보를 다시 확인해주세요.", { type: "error" });
         }
@@ -415,7 +376,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                             value={form.email}
                             onChange={handleChange}
                             onBlur={handleBlur}
-                            disabled={verify}
+                            disabled={isEmailVerified}
                         />
                     </div>
                     {/* 인증번호 입력 필드 */}
@@ -429,15 +390,15 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                             onChange={handleChange}
                             onBlur={handleBlur}
                             maxLength={6}
-                            disabled={verify}
+                            disabled={isEmailVerified}
                         />
                         <button
                             type="button"
                             className="normalButton"
                             onClick={handleSendEmail}
-                            disabled={verify}
+                            disabled={isEmailVerified}
                         >
-                            {send ? "인증하기" : "인증코드발송"}
+                            {isVerificationCodeSent ? "인증하기" : "인증코드발송"}
                         </button>
                     </div>
 
@@ -531,7 +492,7 @@ const PG300006: React.FC<PG300006Props> = ({ onNext, onLogin }) => {
                                 password.length < 6 ||
                                 confirmPassword !== password ||
                                 isCheckingUserId ||
-                                verify !== true
+                                isEmailVerified !== true
                             }
                         >
                             다음

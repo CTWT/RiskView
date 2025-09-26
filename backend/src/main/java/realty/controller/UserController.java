@@ -11,11 +11,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
-import java.util.Date;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 
@@ -350,10 +351,16 @@ public class UserController {
         Map<String, String> codeAndToken = emailService.createVerificationCodeAndToken(email.trim());
         logger.info("API: [POST /api/user/send-password-reset-code] - 비밀번호 재설정용 인증 코드 및 토큰 생성. email: {}", email.trim());
 
+        // 토큰을 HttpOnly 쿠키에 담아 응답에 추가
+        Cookie emailTokenCookie = new Cookie("emailToken", codeAndToken.get("token"));
+        emailTokenCookie.setHttpOnly(true);
+        emailTokenCookie.setPath("/");
+        emailTokenCookie.setMaxAge(emailTokenExpiration);
+        response.addCookie(emailTokenCookie);
+
         // 성공 응답
         responseBody.put("message", "인증 코드 및 토큰이 생성되었습니다.");
         responseBody.put("code", codeAndToken.get("code"));
-        responseBody.put("token", codeAndToken.get("token"));
         responseBody.put("emailTokenExpiration", emailTokenExpiration);
         // 응답 반환
         return ResponseEntity.ok(responseBody);

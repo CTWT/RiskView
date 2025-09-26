@@ -64,10 +64,17 @@ public class EmailController {
             Map<String, String> codeAndToken = emailService.createVerificationCodeAndToken(email);
             logger.debug("EmailService로부터 인증 코드 및 토큰 수신 완료.");
 
+            // 토큰을 HttpOnly 쿠키에 담아 응답에 추가
+            Cookie emailTokenCookie = new Cookie("emailToken", codeAndToken.get("token"));
+            emailTokenCookie.setHttpOnly(true);
+            emailTokenCookie.setPath("/");
+            emailTokenCookie.setMaxAge(emailTokenExpiration); // yml에 설정된 만료 시간
+            response.addCookie(emailTokenCookie);
+            logger.debug("emailToken을 HttpOnly 쿠키에 설정했습니다.");
+
             // 메시지와 함께 OK 응답 반환
             logger.info("이메일 인증코드 및 토큰 생성 성공. 수신자: {}", email);
             return ResponseEntity.ok(Map.of(
-                "message", "인증 코드 및 토큰이 생성되었습니다.",
                 "code", codeAndToken.get("code"),
                 "token", codeAndToken.get("token")
             ));
@@ -76,7 +83,7 @@ public class EmailController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         } catch (Exception e) {
             logger.error("서버 내부 오류로 인증코드 발송 실패. 수신자: {}", email, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("이메일 발송 중 오류가 발생했습니다.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("인증코드 생성 중 오류가 발생했습니다.");
         }
     }
 

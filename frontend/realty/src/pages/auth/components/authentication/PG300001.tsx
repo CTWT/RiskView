@@ -49,7 +49,6 @@ const PG300001: React.FC = () => {
     });
     const [resetUserId, setResetUserId] = useState<string>(""); // 비밀번호 재설정할 사용자 ID
     const [resetUserEmail, setResetUserEmail] = useState<string>(""); // 인증번호가 전송된 이메일
-    const [resetEmailToken, setResetEmailToken] = useState<string>(""); // 인증번호가 전송된 이메일
     const location = useLocation();
 
     // ================================
@@ -161,7 +160,6 @@ const PG300001: React.FC = () => {
         );
         setResetUserId(userId);
         setResetUserEmail(email);
-        setResetEmailToken(emailToken);
         setAuthStep(-3);
     };
 
@@ -259,7 +257,6 @@ const PG300001: React.FC = () => {
                 <PG300010
                     userId={resetUserId}
                     email={resetUserEmail}
-                    emailToken={resetEmailToken}
                     onLogin={goToLogin}
                     onPasswordReset={goToPasswordReset}
                 />

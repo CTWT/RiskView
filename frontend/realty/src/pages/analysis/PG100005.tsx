@@ -334,6 +334,33 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
     const location = displayData?.location ?? "-";
     const now = useMemo(() => new Date(), []);
 
+    // 위험도에 따라 배너 배경 스타일을 동적으로 결정합니다.
+    const bannerStyle = useMemo(() => {
+        const riskLevel = displaySummary?.analysisReport?.riskLevel;
+        if (!riskLevel) {
+            return {}; // 기본 스타일(CSS) 사용
+        }
+        switch (riskLevel.toLowerCase()) {
+            case "high":
+            case "critical":
+            case "고위험":
+            case "치명":
+            case "高リスク":
+                return { background: "linear-gradient(135deg, #fee2e2, #fff)" }; // 빨간색 계열
+            case "low":
+            case "저위험":
+            case "정상":
+                return { background: "linear-gradient(135deg, #dcfce7, #fff)" }; // 초록색 계열
+            case "medium":
+            case "중위험":
+            case "경고":
+                return { background: "linear-gradient(135deg, #fef3c7, #fff)" }; // 노란색 계열
+            default:
+                // MEDIUM 또는 그 외의 경우는 common.css에 정의된 기본 스타일을 사용합니다.
+                return {};
+        }
+    }, [displaySummary]);
+
     // 주요 섹션에서 이미 표시한 키들 제외하고 "주요 발견사항"에 나머지 전부 뿌리기
     const shownKeys = new Set<keyof StructuredContractDataDTO>([
         "leaseType",
@@ -503,7 +530,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
           {loading ? (
               <div className="rv05-banner skeleton" style={{ height: '120px', marginBottom: '24px' }}></div>
           ) : (
-              <div className="rv05-banner">
+              <div className="rv05-banner" style={bannerStyle}>
                 <div>
                   <div className="rv05-banner-title">{t("comprehensive_risk_assessment")}</div>
                     <div className="rv05-banner-sub">

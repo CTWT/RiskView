@@ -44,6 +44,7 @@ const resources = {
       WARNING: "WARNING",
       CAUTION: "CAUTION",
       UNKNOWN: "UNKNOWN",
+      정상: "LOW",
       치명: "CRITICAL",
       고위험: "HIGH",
       경고: "WARNING",
@@ -203,6 +204,7 @@ const resources = {
       경고: "경고",
       주의: "주의",
       UNKNOWN: "알 수 없음",
+      정상: "정상",
       HIGH: "고위험",
       MEDIUM: "중위험",
       LOW: "저위험",
@@ -362,6 +364,7 @@ const resources = {
       警告: "警告",
       注意: "注意",
       UNKNOWN: "不明",
+      정상: "正常",
       "HIGH": "高リスク",
       "MEDIUM": "中リスク",
 
@@ -512,6 +515,7 @@ const resources = {
       警告: "警告",
       注意: "注意",
       UNKNOWN: "未知",
+      정상: "正常",
       "HIGH": "高风险",
       "MEDIUM": "中风险",
 

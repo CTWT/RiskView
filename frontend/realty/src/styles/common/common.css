@@ -846,6 +846,30 @@
   background: #f59e0b22;
 }
 
+/* Danger - 빨간색 계열 (high, 고위험, 위험) */
+/* Danger - 연한 빨간색 계열 */
+.rv05-badge.danger {
+  background: #fca5a5; /* 연한 빨간색 */
+  border: 1px solid #f87171; /* 조금 진한 빨간색 */
+  color: black;
+}
+
+/* Warn - 연한 노란색 계열 */
+.rv05-badge.warn {
+  background: #fde68a; /* 연한 노란색 */
+  border: 1px solid #fbbf24; /* 조금 진한 노란색 */
+  color: black;
+}
+
+/* OK - 연한 초록색 계열 */
+.rv05-badge.ok {
+  background: #86efac; /* 연한 초록색 */
+  border: 1px solid #4ade80; /* 조금 진한 초록색 */
+  color: black;
+}
+
+
+
 /* 특약 */
 .rv05-special {
   white-space: pre-wrap;

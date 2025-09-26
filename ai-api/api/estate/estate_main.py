@@ -18,7 +18,7 @@ if __package__ is None or __package__ == '':
 
     # 절대 경로로 임포트
     from api.estate.components.addr_to_coord import address_to_coord
-    from api.estate.components.extract_sigungudong import extract_sigungudong
+    from api.estate.components.extract_sigungudong import get_sigungudong_from_kakao
     from api.estate.components.remove_address_details import clean_address
     from api.estate.components.building_ledger import get_building_info_from_ledger
     from api.estate.Estate import runEstate
@@ -30,7 +30,7 @@ if __package__ is None or __package__ == '':
 else:
     # Main.py 등 다른 모듈에서 임포트될 때 (상대 경로 임포트)
     from .components.addr_to_coord import address_to_coord
-    from .components.extract_sigungudong import extract_sigungudong
+    from .components.extract_sigungudong import get_sigungudong_from_kakao
     from .components.remove_address_details import clean_address
     from .components.building_ledger import get_building_info_from_ledger
     from .Estate import runEstate
@@ -198,7 +198,8 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     print("입력한 주소: ", address)
     print(f"입력한 계약 정보: 계약금액 {userContractPrice}, 건물용도: {user_bldg_usg}")
 
-    result = extract_sigungudong(address) # 주소에서 시군구동을 추출
+    # result = extract_sigungudong(address) # 주소에서 시군구동을 추출
+    result = get_sigungudong_from_kakao(address) # 주소에서 시군구동을 추출
     if not result:
         return {"error": "주소 정보를 추출할 수 없습니다."}
     print("result: ", result)
@@ -208,7 +209,7 @@ def analyze_estate(contract_data: LeaseContract) -> dict:
     eupmyeondong = result['읍면동']
     beopjeongdong_code = result['법정동코드']
     sigungu_code = beopjeongdong_code[:5]
-    bjdong_code = beopjeongdong_code[5:]
+    bjdong_code = beopjeongdong_code[5:] if beopjeongdong_code and len(beopjeongdong_code) == 10 else ''
     bun = result.get('mainBun', '') # extract_sigungudong 결과에 번/지 정보가 있다면 사용
     ji = result.get('subBun', '')
 

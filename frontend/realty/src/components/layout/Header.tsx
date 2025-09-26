@@ -22,13 +22,19 @@ import logo from "../../assets/images/logo.png";
  */
 
 const Header: React.FC = () => {
-    const { isLoggedIn, logout } = useContext(AuthContext);
+    const { isLoggedIn, logout, timeLeft } = useContext(AuthContext);
     const navigate = useNavigate();
 
     // 로그아웃 이벤트 처리
     const handleLogout = () => {
         logout();
         navigate("/");
+    };
+    // 남은 시간을 mm:ss 형식으로 포맷하는 함수
+    const formatTimeLeft = (seconds: number) => {
+        const minutes = Math.floor(seconds / 60);
+        const remainingSeconds = seconds % 60;
+        return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
     };
     return (
         <header className="headerContainer">
@@ -53,6 +59,9 @@ const Header: React.FC = () => {
                 {isLoggedIn ? (
                     // 로그인 상태일 때
                     <>
+                        <span style={{ color: "#666", fontSize: "14px", marginRight: "16px" }}>
+                            남은 시간: {formatTimeLeft(timeLeft)}
+                        </span>
                         <Link
                             to="/"
                             onClick={handleLogout}

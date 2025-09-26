@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
+import java.util.Date;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -26,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;
 
@@ -112,9 +112,76 @@ public class UserController {
         // 프론트에 전달할 응답 정보 담음
         responseBody.put("success", true);
         responseBody.put("message", "로그인 성공");
+        // 전체 만료 시간 대신, 실제 만료될 타임스탬프를 전달
+        responseBody.put("sessionExpiresAt", System.currentTimeMillis() + (accessTokenExpiration * 1000L));
         logger.info("API: [POST /api/user/login] - 로그인 성공. userId: {}", user.getUserId());
         // 담았던 정보들과 함께 성공 응답 반환
         return ResponseEntity.ok(responseBody);
+    }
+
+    /**
+     * 사용자 활동 시 세션(액세스 토큰) 만료 시간 연장
+     * 현재 쿠키에 있는 accessToken 이 유효하다면 새로운 토큰을 발급하고 만료 시간을 갱신한다.
+     */
+    @PostMapping("/refresh-session")
+    public ResponseEntity<Map<String, Object>> refreshSession(HttpServletRequest request, HttpServletResponse response) {
+        logger.info("API: [POST /api/user/refresh-session] - 세션 갱신 요청 수신");
+        Map<String, Object> responseBody = new HashMap<>();
+
+        try {
+            // 쿠키에서 기존 토큰 추출
+            String token = jwtUtil.extractTokenFromCookies(request, "accessToken");
+            if (token == null || !jwtUtil.validateToken(token)) {
+                logger.warn("세션 갱신 실패: 토큰이 없거나 유효하지 않음");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "인증이 필요합니다."
+                ));
+            }
+
+            // 토큰에서 사용자 식별 정보 추출
+            Claims claims = jwtUtil.getClaims(token);
+            if (claims == null) {
+                logger.warn("세션 갱신 실패: 토큰의 클레임을 읽을 수 없음");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "유효하지 않은 토큰입니다."
+                ));
+            }
+
+            String userId = claims.get("userId", String.class);
+            if (userId == null) {
+                logger.warn("세션 갱신 실패: 토큰에 userId 클레임이 없음");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                    "success", false,
+                    "message", "유효하지 않은 토큰입니다."
+                ));
+            }
+
+            // 사용자 조회
+            User user = userService.findByUserId(userId);
+
+            // 새로운 액세스 토큰 발급 및 쿠키에 설정
+            String newAccessToken = jwtUtil.generateAccessToken(user);
+            Cookie accessTokenCookie = new Cookie("accessToken", newAccessToken);
+            accessTokenCookie.setHttpOnly(true);
+            accessTokenCookie.setPath("/");
+            accessTokenCookie.setMaxAge(accessTokenExpiration); // 설정된 만료 시간으로 갱신
+            response.addCookie(accessTokenCookie);
+
+            // 프론트에 절대 만료 시각(타임스탬프) 전달
+            long newExpiresAt = System.currentTimeMillis() + (accessTokenExpiration * 1000L);
+            responseBody.put("success", true);
+            responseBody.put("sessionExpiresAt", newExpiresAt);
+            logger.info("세션 갱신 성공. userId: {}, expiresAt: {}", userId, new Date(newExpiresAt));
+            return ResponseEntity.ok(responseBody);
+        } catch (Exception e) {
+            logger.error("세션 갱신 중 오류 발생", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
+                "success", false,
+                "message", "세션 갱신 중 오류가 발생했습니다."
+            ));
+        }
     }
 
     /**
@@ -287,6 +354,7 @@ public class UserController {
         responseBody.put("message", "인증 코드 및 토큰이 생성되었습니다.");
         responseBody.put("code", codeAndToken.get("code"));
         responseBody.put("token", codeAndToken.get("token"));
+        responseBody.put("emailTokenExpiration", emailTokenExpiration);
         // 응답 반환
         return ResponseEntity.ok(responseBody);
     }

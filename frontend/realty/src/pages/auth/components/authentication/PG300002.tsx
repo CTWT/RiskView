@@ -101,6 +101,7 @@ const PG300002: React.FC<PG300002Props> = ({
             const res = await axios.post<{
                 success: boolean;
                 message?: string;
+                sessionExpiresAt?: number; // `accessTokenExpiration` 대신 `sessionExpiresAt` 사용
             }>(
                 "/api/user/login", // 요청 보낼 URL
                 { userId, password }, // 요청 보낼 데이터(Body 부분)
@@ -115,7 +116,12 @@ const PG300002: React.FC<PG300002Props> = ({
             // 응답 데이터에서 성공 여부 확인
             if (res.data.success) {
                 // 로그인 함수 호출
-                login();
+                // 백엔드에서 받은 만료 타임스탬프를 login 함수에 전달
+                if (res.data.sessionExpiresAt) {
+                    login(res.data.sessionExpiresAt);
+                } else {
+                    throw new Error("서버로부터 세션 만료 시간을 받지 못했습니다.");
+                }
                 console.log("로그인 성공 - 메인 페이지로 이동");
                 showToast("로그인 되었습니다.", { type: "success" });
 

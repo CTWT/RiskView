@@ -41,9 +41,9 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 function App() {
     // prettier-ignore
     return (
-        <AuthProvider>
-            <ChatProvider>
-                <BrowserRouter>
+        <BrowserRouter>
+            <AuthProvider>
+                <ChatProvider>
                     <Routes>
                         {/* 인증 페이지는 Layout 없이 독립적으로 렌더링 */}
                         <Route path="/PG300001" element={<PG300001 />} />
@@ -100,10 +100,10 @@ function App() {
                         }
                         />
                     </Routes>
-                    </BrowserRouter>
                     <ChatWidget />
                 </ChatProvider>
-                </AuthProvider>
+            </AuthProvider>
+        </BrowserRouter>
             );
 }
 

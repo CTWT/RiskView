@@ -20,6 +20,7 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import java.util.Map; 
 
 import org.slf4j.Logger;
@@ -422,6 +423,17 @@ public class UserService {
             "createdAt", user.getCreatedAt()
         ));
 
+        // 토큰에서 만료 시간을 읽어와 남은 시간을 계산
+        try {
+            Claims claims = jwtUtil.getClaims(jwtUtil.extractTokenFromCookies(request, "accessToken"));
+            if (claims != null) {
+                long expirationTimestamp = claims.getExpiration().getTime();
+                response.put("sessionExpiresAt", expirationTimestamp);
+            }
+        } catch (Exception e) {
+            logger.warn("세션 남은 시간 계산 중 오류 발생: {}", e.getMessage());
+        }
+
         logger.debug("현재 사용자 정보 응답 생성 완료. userId: {}", user.getUserId());
         return response;
     }
@@ -452,7 +464,7 @@ public class UserService {
             throw new UserNotFoundException("사용자를 찾을 수 없습니다.");
         }
 
-        logger.debug("현재 사용자 조회 성공. userId: {}", userId);
+        logger.debug("현재 시간: {}", new Date());
         return findByUserId(userId);
     }
     

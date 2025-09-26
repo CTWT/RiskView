@@ -177,24 +177,6 @@ const PG700001: React.FC = () => {
                 );
                 console.log("위험도 분포 응답: ", response.data);
 
-                const getRiskColor = (level: string) => {
-                    switch (level.toLowerCase()) {
-                        case "고위험":
-                        case "치명":
-                            return "#ef4444"; // red
-                        case "중위험":
-                        case "경고":
-                        case "medium":
-                            return "#f59e0b"; // yellow
-                        case "저위험":
-                        case "정상":
-                        case "unknown":
-                            return "#9ca3af"; // gray
-                        default:
-                            return "#22c55e"; // green
-                    }
-                };
-
                 const chartData = response.data.map((item) => ({
                     level: item.level,
                     percentage: item.percentage,

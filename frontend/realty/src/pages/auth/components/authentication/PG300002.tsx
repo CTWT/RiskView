@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../../../../styles/common/common.css";
 import axios from "axios";
 import useToast from "../../../../hooks/useToast";
@@ -56,7 +56,8 @@ const PG300002: React.FC<PG300002Props> = ({
     // 사용자 입력 비밀번호
     const [password, setPassword] = useState<string>("");
     // react-router-dom의 네비게이션 훅으로 페이지 이동 제어
-    const navigate = useNavigate();
+    const navigate = useNavigate(); 
+    const location = useLocation();
 
     // 커스텀 훅을 사용하여 토스트 메시지 상태 및 표시 함수 획득
     const { toast, showToast } = useToast();
@@ -116,9 +117,13 @@ const PG300002: React.FC<PG300002Props> = ({
                 // 로그인 함수 호출
                 login();
                 console.log("로그인 성공 - 메인 페이지로 이동");
-                showToast("로그인 성공!", { type: "success" });
-                // 메인 페이지로 이동
-                navigate("/");
+                showToast("로그인 되었습니다.", { type: "success" });
+
+                // 리디렉션된 경우, 이전 페이지로 이동합니다.
+                const from = location.state?.from?.pathname || "/";
+                console.log(`로그인 성공 후 ${from} 경로로 이동합니다.`);
+                navigate(from, { replace: true });
+
             } else {
                 // 서버에서 보낸 구체적인 에러 메시지 사용
                 showToast(res.data.message || "로그인에 실패했습니다.", {

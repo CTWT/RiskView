@@ -1,5 +1,9 @@
 from data.LeaseContract import LeaseContract
 from datetime import date
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
 
 
 #  수업명 : 가비아 2회차
@@ -473,12 +477,12 @@ test_dataset = [
         buildingArea=18000.0,
         leasePart='10층 전체',
         leaseArea=500.0,
-        deposit=600000000,
-        downPayment=60000000,
+        deposit=200000000,
+        downPayment=20000000,
         downPaymentSigned=True,
-        middlePayment=120000000,
+        middlePayment=40000000,
         middlePaymentDate=date(2025, 6, 15),
-        balance=420000000,
+        balance=140000000,
         balanceDate=date(2025, 6, 30),
         rentAmount=0,
         rentType="없음",
@@ -532,13 +536,13 @@ test_dataset = [
         middlePaymentDate=date(2025, 7, 20),
         balance=70000000,
         balanceDate=date(2025, 7, 31),
-        rentAmount=1000000,
+        rentAmount=3000000,
         rentType="선불",
         rentDate=date(2025, 8, 1),
         leasePeriodStart=date(2025, 8, 1),
         leasePeriodEnd=date(2026, 7, 31),
         commissionAmount=15,
-        specialTerms='임차인은 임대인의 동의 없이 전대 금지.',
+        specialTerms='임대차 기간 중 시설물의 고장 또는 파손이 발생할 경우,그 원인이 임대인 또는 임차인 어느 한쪽의 과실로 명확히 확인되지 않는 경우에는 수리·교체 비용을 임대인과 임차인이 각각 50%씩 부담한다.',
         contractDate=date(2025, 7, 10),
 
         lessorAddress='서울특별시 용산구 이태원동 225',

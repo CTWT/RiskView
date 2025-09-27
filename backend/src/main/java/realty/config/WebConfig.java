@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /*
@@ -24,24 +25,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
-    
-    @Bean
-    public FilterRegistrationBean<CorsFilter> corsFilter() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-
-        config.addAllowedOrigin("http://1.201.19.40");
-        config.addAllowedOrigin("http://1.201.19.40:8080");
-
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*");
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
-        bean.setOrder(0);
-        return bean;
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")                        // 모든 엔드포인트 허용
+                .allowedOrigins("http://1.201.19.40")     // 프론트 서버 주소 명시
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 허용 메서드
+                .allowedHeaders("*")                      // 모든 헤더 허용
+                .allowCredentials(true);                  // 쿠키/인증 헤더 허용
     }
 }
 

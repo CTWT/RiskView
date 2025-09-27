@@ -2,7 +2,7 @@ name: CI/CD Deploy
 
 on:
     push:
-        branches: ["develop", "main"] # develop → DEV / main → PROD
+        branches: ["develop", "main"]
     workflow_dispatch:
 
 jobs:
@@ -25,7 +25,53 @@ jobs:
                     echo "env=dev" >> $GITHUB_OUTPUT
                   fi
 
-            # 3. Node.js (프론트 빌드)
+            # 3. .env 파일들 먼저 복사 (.env 적용된 상태로 빌드되도록)
+            - name: Copy Frontend .env if missing
+              run: |
+                  TARGET=frontend/realty/.env
+                  SOURCE=/srv/riskview/config/frontend/.env
+
+                  if [ -f "$TARGET" ]; then
+                      echo "✅ Frontend .env already exists, skipping copy."
+                  elif [ -f "$SOURCE" ]; then
+                      echo "📂 Copying frontend .env from backup"
+                      cp "$SOURCE" "$TARGET"
+                  else
+                      echo "❌ Frontend .env not found in either location."
+                      exit 1
+                  fi
+
+            - name: Copy AI .env if missing
+              run: |
+                  TARGET=ai-api/.env
+                  SOURCE=/srv/riskview/config/ai/.env
+
+                  if [ -f "$TARGET" ]; then
+                      echo "✅ AI .env already exists, skipping copy."
+                  elif [ -f "$SOURCE" ]; then
+                      echo "📂 Copying AI .env from backup"
+                      cp "$SOURCE" "$TARGET"
+                  else
+                      echo "❌ AI .env not found in either location."
+                      exit 1
+                  fi
+
+            - name: Copy application.yml if missing
+              run: |
+                  TARGET=backend/src/main/resources/application.yml
+                  SOURCE=/srv/riskview/config/application.yml
+
+                  if [ -f "$TARGET" ]; then
+                      echo "✅ application.yml already exists, skipping copy."
+                  elif [ -f "$SOURCE" ]; then
+                      echo "📂 Copying application.yml from backup"
+                      cp "$SOURCE" "$TARGET"
+                  else
+                      echo "❌ application.yml not found in either location."
+                      exit 1
+                  fi
+
+            # 4. Node.js (프론트 빌드)
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
@@ -39,7 +85,7 @@ jobs:
 
             - run: mv frontend/realty/dist ./dist
 
-            # 4. Java (백엔드 빌드)
+            # 5. Java (백엔드 빌드)
             - name: Setup Java
               uses: actions/setup-java@v4
               with:
@@ -53,12 +99,12 @@ jobs:
             - name: Check JAR exists
               run: ls -al backend/build/libs
 
-            # 5. Python (AI 서버 압축)
+            # 6. Python (AI 서버 압축)
             - name: Archive AI source
               run: |
                   tar -czf ai_src.tar.gz -C ai-api .
 
-            # 6. 산출물 /tmp 로 스테이징
+            # 7. 산출물 /tmp 로 스테이징
             - name: Stage artifacts locally (self-hosted)
               run: |
                   set -e
@@ -82,55 +128,7 @@ jobs:
                   mv ai_src.tar.gz /tmp/ai_src.tar.gz
                   ls -al /tmp/ai_src.tar.gz
 
-            # 6.5 backend application.yml 덮어쓰기 방지
-            - name: Copy application.yml if missing
-              run: |
-                  TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/backend/src/main/resources/application.yml
-                  SOURCE=/srv/riskview/config/application.yml
-
-                  if [ -f "$TARGET" ]; then
-                      echo "✅ application.yml already exists, skipping copy."
-                  elif [ -f "$SOURCE" ]; then
-                      echo "📂 Copying application.yml from backup"
-                      cp "$SOURCE" "$TARGET"
-                  else
-                      echo "❌ application.yml not found in either location."
-                      exit 1
-                  fi
-
-            # 6.6 ai-api .env 덮어쓰기 방지
-            - name: Copy AI .env if missing
-              run: |
-                  TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/ai-api/.env
-                  SOURCE=/srv/riskview/config/ai/.env
-
-                  if [ -f "$TARGET" ]; then
-                      echo "✅ AI .env already exists, skipping copy."
-                  elif [ -f "$SOURCE" ]; then
-                      echo "📂 Copying AI .env from backup"
-                      cp "$SOURCE" "$TARGET"
-                  else
-                      echo "❌ AI .env not found in either location."
-                      exit 1
-                  fi
-
-            # 6.7 frontend .env 덮어쓰기 방지
-            - name: Copy Frontend .env if missing
-              run: |
-                  TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/frontend/realty/.env
-                  SOURCE=/srv/riskview/config/frontend/.env
-
-                  if [ -f "$TARGET" ]; then
-                      echo "✅ Frontend .env already exists, skipping copy."
-                  elif [ -f "$SOURCE" ]; then
-                      echo "📂 Copying frontend .env from backup"
-                      cp "$SOURCE" "$TARGET"
-                  else
-                      echo "❌ Frontend .env not found in either location."
-                      exit 1
-                  fi
-
-            # 7. 서버 배포 스크립트 실행
+            # 8. 서버 배포 스크립트 실행
             - name: Deploy locally
               run: |
                   echo "🚀 Deploy..."

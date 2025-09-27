@@ -3,11 +3,9 @@ package realty.config;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.lang.NonNull;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /*
@@ -26,30 +24,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
-    /**
-     * 리액트에 포트를 열어줌
-     */
-    @Override
-    public void addCorsMappings(@NonNull CorsRegistry registry) {
-        registry.addMapping("/**")  // 모든 경로에 대해
-                                .allowedOrigins(
-                    "http://localhost:5173",   // 로컬 개발 환경
-                    "http://1.201.19.40",           // 배포 서버 환경
-                    "http://1.201.19.40:8080"       // 배포 서버 환경
-                )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
-    }
     
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilter() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://1.201.19.40");
+        config.addAllowedOriginPattern("*");  // 💡 모든 Origin 허용 (Spring Boot 2.4+)
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
 
         FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));

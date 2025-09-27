@@ -56,7 +56,7 @@ const PG300002: React.FC<PG300002Props> = ({
     // 사용자 입력 비밀번호
     const [password, setPassword] = useState<string>("");
     // react-router-dom의 네비게이션 훅으로 페이지 이동 제어
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
     const location = useLocation();
 
     // 커스텀 훅을 사용하여 토스트 메시지 상태 및 표시 함수 획득
@@ -103,7 +103,7 @@ const PG300002: React.FC<PG300002Props> = ({
                 message?: string;
                 sessionExpiresAt?: number; // `accessTokenExpiration` 대신 `sessionExpiresAt` 사용
             }>(
-                "/api/user/login", // 요청 보낼 URL
+                "http://localhost:8080/api/user/login", // 요청 보낼 URL
                 { userId, password }, // 요청 보낼 데이터(Body 부분)
                 {
                     withCredentials: true, // 요청 설정: 쿠키 포함 여부
@@ -120,7 +120,9 @@ const PG300002: React.FC<PG300002Props> = ({
                 if (res.data.sessionExpiresAt) {
                     login(res.data.sessionExpiresAt);
                 } else {
-                    throw new Error("서버로부터 세션 만료 시간을 받지 못했습니다.");
+                    throw new Error(
+                        "서버로부터 세션 만료 시간을 받지 못했습니다."
+                    );
                 }
                 console.log("로그인 성공 - 메인 페이지로 이동");
                 showToast("로그인 되었습니다.", { type: "success" });
@@ -129,7 +131,6 @@ const PG300002: React.FC<PG300002Props> = ({
                 const from = location.state?.from?.pathname || "/";
                 console.log(`로그인 성공 후 ${from} 경로로 이동합니다.`);
                 navigate(from, { replace: true });
-
             } else {
                 // 서버에서 보낸 구체적인 에러 메시지 사용
                 showToast(res.data.message || "로그인에 실패했습니다.", {

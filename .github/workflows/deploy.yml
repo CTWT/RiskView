@@ -82,12 +82,18 @@ jobs:
                   ls -al /tmp/ai_src.tar.gz
 
             # 6.5 application.yml 덮어쓰기 방지
-            - name: Do not overwrite application.yml
+            - name: Copy application.yml if missing
               run: |
-                  if [ -f /home/devuser/actions-runner/_work/RiskView/RiskView/backend/src/main/resources/application.yml ]; then
+                  TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/backend/src/main/resources/application.yml
+                  SOURCE=/srv/riskview/config/application.yml
+
+                  if [ -f "$TARGET" ]; then
                       echo "✅ application.yml already exists, skipping copy."
+                  elif [ -f "$SOURCE" ]; then
+                      echo "📂 Copying application.yml from backup"
+                      cp "$SOURCE" "$TARGET"
                   else
-                      echo "⚠️ application.yml is missing! Please place it manually."
+                      echo "❌ application.yml not found in either location."
                       exit 1
                   fi
 

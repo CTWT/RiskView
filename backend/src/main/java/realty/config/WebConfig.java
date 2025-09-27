@@ -3,7 +3,10 @@ package realty.config;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -22,20 +25,33 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
   * Web설정에 관한 Config
   */
 
-@Configuration
+ @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
     @Bean
-    public CorsFilter corsFilter() {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .cors() // corsConfigurationSource 적용
+            .and()
+            .csrf().disable()
+            .authorizeHttpRequests(auth -> auth
+                .anyRequest().permitAll() // 모든 요청 허용
+            );
+
+        return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);                           // 쿠키/인증 헤더 허용
-        config.addAllowedOrigin("http://1.201.19.40");             // 프론트 도메인 + 포트 명시
-        config.addAllowedHeader("*");                               // 모든 헤더 허용
-        config.addAllowedMethod("*");                               // 모든 HTTP 메서드 허용
+        config.setAllowCredentials(true);
+        config.addAllowedOrigin("http://1.201.19.40"); // 프론트 주소
+        config.addAllowedHeader("*");
+        config.addAllowedMethod("*"); // GET, POST, OPTIONS 모두 허용
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);           // 모든 엔드포인트에 적용
-        return new CorsFilter(source);
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 }
 

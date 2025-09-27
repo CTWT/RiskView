@@ -103,7 +103,7 @@ const PG300002: React.FC<PG300002Props> = ({
                 message?: string;
                 sessionExpiresAt?: number; // `accessTokenExpiration` 대신 `sessionExpiresAt` 사용
             }>(
-                "http://localhost:8080/api/user/login", // 요청 보낼 URL
+                "http://1.209.19.40:8080/api/user/login", // 요청 보낼 URL
                 { userId, password }, // 요청 보낼 데이터(Body 부분)
                 {
                     withCredentials: true, // 요청 설정: 쿠키 포함 여부

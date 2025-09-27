@@ -364,6 +364,7 @@ const PG500041: React.FC = () => {
                   </div>
                   <div className="board-item-main">
                     <div className="board-item-header">
+                      <span className={`board-badge board-badge-${post.type}`}>{post.type}</span>
                       <Link
                         to={`/PG500001/PG500041/PG500042/${post.id}`}
                         className="board-item-title"
@@ -382,17 +383,12 @@ const PG500041: React.FC = () => {
                 </div>
 
                 <div className="board-item-stats">
-                  {post.type && (
-                    <span className={`board-badge board-badge-${post.type}`}>
-                      {post.type}
-                    </span>
-                  )}
                   <div className="stat-numbers">
-                    <span className="stat-item">
+                    <span className="freeboard-stat-item">
                       👁 {post.views.toLocaleString()}
                     </span>
-                    <span className="stat-item">👍 {post.likes}</span>
-                    <span className="stat-item">💬 {post.comments}</span>
+                    <span className="freeboard-stat-item">👍 {post.likes}</span>
+                    <span className="freeboard-stat-item">💬 {post.comments}</span>
                   </div>
                 </div>
               </div>

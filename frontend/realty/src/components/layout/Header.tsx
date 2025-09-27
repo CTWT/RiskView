@@ -59,9 +59,21 @@ const Header: React.FC = () => {
                 {isLoggedIn ? (
                     // 로그인 상태일 때
                     <>
-                        <span style={{ color: "#666", fontSize: "14px", marginRight: "16px" }}>
-                            남은 시간: {formatTimeLeft(timeLeft)}
+                        <span style={{
+                            color: '#333',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            backgroundColor: '#f5f5f5',
+                            padding: '6px 12px',
+                            borderRadius: '8px',
+                            display: 'inline-block',
+                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                            width: '130px',
+                            textAlign: 'center',
+                        }}>
+                            로그아웃까지: {formatTimeLeft(timeLeft)}
                         </span>
+
                         <Link
                             to="/"
                             onClick={handleLogout}

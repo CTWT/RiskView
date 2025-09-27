@@ -31,6 +31,7 @@ public class WebConfig implements WebMvcConfigurer {
         config.setAllowCredentials(true);
 
         config.addAllowedOrigin("http://1.201.19.40");
+        config.addAllowedOrigin("http://1.201.19.40:8080");
 
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");

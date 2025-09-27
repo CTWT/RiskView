@@ -1,10 +1,10 @@
 package realty.config;
 
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -25,33 +25,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
   * Web설정에 관한 Config
   */
 
- @Configuration
+@Configuration
 public class WebConfig implements WebMvcConfigurer {
     
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .cors() // corsConfigurationSource 적용
-            .and()
-            .csrf().disable()
-            .authorizeHttpRequests(auth -> auth
-                .anyRequest().permitAll() // 모든 요청 허용
-            );
-
-        return http.build();
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("*")
+        // GET, POST, PATCH, DELETE, OPTIONS 메서드 허용
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowCredentials(true);
-        config.addAllowedOrigin("http://1.201.19.40"); // 프론트 주소
-        config.addAllowedHeader("*");
-        config.addAllowedMethod("*"); // GET, POST, OPTIONS 모두 허용
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
 }
 

@@ -29,6 +29,9 @@ public class WebConfig implements WebMvcConfigurer {
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
+
+        config.addAllowedOrigin("http://1.201.19.40");
+
         config.addAllowedOriginPattern("*");  // 💡 모든 Origin 허용 (Spring Boot 2.4+)
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");

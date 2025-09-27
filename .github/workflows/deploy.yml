@@ -7,7 +7,7 @@ on:
 
 jobs:
     build-and-deploy:
-        runs-on: [self-hosted, linux, x64] # 등록한 Runner 라벨과 동일해야 함
+        runs-on: [self-hosted, linux, x64]
         environment: ${{ github.ref_name == 'main' && 'prod' || 'dev' }}
 
         steps:
@@ -15,7 +15,7 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
-            # 2. 대상 환경 결정 (브랜치 기준)
+            # 2. 대상 환경 결정
             - name: Decide target
               id: pick
               run: |
@@ -36,7 +36,9 @@ jobs:
               run: |
                   npm ci
                   npm run build
+
             - run: mv frontend/realty/dist ./dist
+
             # 4. Java (백엔드 빌드)
             - name: Setup Java
               uses: actions/setup-java@v4
@@ -56,7 +58,7 @@ jobs:
               run: |
                   tar -czf ai_src.tar.gz -C ai-api .
 
-            # 6. (SELF-HOSTED) 산출물 /tmp 로 스테이징
+            # 6. 산출물 /tmp 로 스테이징
             - name: Stage artifacts locally (self-hosted)
               run: |
                   set -e
@@ -67,7 +69,6 @@ jobs:
                   echo "📦 Pick backend jar -> /tmp/app.jar"
                   JAR_CANDIDATE=$(ls -1 backend/build/libs/*.jar | grep -v '\-plain\.jar' | head -n 1 || true)
                   if [ -z "$JAR_CANDIDATE" ]; then
-                    # non-plain 이 없으면 아무거나 하나 선택
                     JAR_CANDIDATE=$(ls -1 backend/build/libs/*.jar | head -n 1 || true)
                   fi
                   if [ -z "$JAR_CANDIDATE" ]; then
@@ -81,7 +82,7 @@ jobs:
                   mv ai_src.tar.gz /tmp/ai_src.tar.gz
                   ls -al /tmp/ai_src.tar.gz
 
-            # 6.5 application.yml 덮어쓰기 방지
+            # 6.5 backend application.yml 덮어쓰기 방지
             - name: Copy application.yml if missing
               run: |
                   TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/backend/src/main/resources/application.yml
@@ -97,7 +98,39 @@ jobs:
                       exit 1
                   fi
 
-            # 7. (SELF-HOSTED) 서버 배포 스크립트 '로컬' 실행
+            # 6.6 ai-api .env 덮어쓰기 방지
+            - name: Copy AI .env if missing
+              run: |
+                  TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/ai-api/.env
+                  SOURCE=/srv/riskview/config/ai/.env
+
+                  if [ -f "$TARGET" ]; then
+                      echo "✅ AI .env already exists, skipping copy."
+                  elif [ -f "$SOURCE" ]; then
+                      echo "📂 Copying AI .env from backup"
+                      cp "$SOURCE" "$TARGET"
+                  else
+                      echo "❌ AI .env not found in either location."
+                      exit 1
+                  fi
+
+            # 6.7 frontend .env 덮어쓰기 방지
+            - name: Copy Frontend .env if missing
+              run: |
+                  TARGET=/home/devuser/actions-runner/_work/RiskView/RiskView/frontend/realty/.env
+                  SOURCE=/srv/riskview/config/frontend/.env
+
+                  if [ -f "$TARGET" ]; then
+                      echo "✅ Frontend .env already exists, skipping copy."
+                  elif [ -f "$SOURCE" ]; then
+                      echo "📂 Copying frontend .env from backup"
+                      cp "$SOURCE" "$TARGET"
+                  else
+                      echo "❌ Frontend .env not found in either location."
+                      exit 1
+                  fi
+
+            # 7. 서버 배포 스크립트 실행
             - name: Deploy locally
               run: |
                   echo "🚀 Deploy..."

@@ -51,6 +51,9 @@ const PG300002: React.FC<PG300002Props> = ({
     /**
      * 상태 관리 영역
      */
+
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // api 통신을 위한주소 설정
+
     // 사용자 입력 아이디
     const [userId, setUserId] = useState<string>("");
     // 사용자 입력 비밀번호
@@ -103,7 +106,7 @@ const PG300002: React.FC<PG300002Props> = ({
                 message?: string;
                 sessionExpiresAt?: number; // `accessTokenExpiration` 대신 `sessionExpiresAt` 사용
             }>(
-                "http://1.209.19.40:8080/api/user/login", // 요청 보낼 URL
+                `${API_BASE_URL}/api/user/login`, // 요청 보낼 URL
                 { userId, password }, // 요청 보낼 데이터(Body 부분)
                 {
                     withCredentials: true, // 요청 설정: 쿠키 포함 여부

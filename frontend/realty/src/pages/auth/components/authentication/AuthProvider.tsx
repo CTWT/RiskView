@@ -24,6 +24,7 @@ import Toast from "../../../../components/ui/Toast";
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // api 통신을 위한주소 설정
     // 로그인 상태를 관리하는 상태값
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true); // 인증 상태 확인 로딩 상태 추가
@@ -50,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                     success: boolean;
                     user: any;
                     sessionExpiresAt?: number; // `remainingSessionTime` 대신 `sessionExpiresAt` 사용
-                }>("/api/user/me", {
+                }>(`${API_BASE_URL}/api/user/me`, {
                     withCredentials: true, // 쿠키 포함해서 요청
                 });
 
@@ -58,7 +59,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                     setIsLoggedIn(true); // 사용자 정보가 있다면 로그인 상태로 간주
                     // 페이지 로드 시 백엔드에서 받은 절대 만료 시각으로 타이머를 설정합니다.
                     setSessionExpiresAt(res.data.sessionExpiresAt || null);
-
                 } else {
                     setIsLoggedIn(false);
                 }
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // 로그인 여부 확인
         checkAuth();
-    }, []);
+    }, [API_BASE_URL]);
 
     // 세션 만료 카운트다운 효과
     useEffect(() => {
@@ -98,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
             setTimeLeft(0);
         }
-    }, [sessionExpiresAt]);
+    }, [API_BASE_URL, sessionExpiresAt]);
 
     // 사용자 활동 감지 및 세션 갱신 로직
     useEffect(() => {
@@ -116,8 +116,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
             try {
                 console.log("사용자 활동 감지, 세션 갱신 시도...");
-                const res = await axios.post<{ success: boolean; sessionExpiresAt?: number }>(
-                    "/api/user/refresh-session",
+                const res = await axios.post<{
+                    success: boolean;
+                    sessionExpiresAt?: number;
+                }>(
+                    `${API_BASE_URL}/api/user/refresh-session`,
                     {},
                     { withCredentials: true }
                 );
@@ -128,43 +131,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 }
             } catch (error) {
                 // 401 오류 등은 Axios 인터셉터에서 처리하므로 여기서는 별도 처리 안 함
-                console.warn("세션 갱신 중 오류 발생 (인터셉터에서 처리될 수 있음)", error);
+                console.warn(
+                    "세션 갱신 중 오류 발생 (인터셉터에서 처리될 수 있음)",
+                    error
+                );
             }
         };
 
-        const activityEvents: (keyof WindowEventMap)[] = ["click", "keydown", "scroll"];
-        activityEvents.forEach(event => window.addEventListener(event, handleActivity));
+        const activityEvents: (keyof WindowEventMap)[] = [
+            "click",
+            "keydown",
+            "scroll",
+        ];
+        activityEvents.forEach((event) =>
+            window.addEventListener(event, handleActivity)
+        );
 
         return () => {
-            activityEvents.forEach(event => window.removeEventListener(event, handleActivity));
+            activityEvents.forEach((event) =>
+                window.removeEventListener(event, handleActivity)
+            );
         };
-    }, [isLoggedIn]);
+    }, [API_BASE_URL, isLoggedIn]);
 
     // 전역 사용자 활동 이벤트 리스닝 (클릭/키입력/마우스 이동/스크롤)
-    const logout = useCallback(async (sessionExpired = false) => {
-        // 사용자가 직접 로그아웃하는 경우에만 서버에 요청
-        if (!sessionExpired) {
-            try {
-                await axios.post("/api/user/logout", {}, { withCredentials: true });
-            } catch (err) {
-                console.error("서버 로그아웃 요청 실패", err);
+    const logout = useCallback(
+        async (sessionExpired = false) => {
+            // 사용자가 직접 로그아웃하는 경우에만 서버에 요청
+            if (!sessionExpired) {
+                try {
+                    await axios.post(
+                        `${API_BASE_URL}/api/user/logout`,
+                        {},
+                        { withCredentials: true }
+                    );
+                } catch (err) {
+                    console.error("서버 로그아웃 요청 실패", err);
+                }
             }
-        }
 
-        // 로그인 상태를 false로 변경
-        setIsLoggedIn(false);
-        setSessionExpiresAt(null); // 로그아웃 시 타이머 초기화
-        const message = sessionExpired ? "세션이 만료되었습니다. 다시 로그인해주세요." : "로그아웃 되었습니다.";
-        showToast(message, { type: "info" });
+            // 로그인 상태를 false로 변경
+            setIsLoggedIn(false);
+            setSessionExpiresAt(null); // 로그아웃 시 타이머 초기화
+            const message = sessionExpired
+                ? "세션이 만료되었습니다. 다시 로그인해주세요."
+                : "로그아웃 되었습니다.";
+            showToast(message, { type: "info" });
 
-        // 로그아웃 후 항상 홈페이지로 이동
-        navigate("/");
-        console.log(
-            sessionExpired
-                ? "세션 만료로 자동 로그아웃 처리 후 홈페이지로 이동합니다."
-                : "로그아웃 처리 후 홈페이지로 이동합니다."
-        );
-    }, [showToast, navigate]);
+            // 로그아웃 후 항상 홈페이지로 이동
+            navigate("/");
+            console.log(
+                sessionExpired
+                    ? "세션 만료로 자동 로그아웃 처리 후 홈페이지로 이동합니다."
+                    : "로그아웃 처리 후 홈페이지로 이동합니다."
+            );
+        },
+        [API_BASE_URL, showToast, navigate]
+    );
 
     // Axios 응답 인터셉터 설정
     useEffect(() => {
@@ -233,7 +256,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             >
                 {children}
             </AuthContext.Provider>
-            <Toast message={toast.message} type={toast.type} isVisible={toast.isVisible} />
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+            />
         </>
     );
 };

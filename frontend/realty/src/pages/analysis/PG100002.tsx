@@ -50,6 +50,7 @@ interface PG100002Props {
 }
 
 const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
+    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // api 통신을 위한주소 설정
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null); // 업로드 이미지 미리보기 URL
     const [isUploading, setIsUploading] = useState(false); // 파일 업로드 및 OCR 스캔 진행 중 상태
@@ -229,7 +230,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
             try {
                 // progress 이벤트 추적을 위해 axios 옵션에 onUploadProgress를 추가
                 const response = await axios.post(
-                    `http://localhost:8080/upload`,
+                    `${API_BASE_URL}/upload`,
                     formData,
                     {
                         headers: {
@@ -239,7 +240,8 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                         onUploadProgress: (progressEvent) => {
                             if (progressEvent.total) {
                                 const percentCompleted = Math.round(
-                                    (progressEvent.loaded * 100) / progressEvent.total
+                                    (progressEvent.loaded * 100) /
+                                        progressEvent.total
                                 );
                                 setProgress(percentCompleted);
                             }
@@ -300,7 +302,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 type: "error",
             });
         }
-    }, [selectedFile, previewImage, onStartAnalysis, showToast]);
+    }, [API_BASE_URL, selectedFile, previewImage, onStartAnalysis, showToast]);
 
     const cancelUpload = useCallback(() => {
         setSelectedFile(null);
@@ -312,93 +314,123 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
 
     return (
         <PageContainer showBreadcrumb={true} centerContent={true}>
-        <div className="an02-container">
-            <CommonContainerHeader
-                subtitle="계약 분석"
-                title="계약서 분석"
-                description="부동산 계약서를 업로드하여 자동으로 내용을 분석해보세요"
-            />
+            <div className="an02-container">
+                <CommonContainerHeader
+                    subtitle="계약 분석"
+                    title="계약서 분석"
+                    description="부동산 계약서를 업로드하여 자동으로 내용을 분석해보세요"
+                />
 
-            <div
-                className={`an02-upload-area ${
-                    isDragOver ? "an02-drag-over" : ""
-                }`}
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onClick={triggerFileInput}
-            >
-                {/* 미리보기 이미지가 있으면 미리보기 이미지를, 없으면 기본 아이콘(인라인 SVG) 표시 */}
-                {previewImage ? (
-                    <img
-                        src={previewImage}
-                        alt="업로드된 이미지 미리보기"
-                        className="an02-uploaded-preview-image"
-                    />
-                ) : (
-                    <div className="an02-upload-placeholder-icon">
-                    <svg
-                        width="128"
-                        height="128"
-                        viewBox="0 0 140 128"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <rect x="8" y="24" width="112" height="72" rx="10" fill="url(#grad1)" />
-                        <path d="M16 84L40 44L64 84L88 44L112 68" stroke="white" strokeWidth="6" />
-                        <path
-                        d="M112 0H122V10H132V20H122V30H112V20H102V10H112V0Z"
-                        fill="url(#grad1)"
+                <div
+                    className={`an02-upload-area ${
+                        isDragOver ? "an02-drag-over" : ""
+                    }`}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={triggerFileInput}
+                >
+                    {/* 미리보기 이미지가 있으면 미리보기 이미지를, 없으면 기본 아이콘(인라인 SVG) 표시 */}
+                    {previewImage ? (
+                        <img
+                            src={previewImage}
+                            alt="업로드된 이미지 미리보기"
+                            className="an02-uploaded-preview-image"
                         />
-                        <defs>
-                        <linearGradient id="grad1" x1="8" y1="24" x2="120" y2="96" gradientUnits="userSpaceOnUse">
-                            <stop stopColor="#c4e5fb"/>
-                            <stop offset="1" stopColor="#c3b5fb"/>
-                        </linearGradient>
-                        </defs>
-                    </svg>
-                    <p className="an02-upload-placeholder-text">
-                        계약서 또는 등기부등본 파일을 드래그하거나 클릭하여 업로드하세요<br />
-                        PNG, JPG, PDF 파일
-                    </p>
-                    </div>
-                )}
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".pdf,.jpg,.jpeg,.png"
-                    style={{ display: "none" }}
+                    ) : (
+                        <div className="an02-upload-placeholder-icon">
+                            <svg
+                                width="128"
+                                height="128"
+                                viewBox="0 0 140 128"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <rect
+                                    x="8"
+                                    y="24"
+                                    width="112"
+                                    height="72"
+                                    rx="10"
+                                    fill="url(#grad1)"
+                                />
+                                <path
+                                    d="M16 84L40 44L64 84L88 44L112 68"
+                                    stroke="white"
+                                    strokeWidth="6"
+                                />
+                                <path
+                                    d="M112 0H122V10H132V20H122V30H112V20H102V10H112V0Z"
+                                    fill="url(#grad1)"
+                                />
+                                <defs>
+                                    <linearGradient
+                                        id="grad1"
+                                        x1="8"
+                                        y1="24"
+                                        x2="120"
+                                        y2="96"
+                                        gradientUnits="userSpaceOnUse"
+                                    >
+                                        <stop stopColor="#c4e5fb" />
+                                        <stop offset="1" stopColor="#c3b5fb" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <p className="an02-upload-placeholder-text">
+                                계약서 또는 등기부등본 파일을 드래그하거나
+                                클릭하여 업로드하세요
+                                <br />
+                                PNG, JPG, PDF 파일
+                            </p>
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        style={{ display: "none" }}
+                    />
+                </div>
+
+                <button
+                    className="an02-ai-analyze-start-btn"
+                    onClick={handleAnalyzeClick}
+                    disabled={
+                        !selectedFile ||
+                        isUploading ||
+                        isModalOpen ||
+                        !previewImage
+                    }
+                >
+                    {isUploading ? "OCR 스캔 중..." : "AI 분석 시작하기"}
+                </button>
+
+                <button
+                    className="an02-ai-analyze-start-btn"
+                    onClick={cancelUpload}
+                    disabled={
+                        !selectedFile ||
+                        isUploading ||
+                        isModalOpen ||
+                        !previewImage
+                    }
+                >
+                    업로드 취소하기
+                </button>
+
+                {/* OCR 스캔 진행 모달 컴포넌트 사용 */}
+                <OcrProgressModal isOpen={isModalOpen} progress={progress} />
+
+                {/* 토스트 컴포넌트 */}
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    isVisible={toast.isVisible}
                 />
             </div>
-
-            <button
-                className="an02-ai-analyze-start-btn"
-                onClick={handleAnalyzeClick}
-                disabled={!selectedFile || isUploading || isModalOpen || !previewImage}
-            >
-                {isUploading ? "OCR 스캔 중..." : "AI 분석 시작하기"}
-            </button>
-
-            <button
-                className="an02-ai-analyze-start-btn"
-                onClick={cancelUpload}
-                disabled={!selectedFile || isUploading || isModalOpen || !previewImage}
-            >
-                업로드 취소하기
-            </button>
-
-            {/* OCR 스캔 진행 모달 컴포넌트 사용 */}
-            <OcrProgressModal isOpen={isModalOpen} progress={progress} />
-
-            {/* 토스트 컴포넌트 */}
-            <Toast
-                message={toast.message}
-                type={toast.type}
-                isVisible={toast.isVisible}
-            />
-            </div>
-            </PageContainer>
+        </PageContainer>
     );
 };
 

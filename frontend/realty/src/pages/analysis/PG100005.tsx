@@ -11,8 +11,6 @@ import type { StructuredContractDataDTO } from "../../types/contract";
 import { pdf } from "@react-pdf/renderer";
 import ReportPDF from "../../components/reportPDF";
 
-
-
 /*
  * @file PG100005.tsx
  * @description 아직 설계단계이지만 AI 분석 이후 분석결과 보고서가 나올 페이지 입니다.
@@ -350,7 +348,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
             case "low":
             case "저위험":
             case "정상":
-                return { background: "linear-gradient(135deg, #dcfce7, #fff)" }; // 초록색 계열
+              return { background: "linear-gradient(135deg, #dcfce7, #fff)" }; // 초록색 계열
             case "medium":
             case "중위험":
             case "경고":
@@ -490,8 +488,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
 
           {/* 상단 요약칩 */}
           <div className="rv05-chips">
-            <div className="rv05-chip">
-              <span className="rv05-chip-dot ok" />
+              <div className="rv05-chip-dot ok" />
               <div>
                 <div className="rv05-chip-title">{t("analysis_complete")}</div>
                 <div className="rv05-chip-sub">
@@ -499,16 +496,12 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   {now.toTimeString().slice(0, 5)}
                 </div>
               </div>
-            </div>
-            <div className="rv05-chip">
-              <span className="rv05-chip-dot info" />
+              <div className="rv05-chip-dot info" />
               <div>
                 <div className="rv05-chip-title">{t("property_address")}</div>
                 <div className="rv05-chip-sub">{location}</div>
               </div>
-            </div>
-            <div className="rv05-chip">
-              <span className="rv05-chip-dot note" />
+              <div className="rv05-chip-dot note" />
               <div>
                 <div className="rv05-chip-title">{t("contract_type")}</div>
                 <div className="rv05-chip-sub">
@@ -521,7 +514,6 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                     : leaseType}
                 </div>
               </div>
-            </div>
           </div>
 
           {/* 종합 위험 배너 */}
@@ -534,9 +526,11 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                     <div className="rv05-banner-sub">
                         <SkeletonWrapper width="90%">{displaySummary?.analysisReport?.summary ?? "-"}</SkeletonWrapper>
                     </div>
+                    <br/>
                     <div className="rv05-banner-sub">
                         <SkeletonWrapper width="70%">{displaySummary?.analysisReport?.sentimentSummary ?? "-"} {displaySummary?.analysisReport?.sentimentEmoji ?? ""}</SkeletonWrapper>
                     </div>
+                    <br/>
                     <div className="rv05-banner-sub">
                         <SkeletonWrapper width="50%">
                             {t("sentiment_score")}: {displaySummary?.analysisReport?.sentimentScore ?? "-"} ({displaySummary?.analysisReport?.sentimentCategory ?? "-"})
@@ -574,7 +568,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
 
           {/* 거래 이상 감지 */}
           {loading ? (
-              <article className="rv05-card rv05-wide">
+              <article className="rv05-card rv05-wide transaction-anomaly">
                   <div className="skeleton skeleton-title"></div>
                   <div className="skeleton skeleton-hr"></div>
                   <div className="skeleton-dl">
@@ -583,7 +577,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   </div>
               </article>
           ) : (
-              <article className="rv05-card rv05-wide">
+              <article className="rv05-card rv05-wide transaction-anomaly">
                   <h3 className="rv05-sec-title">{t("transaction_anomaly_detection")}</h3>
                   <hr className="rv05-hr" />
                   <p></p>
@@ -619,7 +613,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
 
           {/* 위험 조항 */}
           {loading ? (
-              <article className="rv05-card rv05-wide">
+              <article className="rv05-card rv05-wide risky-clauses">
                   <div className="skeleton skeleton-title"></div>
                   <div className="skeleton skeleton-hr"></div>
                   <div className="skeleton-dl">
@@ -628,7 +622,7 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                   </div>
               </article>
           ) : (
-              <article className="rv05-card rv05-wide">
+              <article className="rv05-card rv05-wide risky-clauses">
                   <h3 className="rv05-sec-title">{t("risky_clauses")}</h3>
                   <hr className="rv05-hr" />
                   <p></p>
@@ -727,15 +721,16 @@ const PG100005: React.FC<PG100005Props> = ({ documentCode }) => {
                 <div>
                   <dt>{t("rent")}</dt>
                   <dd>
-                    <SkeletonWrapper>{fmtNum(displayData?.rentAmount)} {t("currency_unit")} ({displayData?.rentType ?? "-"})</SkeletonWrapper>
+                    <SkeletonWrapper>{fmtNum(displayData?.rentAmount)} {t("currency_unit")} ({t(displayData?.rentType ?? "-")})</SkeletonWrapper>
                   </dd>
                 </div>
               </dl>
             </article>
 
             {/* 특약 */}
-            <article className="rv05-card rv05-wide">
+            <article className="rv05-card rv05-wide special">
               <h3 className="rv05-sec-title">{t("special_terms")}</h3>
+              <hr className="rv05-hr" />
               <p></p>
               <SkeletonBlock height="auto">
                 <p className="rv05-special">

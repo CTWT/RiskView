@@ -105,7 +105,7 @@ def _translate_dict_values(data: dict, target_lang: str) -> dict:
             return [translate_recursive(elem) for elem in item]
         if isinstance(item, str) and item.strip():
             # 특정 값들은 번역에서 제외합니다.
-            if item in ["JEONSE", "MONTHLY", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "CRITICAL", "WARNING", "CAUTION", "선불", "후불"]:
+            if item in ["JEONSE", "MONTHLY", "HIGH", "MEDIUM", "LOW", "UNKNOWN", "CRITICAL", "WARNING", "CAUTION"]:
                 return item
             try:
                 result = translator.translate_text(item, source_lang="KO", target_lang=lang)

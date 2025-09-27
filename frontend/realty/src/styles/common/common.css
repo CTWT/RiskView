@@ -685,8 +685,20 @@
 }
 
 .rv05-card.rv05-wide {
-  margin-top: 20px;
-  margin-bottom: 20px;
+  grid-column: span 12;
+}
+
+.rv05-card.rv05-wide.transaction-anomaly {
+  margin-bottom: 24px;
+  grid-column: span 6;
+}
+
+.rv05-card.rv05-wide.risky-clauses {
+  margin-bottom: 24px;
+  grid-column: span 6;
+}
+
+.rv05-card.rv05-wide.special {
   grid-column: span 12;
 }
 
@@ -714,24 +726,26 @@
 
 .rv05-dl {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 왼쪽은 라벨, 오른쪽은 값 */
-  row-gap: 16px; /* 세로 간격 */
-  column-gap: 28px; /* 좌우 간격 */
-  align-items: start; /* 세로 중앙 정렬 */
+  grid-template-columns: 1fr 1fr;
+  row-gap: 16px;
+  column-gap: 28px;
+  align-items: start;
   margin: 0;
-  padding: 0;
+  padding: 12px;
+  background-color: #f0f2f5;
+  border-radius: 15px;
 }
 
 .rv05-dl dt {
-  color: #6b7280;
-  font-weight: 600;
+  color: var(--rv05-text);
+  font-weight: bold;
   text-align: left; /* 라벨 왼쪽 정렬 */
   line-height: 1.4;
 }
 
 .rv05-dl dd {
+  color: var(--rv05-subtext);
   text-align: left;
-  font-weight: 600;
   margin-left: 15px;
   word-break: keep-all; /* 긴 텍스트 단어 단위 줄바꿈 */
   line-height: 1.8;
@@ -739,16 +753,10 @@
 
 /* 칩(상단 요약) */
 .rv05-chips {
-  display: flex;
-  justify-content: space-between; /* 양쪽 끝으로 균등 배분 */
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto 1fr;
   gap: 12px;
   margin: 6px 0 16px;
-}
-
-.rv05-chip {
-  display: flex;
-  gap: 10px;
-  align-items: center;
   background: var(--rv05-muted);
   border: 1px solid var(--rv05-border);
   padding: 12px 14px;
@@ -763,7 +771,7 @@
 }
 
 .rv05-chip-sub {
-  color: #475569;
+  color: var(--rv05-subtext)
 }
 
 .rv05-chip-dot {
@@ -771,6 +779,8 @@
   height: 10px;
   border-radius: 50%;
   display: inline-block;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .rv05-chip-dot.ok {
@@ -840,6 +850,8 @@
 
 
 
+
+
 /* 특약 */
 .rv05-special {
   white-space: pre-wrap;
@@ -848,6 +860,7 @@
   padding: 12px;
   color: var(--rv05-text);
   /* box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12); */
+  margin-bottom: 0px;
 }
 
 /* 주요 발견사항(나머지 필드) */

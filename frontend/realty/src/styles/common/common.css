@@ -761,7 +761,9 @@
   border: 1px solid var(--rv05-border);
   padding: 12px 14px;
   border-radius: 12px;
-  min-width: 290px;
+  width: 100%; /* Full width */
+  min-width: 1030px; /* report-container 최대 너비만큼 */
+  box-sizing: border-box;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
 

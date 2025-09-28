@@ -31,11 +31,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("*")
-            .allowedOrigins("http://1.201.19.40:8080/*")
-        // GET, POST, PATCH, DELETE, OPTIONS 메서드 허용
+                .allowedOriginPatterns("http://1.201.19.40:*")  // 포트 포함 origin
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
+                .allowedHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With") // 명시적 허용
                 .allowCredentials(true);
     }
 

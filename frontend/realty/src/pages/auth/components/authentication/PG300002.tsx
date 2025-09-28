@@ -79,6 +79,10 @@ const PG300002: React.FC<PG300002Props> = ({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        console.log("=== 로그인 요청 전 ===");
+        console.log("API URL:", `${API_BASE_URL}/api/user/login`);
+        console.log("Payload:", { userId, password });
+
         // 아이디와 비밀번호가 모두 비어있으면 에러 메시지 출력 후 종료
         if (!userId && !password) {
             showToast("아이디와 비밀번호를 모두 입력해주세요.", {
@@ -115,6 +119,8 @@ const PG300002: React.FC<PG300002Props> = ({
                     },
                 }
             );
+            console.log("=== 로그인 요청 후 응답 ===");
+            console.log("Response:", res);
             // HTTP 상태 코드 200이면 로그인 성공으로 간주하고 메인 페이지로 이동
             // 응답 데이터에서 성공 여부 확인
             if (res.data.success) {

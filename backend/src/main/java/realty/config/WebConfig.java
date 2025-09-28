@@ -28,6 +28,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
     
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
@@ -35,7 +36,16 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With") // 명시적 허용
                 .allowCredentials(true);
+
+        // 디버깅용 로그
+        System.out.println("===== CORS Mapping Added =====");
+        System.out.println("Allowed Origins: http://1.201.19.40:*");
+        System.out.println("Allowed Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
+        System.out.println("Allowed Headers: Authorization, Content-Type, Accept, X-Requested-With");
+        System.out.println("Allow Credentials: true");
+        System.out.println("==============================");
     }
+
 
 }
 

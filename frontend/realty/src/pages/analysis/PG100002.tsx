@@ -50,7 +50,6 @@ interface PG100002Props {
 }
 
 const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // api 통신을 위한주소 설정
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null); // 업로드 이미지 미리보기 URL
     const [isUploading, setIsUploading] = useState(false); // 파일 업로드 및 OCR 스캔 진행 중 상태
@@ -229,25 +228,21 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
 
             try {
                 // progress 이벤트 추적을 위해 axios 옵션에 onUploadProgress를 추가
-                const response = await axios.post(
-                    `${API_BASE_URL}/upload`,
-                    formData,
-                    {
-                        headers: {
-                            "Content-Type": "multipart/form-data",
-                        },
-                        withCredentials: true,
-                        onUploadProgress: (progressEvent) => {
-                            if (progressEvent.total) {
-                                const percentCompleted = Math.round(
-                                    (progressEvent.loaded * 100) /
-                                        progressEvent.total
-                                );
-                                setProgress(percentCompleted);
-                            }
-                        },
-                    }
-                );
+                const response = await axios.post(`/upload`, formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                    withCredentials: true,
+                    onUploadProgress: (progressEvent) => {
+                        if (progressEvent.total) {
+                            const percentCompleted = Math.round(
+                                (progressEvent.loaded * 100) /
+                                    progressEvent.total
+                            );
+                            setProgress(percentCompleted);
+                        }
+                    },
+                });
 
                 // 요청 성공 시
                 // ⭐ 이 부분을 수정해야 합니다.
@@ -302,7 +297,7 @@ const PG100002: React.FC<PG100002Props> = ({ onStartAnalysis }) => {
                 type: "error",
             });
         }
-    }, [API_BASE_URL, selectedFile, previewImage, onStartAnalysis, showToast]);
+    }, [selectedFile, previewImage, onStartAnalysis, showToast]);
 
     const cancelUpload = useCallback(() => {
         setSelectedFile(null);

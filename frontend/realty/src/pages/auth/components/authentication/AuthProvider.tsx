@@ -24,7 +24,6 @@ import Toast from "../../../../components/ui/Toast";
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     children,
 }) => {
-    const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; // api 통신을 위한주소 설정
     // 로그인 상태를 관리하는 상태값
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true); // 인증 상태 확인 로딩 상태 추가
@@ -72,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // 로그인 여부 확인
         checkAuth();
-    }, [API_BASE_URL]);
+    }, []);
 
     // 세션 만료 카운트다운 효과
     useEffect(() => {
@@ -98,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
             setTimeLeft(0);
         }
-    }, [API_BASE_URL, sessionExpiresAt]);
+    }, [sessionExpiresAt]);
 
     // 사용자 활동 감지 및 세션 갱신 로직
     useEffect(() => {
@@ -119,11 +118,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 const res = await axios.post<{
                     success: boolean;
                     sessionExpiresAt?: number;
-                }>(
-                    `${API_BASE_URL}/api/user/refresh-session`,
-                    {},
-                    { withCredentials: true }
-                );
+                }>(`/api/user/refresh-session`, {}, { withCredentials: true });
 
                 if (res.data.success && res.data.sessionExpiresAt) {
                     setSessionExpiresAt(res.data.sessionExpiresAt);
@@ -152,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                 window.removeEventListener(event, handleActivity)
             );
         };
-    }, [API_BASE_URL, isLoggedIn]);
+    }, [isLoggedIn]);
 
     // 전역 사용자 활동 이벤트 리스닝 (클릭/키입력/마우스 이동/스크롤)
     const logout = useCallback(
@@ -161,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             if (!sessionExpired) {
                 try {
                     await axios.post(
-                        `${API_BASE_URL}/api/user/logout`,
+                        `/api/user/logout`,
                         {},
                         { withCredentials: true }
                     );
@@ -186,7 +181,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                     : "로그아웃 처리 후 홈페이지로 이동합니다."
             );
         },
-        [API_BASE_URL, showToast, navigate]
+        [showToast, navigate]
     );
 
     // Axios 응답 인터셉터 설정

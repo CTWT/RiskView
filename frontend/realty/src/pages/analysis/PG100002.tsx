@@ -10,7 +10,7 @@ import CommonContainerHeader from "../../components/ui/CommonContainerHeader";
 import PageContainer from "../../components/layout/PageContainer";
 
 import * as pdfjs from "pdfjs-dist";
-pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.mjs";
+pdfjs.GlobalWorkerOptions.workerSrc = "/pdf.worker.mjs";
 
 import type {
     DocumentsDTO,

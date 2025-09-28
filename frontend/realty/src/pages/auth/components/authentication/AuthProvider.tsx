@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
                     success: boolean;
                     user: any;
                     sessionExpiresAt?: number; // `remainingSessionTime` 대신 `sessionExpiresAt` 사용
-                }>(`${API_BASE_URL}/api/user/me`, {
+                }>(`/api/user/me`, {
                     withCredentials: true, // 쿠키 포함해서 요청
                 });
 

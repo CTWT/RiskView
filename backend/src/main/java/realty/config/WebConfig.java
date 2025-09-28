@@ -32,9 +32,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOriginPatterns("http://1.201.19.40:*")  // 포트 포함 origin
+                .allowedOriginPatterns("*")  // 포트 포함 origin
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                .allowedHeaders("Authorization", "Content-Type", "Accept", "X-Requested-With") // 명시적 허용
+                .allowedHeaders("*") // 명시적 허용
                 .allowCredentials(true);
 
         // 디버깅용 로그

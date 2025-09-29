@@ -34,7 +34,9 @@ const Header: React.FC = () => {
     const formatTimeLeft = (seconds: number) => {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
-        return `${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`;
+        return `${String(minutes).padStart(2, "0")}:${String(
+            remainingSeconds
+        ).padStart(2, "0")}`;
     };
     return (
         <header className="headerContainer">
@@ -52,25 +54,27 @@ const Header: React.FC = () => {
                 <Link to="/PG100001">계약서 분석</Link>
                 <Link to="/PG400001">부동산 뉴스</Link>
                 <Link to="/PG500001">커뮤니티</Link>
-                <Link to="/CommonTest">공통함수 테스트</Link>
+                {/* <Link to="/CommonTest">공통함수 테스트</Link> */}
             </nav>
             <div className="headerAuth">
                 {/* 로그인 여부에 따라서 메뉴를 다르게 표시 */}
                 {isLoggedIn ? (
                     // 로그인 상태일 때
                     <>
-                        <span style={{
-                            color: '#333',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            backgroundColor: '#f5f5f5',
-                            padding: '6px 12px',
-                            borderRadius: '8px',
-                            display: 'inline-block',
-                            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                            width: '130px',
-                            textAlign: 'center',
-                        }}>
+                        <span
+                            style={{
+                                color: "#333",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                backgroundColor: "#f5f5f5",
+                                padding: "6px 12px",
+                                borderRadius: "8px",
+                                display: "inline-block",
+                                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                                width: "130px",
+                                textAlign: "center",
+                            }}
+                        >
                             로그아웃까지: {formatTimeLeft(timeLeft)}
                         </span>
 

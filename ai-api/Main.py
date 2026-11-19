@@ -1,0 +1,232 @@
+import sys, os
+import uvicorn, json
+from typing import Dict
+
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import Body, Query, Response
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+from api.ocr.Server import process_file
+from api.ocr.Server import search_address
+from api.estate.estate_main import analyze_estate
+from api.wordcloud import wordcloud_main as wordcloud_router
+from api.wordcloud.okt_analyzer import router as okt_analyzer_router
+from api.wordcloud.wordcloud_main import generate_wordcloud
+from api.ocr.data.LeaseContract import LeaseContract # This import is not used, can be removed if not needed elsewhere
+
+from ai.contract_analysis.contract_clause import analyze_clause, translate_contract_data, translate_analysis_data, ContractData
+from ai.contract_analysis.create_report import AiRiskAnalysisRequest
+from ai.contract_analysis.create_report import AnalysisReportsDTO
+from ai.contract_analysis.create_report import analyze_with_openai
+from ai.emotion_analysis.post_emotion_analysis import analyze_all_posts_as_json
+
+base_path = os.path.dirname(os.path.abspath(__file__))
+if base_path not in sys.path:
+    sys.path.insert(0, base_path)
+
+
+app = FastAPI()
+
+# --- CORS 미들웨어 설정 ---
+origins = [
+    "http://localhost:5173",  # 프론트엔드 Origin
+    "http://localhost:8080",  # Java 백엔드 Origin
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# -------------------------
+
+# 라우터 등록
+app.include_router(wordcloud_router.router, prefix="/wordcloud", tags=["wordcloud"])
+app.include_router(okt_analyzer_router, prefix="/okt", tags=["okt_analyzer"])
+
+# 이벤트 상태 저장
+event_flags: Dict[str, bool] = {
+    "ocr": False,  # ocr api 이벤트
+    "kakao_map": False,  # kakao_map api 이벤트
+    "news_114": False,  # 뉴스 114
+    "news_yeonhap": False,  # 연합뉴스
+    "news_chosun": False,  # 뉴스 조선
+    "estate": False,  # 전월세 실거래데이터
+    "analyze_estate": False,  # 부동산 종합 분석
+    "analyze_clause": False,  # 특약사항 위험 분석
+    "wordcloud": False,  # 워드클라우드
+    "create_report": False,
+    "post_emotion_analysis": False
+}
+
+
+class EventTrigger(BaseModel):
+    api_name: str
+
+
+@app.post("/trigger")
+def trigger_event(event: EventTrigger):
+    if event.api_name not in event_flags:
+        raise HTTPException(status_code=404, detail="API이름이 잘못됨")
+    event_flags[event.api_name] = True
+    return {"message": f"{event.api_name} 실행 준비 완료"}
+
+
+# OCR호출
+@app.post("/ocr")
+async def run_ocr(file: UploadFile = File(...)):
+    if not event_flags["ocr"]:
+        raise HTTPException(status_code=403, detail="ocr실행 실패")
+    event_flags["ocr"] = False
+    return await process_file(file)
+
+
+class AddressRequest(BaseModel):
+    address: str
+
+
+# kakao_map
+@app.post("/kakao_map")
+async def search_map(req: AddressRequest):
+    if not event_flags["kakao_map"]:
+        raise HTTPException(status_code=403, detail="kakao_map 실패")
+    event_flags["kakao_map"] = False
+    return await search_address(req.address)
+
+
+# # 뉴스114 크롤링 호출
+# @app.post("/news_114")
+# async def run_news_114() :
+#     if not event_flags["news_114"] :
+#         raise HTTPException(status_code=403, detail="뉴스 114 실행 실패")
+#     event_flags["news_114"] = False
+
+#     News_114_Save()
+
+#     result = {"message " : " 뉴스 114 데이터 수집 완료"}
+#     return result
+
+# # 연합뉴스 크롤링 호출
+# @app.post("/news_yeonhap")
+# async def run_news_yeonhap() :
+#     if not event_flags["news_yeonhap"] :
+#         raise HTTPException(status_code=403, detail="연합 뉴스 실행 실패")
+#     event_flags["news_yeonhap"] = False
+
+#     News_Yeonhap_Save()
+
+#     result = {"message " : " 연합 뉴스 데이터 수집 완료"}
+#     return result
+
+# # 뉴스 조선 크롤링 호출
+# @app.post("/news_chosun")
+# async def run_new_chosun() :
+#     if not event_flags["news_chosun"] :
+#         raise HTTPException(status_code=403, detail="뉴스 조선 실행 실패")
+#     event_flags["news_chosun"] = False
+
+#     News_Chosun_Save()
+
+#     result = {"message " : " 뉴스 조선 데이터 수집 완료"}
+#     return result
+
+
+# 실거래 데이터 호출
+@app.post("/estate")
+async def run_estate(end_index: str, cgg_nm: str, ctrt_day: str, bldg_usg: str):
+    if not event_flags["estate"]:
+        raise HTTPException(status_code=403, detail="실거래 데이터 호출 실패")
+    event_flags["estate"] = False
+
+    data = runEstate(end_index, cgg_nm, ctrt_day, bldg_usg)
+    result = {"message ": "실거래데이터 호출 성공"}
+    return result
+
+
+# 부동산 종합 분석
+@app.post("/analyze_estate")
+async def analyzeAnomaly(contract_data: LeaseContract):
+    if not event_flags["analyze_estate"]:
+        raise HTTPException(
+            status_code=403, detail="부동산 종합 분석 실행이 허용되지 않았습니다."
+        )
+    event_flags["analyze_estate"] = False  # 사용 후 플래그 리셋
+
+    analysis_result = analyze_estate(contract_data)
+    return analysis_result
+
+
+class ClauseRequest(BaseModel):
+    contract_clause: str
+
+
+@app.post("/analyze_clause")
+async def analyzeClause(req: ClauseRequest):
+    if not event_flags["analyze_clause"]:
+        raise HTTPException(
+            status_code=403, detail="특약사항 위험 분석 실행이 허용되지 않았습니다."
+        )
+    event_flags["analyze_clause"] = False
+
+    analysis_result = analyze_clause(req.contract_clause)
+    return analysis_result
+
+class AnalysisSummaryDTO(BaseModel):
+    analysisReport: dict
+    transactionAnomaly: dict  
+    riskyClauses: dict
+
+@app.post("/analysis/translate", response_model=AnalysisSummaryDTO)
+async def translate_analysis_endpoint(data: AnalysisSummaryDTO, target_lang: str = Query("en-us", enum=["en-us", "en", "ja", "zh"])):
+    translated = translate_analysis_data(data.model_dump(), target_lang=target_lang.lower())
+    return translated
+
+@app.post("/contracts/translate", response_model=ContractData)
+async def translate_endpoint(data: ContractData, target_lang: str = Query(...)):
+    translated_dict = translate_contract_data(data.model_dump(), target_lang)
+    return ContractData(**translated_dict)
+
+@app.post("/create_report", response_model=AnalysisReportsDTO)
+async def createReport(req: AiRiskAnalysisRequest):
+    if not event_flags["create_report"]:
+        raise HTTPException(
+            status_code=403, detail="계약서 리포트 생성이 허용되지 않았습니다."
+        )
+    event_flags["create_report"] = False
+
+    clause = req.contractClauseDTO
+    anomaly = req.anomalyDetectResult
+
+    result = analyze_with_openai(anomaly=anomaly, clause=clause)
+    return result
+
+# 워드클라우드 호출
+@app.post("/wordcloud")
+async def create_wordcloud(
+    response: Response,
+    text: str = Body(..., embed=True),
+    width: int = Query(800, gt=0),
+    height: int = Query(600, gt=0),
+):
+    if not event_flags["wordcloud"]:
+        raise HTTPException(status_code=403, detail="워드클라우드 실행 실패")
+    event_flags["wordcloud"] = False
+
+    img_bytes = generate_wordcloud(text, width, height)
+    response.headers["Content-Type"] = "image/png"
+    return Response(content=img_bytes, media_type="image/png")
+
+@app.post("/post_emotion_analysis")
+async def sentiment_analyze_post():
+    if not event_flags["post_emotion_analysis"]:
+        raise HTTPException(status_code=403, detail="게시판 감성 분석 실행 실패")
+    event_flags["post_emotion_analysis"] = False
+
+    result = analyze_all_posts_as_json()
+    return result
+
+if __name__ == "__main__":
+    uvicorn.run("Main:app", host="0.0.0.0", port=8000, reload=True)

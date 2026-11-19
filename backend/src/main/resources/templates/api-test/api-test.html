@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <title>FastAPI OCR 테스트</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=jdlt8o7oi6"></script>
+    <style>
+        .api-panel {
+            border: 1px solid #ccc;
+            margin: 10px 0;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>FastAPI 실행 테스트</h1>
+
+    <!-- API 버튼 영역 -->
+    <div id="api-buttons"></div>
+
+    <!-- 동적 패널 영역 -->
+    <div id="api-panels"></div>
+
+    <script>
+        const apis = [
+            { name: 'ocr', isFileApi: true },
+            { name: 'api_1', isFileApi: false },
+            { name: 'api_2', isFileApi: false }
+        ];
+
+        $(document).ready(function () {
+            const buttonContainer = $("#api-buttons");
+            apis.forEach(api => {
+                const button = $("<button>")
+                    .text(api.name.toUpperCase() + " 실행")
+                    .on("click", () => createApiPanel(api.name, api.isFileApi));
+                buttonContainer.append(button);
+            });
+        });
+
+        function createApiPanel(apiName, isFileApi) {
+            const panelId = `panel-${apiName}`;
+            if (document.getElementById(panelId)) {
+                alert(apiName + " 패널이 이미 생성되었습니다.");
+                return;
+            }
+
+            const panel = document.createElement("div");
+            panel.className = "api-panel";
+            panel.id = panelId;
+
+            let html = `<h3>${apiName.toUpperCase()} 실행</h3>`;
+            if (isFileApi) {
+                html += `<input type="file" id="file-${apiName}" /><br><br>`;
+            }
+            html += `<button onclick="runApi('${apiName}', ${isFileApi})">실행</button>`;
+
+            if (apiName === "ocr") {
+                html += `
+                    <div id="ocr-result-${apiName}" style="margin-top:10px; display:none;">
+                        <form>
+                            <h4>📋 계약 기본 정보</h4>
+                            <div>임대 유형: <input type="text" id="leaseType-${apiName}"></div>
+                            <div>소재지: <input type="text" id="location-${apiName}"></div>
+                            <div>토지 구분: <input type="text" id="landType-${apiName}"></div>
+                            <div>토지 면적: <input type="number" id="landArea-${apiName}">㎡</div>
+                            <div>건물 구조 및 용도: <input type="text" id="buildingStructureUse-${apiName}"></div>
+                            <div>건물 면적: <input type="number" id="buildingArea-${apiName}">㎡</div>
+                            <div>임대 부위: <input type="text" id="leasePart-${apiName}"></div>
+                            <div>임대 면적: <input type="number" id="leaseArea-${apiName}">㎡</div>
+                            <h4>💰 금액 및 기간 정보</h4>
+                            <div>보증금: <input type="number" id="deposit-${apiName}">원</div>
+                            <div>계약금: <input type="number" id="downPayment-${apiName}">원</div>
+                            <div>계약금 서명 여부:
+                                <select id="downPaymentSigned-${apiName}">
+                                    <option value="true">서명 완료</option>
+                                    <option value="false">미서명</option>
+                                </select>
+                            </div>
+                            <div>중도금: <input type="number" id="middlePayment-${apiName}">원</div>
+                            <div>중도금 날짜: <input type="date" id="middlePaymentDate-${apiName}"></div>
+                            <div>잔금: <input type="number" id="balance-${apiName}">원</div>
+                            <div>잔금 날짜: <input type="date" id="balanceDate-${apiName}"></div>
+                            <div>임대료: <input type="number" id="rentAmount-${apiName}">원</div>
+                            <div>임대료 지급 방식:
+                                <select id="rentType-${apiName}">
+                                    <option value="선불">선불</option>
+                                    <option value="후불">후불</option>
+                                </select>
+                            </div>
+                            <div>임대료 지급일: <input type="date" id="rentDate-${apiName}"></div>
+                            <div>임대 기간:
+                                <input type="date" id="leasePeriodStart-${apiName}"> ~
+                                <input type="date" id="leasePeriodEnd-${apiName}">
+                            </div>
+                            <div>중개 수수료: <input type="number" id="commissionAmount-${apiName}">%</div>
+                            <div>특약사항: <input type="text" id="specialTerms-${apiName}"></div>
+                            <h4>📍 지도 정보</h4>
+                            <div>도로명 주소: <span id="roadAddress-${apiName}"></span></div>
+                            <div>지번 주소: <span id="jibunAddress-${apiName}"></span></div>
+                            <div>위도: <span id="latitude-${apiName}"></span></div>
+                            <div>경도: <span id="longitude-${apiName}"></span></div>
+                            <div id="map-${apiName}" style="width:100%; height:300px; margin-top:10px;"></div>
+                        </form>
+                    </div>
+                `;
+            } else {
+                html += `<pre id="result-${apiName}">결과 없음</pre>`;
+            }
+
+            panel.innerHTML = html;
+            document.getElementById("api-panels").appendChild(panel);
+        }
+
+        function runApi(apiName, isFileApi) {
+            const formData = new FormData();
+            formData.append("apiName", apiName);
+
+            if (isFileApi) {
+                const file = document.getElementById(`file-${apiName}`).files[0];
+                if (!file) {
+                    alert("파일을 선택하세요.");
+                    return;
+                }
+                formData.append("file", file);
+            }
+
+            $.ajax({
+                url: '/ajax/run-api',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response.status === "success") {
+                        if (apiName === "ocr") {
+                            $(`#ocr-result-${apiName}`).show();
+                            const data = response.structuredContractDataDTO;
+                            for (const key in data) {
+                                const el = document.getElementById(`${key}-${apiName}`);
+                                if (el) el.value = data[key] || '';
+                            }
+                            const mapInfo = response.mapInfo;
+                            $(`#roadAddress-${apiName}`).text(mapInfo.roadAddress || '');
+                            $(`#jibunAddress-${apiName}`).text(mapInfo.jibunAddress || '');
+                            $(`#latitude-${apiName}`).text(mapInfo.y || '');
+                            $(`#longitude-${apiName}`).text(mapInfo.x || '');
+
+                            const map = new naver.maps.Map(`map-${apiName}`, {
+                                center: new naver.maps.LatLng(mapInfo.y, mapInfo.x),
+                                zoom: 16
+                            });
+                            new naver.maps.Marker({
+                                position: new naver.maps.LatLng(mapInfo.y, mapInfo.x),
+                                map: map
+                            });
+                        } else {
+                            $(`#result-${apiName}`).text(JSON.stringify(response.data, null, 2));
+                        }
+                    } else {
+                        alert("실패: " + response.message);
+                    }
+                },
+                error: function () {
+                    alert("서버 오류 발생");
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>

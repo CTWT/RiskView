@@ -1,0 +1,44 @@
+body {
+    font-family: 'Arial', sans-serif;
+    padding: 30px;
+    background-color: #f2f2f2;
+}
+
+.section {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.section h2 {
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* 공통 입력 항목 레이아웃 */
+.item {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+}
+
+/* 라벨 공통 스타일 */
+.item .label {
+    font-weight: bold;
+    width: 180px;
+    flex-shrink: 0;
+}
+
+/* 양쪽 공인중개사 정보용 레이아웃 */
+.realtor-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+}
+
+.realtor-column {
+    flex: 1;
+}

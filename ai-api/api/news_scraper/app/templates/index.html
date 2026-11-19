@@ -1,0 +1,32 @@
+
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>뉴스 크롤링 결과</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <div class="column">
+      <h1>연합뉴스</h1>
+      {% for news in yonhap_list %}
+        <div class="news-block">
+          <h2>{{ news.title }}</h2>
+          <p>{{ news.content }}</p>
+        </div>
+      {% endfor %}
+    </div>
+    <div class="column">
+      <h1>조선비즈</h1>
+      {% for news in chosun_list %}
+        <div class="news-block">
+          <h2>{{ news.title }}</h2>
+          <p>{{ news.content }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</body>
+</html>
